@@ -6,6 +6,12 @@ import { getStore } from "@/lib/data";
 import { accessDecision } from "@/lib/domain/access";
 import { normalizeEmail } from "@/lib/domain/people";
 
+// Auth.js throws in production when AUTH_SECRET is missing, even for the
+// sample sign-in. A public fallback is enough for fictional preview data.
+// A real AUTH_SECRET in the environment replaces it.
+if (!process.env.AUTH_SECRET?.trim()) process.env.AUTH_SECRET = authSecret();
+if (!process.env.AUTH_TRUST_HOST) process.env.AUTH_TRUST_HOST = "true";
+
 const domain = allowedDomain();
 const mode = authMode();
 

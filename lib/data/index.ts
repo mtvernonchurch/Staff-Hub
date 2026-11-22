@@ -5,8 +5,6 @@ import { MemoryStore } from "@/lib/data/memory-store";
 import { createSeed } from "@/lib/data/mock-data";
 import { SheetsStore } from "@/lib/data/sheets-store";
 import type { HubStore } from "@/lib/data/types";
-import { createGoogleSheetsApi } from "@/lib/sheets/google-api";
-
 const globalStore = globalThis as typeof globalThis & { __mvStaffHub?: MemoryStore };
 
 function mockStore(): MemoryStore {
@@ -16,5 +14,6 @@ function mockStore(): MemoryStore {
 
 export const getStore = cache(async (): Promise<HubStore> => {
   if (dataMode() === "mock") return mockStore();
-  return new SheetsStore(createGoogleSheetsApi());
+  const { createGoogleSheetsApi } = await import("@/lib/sheets/google-api");
+  return new SheetsStore(await createGoogleSheetsApi());
 });
