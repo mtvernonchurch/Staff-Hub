@@ -2,7 +2,7 @@ import Link from "next/link";
 import { setWorkStatusAction } from "@/app/(hub)/extra-actions";
 import { ActionItemForm, ActionList } from "@/components/records";
 import { StaffPinBoard } from "@/components/staff-pins";
-import { Empty, Flash, OutLink, PageHeader } from "@/components/ui";
+import { Empty, Flash, OutLink } from "@/components/ui";
 import type { ActionItem, Meeting, WorkflowCard, WorkStatus } from "@/lib/data/types";
 import { isAdmin } from "@/lib/domain/access";
 import { careActionLabel } from "@/lib/domain/care";
@@ -86,35 +86,37 @@ export default async function HomePage({
 
   return (
     <>
-      <Flash error={query.error} notice={query.notice} />
-      <StaffPinBoard pins={pins} acks={acks} actor={staff} today={today} returnTo={returnTo} />
-      <PageHeader
-        kicker="Mt Vernon Church · Columbus"
-        title={`Welcome, ${firstName(staff.name)}`}
-        lede={`${greeting()} · ${formatLong(today)}`}
-      />
-      {isAdmin(staff) ? (
-        <div className="filters" aria-label="Home view">
-          <Link className={teamView ? "btn btn-small" : "btn btn-primary btn-small"} href="/">My home</Link>
-          <Link className={teamView ? "btn btn-primary btn-small" : "btn btn-small"} href="/?view=team">Team overview</Link>
-        </div>
-      ) : null}
-      <section className="summary" aria-label="My week">
-        <div className="ring" style={{ background: `conic-gradient(#b7e6d6 ${open.length + doneThisWeek ? Math.round((doneThisWeek / (open.length + doneThisWeek)) * 100) : 0}%, rgba(255,255,255,0.16) 0)` }} aria-hidden>
-          <span>{doneThisWeek}</span>
-        </div>
-        <div>
-          <p>{teamView ? "Team week" : "My week"}</p>
-          <div className="stat-row">
-            <strong>{overdueCount} overdue</strong>
-            <strong>{dueSoonCount} due soon</strong>
-            <strong>{open.length} open</strong>
-            <strong>{visibleNotes.length} care {visibleNotes.length === 1 ? "note" : "notes"}</strong>
-            <strong>{waiting.length + myGraphics.length + myAway.length + approvals.length} {waiting.length + myGraphics.length + myAway.length + approvals.length === 1 ? "request" : "requests"}</strong>
+      <section className="summary home-hat" aria-label="Welcome">
+        <header className="hat-copy">
+          <p className="kicker">Mt Vernon Church · Columbus</p>
+          <h1>Welcome, {firstName(staff.name)}</h1>
+          <p className="hat-lede">{greeting()} · {formatLong(today)}</p>
+          {isAdmin(staff) ? (
+            <div className="filters" aria-label="Home view">
+              <Link className={teamView ? "btn btn-small" : "btn btn-primary btn-small"} href="/">My home</Link>
+              <Link className={teamView ? "btn btn-primary btn-small" : "btn btn-small"} href="/?view=team">Team overview</Link>
+            </div>
+          ) : null}
+        </header>
+        <div className="hat-stats">
+          <div className="ring" style={{ background: `conic-gradient(#b7e6d6 ${open.length + doneThisWeek ? Math.round((doneThisWeek / (open.length + doneThisWeek)) * 100) : 0}%, rgba(255,255,255,0.16) 0)` }} aria-hidden>
+            <span>{doneThisWeek}</span>
           </div>
-          <WeekStrip today={today} items={teamView ? items : mineItems} meetings={meetings} />
+          <div>
+            <p>{teamView ? "Team week" : "My week"}</p>
+            <div className="stat-row">
+              <strong>{overdueCount} overdue</strong>
+              <strong>{dueSoonCount} due soon</strong>
+              <strong>{open.length} open</strong>
+              <strong>{visibleNotes.length} care {visibleNotes.length === 1 ? "note" : "notes"}</strong>
+              <strong>{waiting.length + myGraphics.length + myAway.length + approvals.length} {waiting.length + myGraphics.length + myAway.length + approvals.length === 1 ? "request" : "requests"}</strong>
+            </div>
+            <WeekStrip today={today} items={teamView ? items : mineItems} meetings={meetings} />
+          </div>
         </div>
       </section>
+      <Flash error={query.error} notice={query.notice} />
+      <StaffPinBoard pins={pins} acks={acks} actor={staff} today={today} returnTo={returnTo} />
       <div className="stack">
         <section className="card tone-action">
           <div className="card-head">

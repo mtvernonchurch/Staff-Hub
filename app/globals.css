@@ -117,6 +117,23 @@ button { cursor: pointer; }
   background: var(--navy); color: white; border-radius: 24px; padding: 18px;
   margin-bottom: 16px;
 }
+.summary.home-hat {
+  grid-template-columns: 1fr;
+  gap: 18px;
+  margin: -22px -16px 16px;
+  border-radius: 0 0 28px 28px;
+  padding: 18px 16px 20px;
+}
+.home-hat h1 { color: #fff; }
+.home-hat .kicker { color: var(--mint); }
+.home-hat .hat-lede { color: #e7f3ee; margin-top: 8px; font-size: 1.05rem; }
+.home-hat .filters { margin: 14px 0 0; }
+.home-hat .filters .btn {
+  background: transparent; color: #fff; border-color: rgba(255, 255, 255, 0.45);
+}
+.home-hat .filters .btn-primary { background: var(--mint); color: var(--navy); border-color: transparent; }
+.home-hat :focus-visible { outline-color: var(--mint); }
+.hat-stats { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; }
 .summary p { color: #d5e6e0; }
 .summary strong { color: white; }
 .stat-row { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 8px; }
@@ -236,8 +253,13 @@ summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; al
 .group-title, .section-break { margin: 18px 0 8px; color: var(--muted); font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; }
 .progress-label { font-weight: 700; }
 
+@media (max-width: 560px) {
+  .hat-stats { grid-template-columns: 1fr; }
+  .home-hat h1 { font-size: 2.05rem; }
+}
 @media (min-width: 720px) {
   .main { padding: 32px 28px 72px; }
+  .summary.home-hat { margin: -32px -28px 18px; padding: 26px 28px 24px; }
   .quick-grid, .folder-grid { grid-template-columns: 1fr 1fr; }
   .item { grid-template-columns: 1fr auto; align-items: center; }
   .sign-card { padding: 36px 32px; }
@@ -248,6 +270,7 @@ summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; al
   .topbar { display: none; }
   .grid-home { grid-template-columns: 1.3fr 0.9fr; align-items: start; }
   .main { padding: 36px 36px 80px; }
+  .summary.home-hat { margin: -36px -36px 18px; padding: 28px 36px 26px; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
