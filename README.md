@@ -49,7 +49,7 @@ If an earlier import is stuck, open the project → **Settings** → **Build and
 
 | Page | What staff do there |
 | --- | --- |
-| Home | Your open items, this week from the staff meeting, Monday at 1:00 PM, quick links, and your Planning Center cards |
+| Home | Welcome by first name, then only your open items, care notes, and requests. Shared announcements and links sit below. Admins can switch to a team overview |
 | This week | Announcements, action items, prayer, celebrations, and notes from the latest staff meeting, plus earlier meetings |
 | Meeting mode | Admins only. Live entry during Monday's 1:00 PM staff meeting |
 | Action items | The one shared list. Filter mine or everyone's. Add, update, and mark done |

@@ -217,7 +217,7 @@ summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; al
 .people button strong { display: block; }
 .people button span { color: var(--muted); }
 .problem { max-width: 36rem; margin: 10vh auto; background: var(--card); padding: 24px; border-radius: 20px; }
-.group-title { margin: 18px 0 8px; color: var(--muted); font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.group-title, .section-break { margin: 18px 0 8px; color: var(--muted); font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; }
 .progress-label { font-weight: 700; }
 
 @media (min-width: 720px) {
