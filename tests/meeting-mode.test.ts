@@ -7,7 +7,7 @@ import type { SheetsApi } from "@/lib/sheets/api";
 import { chicagoToday } from "@/lib/domain/dates";
 import { announcementsForMeeting, thisWeekMeeting } from "@/lib/domain/view";
 import { HubError } from "@/lib/hub-error";
-import { deleteActionItem, ensureMondayMeeting, finishMeeting } from "@/lib/services/hub";
+import { createCareNote, deleteActionItem, ensureMondayMeeting, finishMeeting } from "@/lib/services/hub";
 import { COLUMNS } from "@/lib/sheets/schema";
 
 const today = new Date("2026-11-22T18:00:00Z");
@@ -52,7 +52,23 @@ describe("meeting mode rules", () => {
     expect(finished.status).toBe("Done");
     expect((await store.getMeeting("mtg_monday"))?.status).toBe("Done");
     expect(events[0]?.type).toBe("meeting.finished");
-    if (events[0]?.type === "meeting.finished") expect(events[0].recap).toContain("Thanksgiving Eve service");
+    if (events[0]?.type === "meeting.finished") {
+      expect(events[0].recap).toContain("Thanksgiving Eve service");
+      expect(events[0].recap).toContain("Call for the Parker family");
+    }
+  });
+
+  it("puts an assigned care note on that person's action items", async () => {
+    const store = new MemoryStore(createSeed(today));
+    const avery = (await store.listStaff()).find((person) => person.name === "Avery Quinn")!;
+    const note = await createCareNote(
+      { store, actor: avery, today },
+      { meetingId: "mtg_monday", person: "Sam Ellis", action: "Meal", custom: "", details: "Dinner Thursday", assignee: "Dana Ruiz" },
+    );
+    const item = await store.getActionItem(note.actionItemId);
+    expect(item?.owner).toBe("Dana Ruiz");
+    expect(item?.action).toBe("Care note: Meal for Sam Ellis");
+    expect(item?.meetingId).toBe("mtg_monday");
   });
 });
 
@@ -83,6 +99,7 @@ describe("announcement sheet columns", () => {
       async deleteRow() {
         throw new Error("not used");
       },
+      async ensureTab() {},
     };
     const store = new SheetsStore(api);
     await store.createAnnouncement({

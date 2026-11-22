@@ -62,6 +62,40 @@ export function createSheetsApi(options: {
   }
 
   return {
+    async ensureTab(tab, headers) {
+      const response = await fetchImpl(
+        `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(options.sheetId)}?fields=sheets.properties`,
+        { headers: { Authorization: `Bearer ${options.accessToken}` } },
+      );
+      const text = await response.text();
+      if (!response.ok) explain(new Error(`${response.status} ${text.slice(0, 300)}`));
+      const data = JSON.parse(text) as { sheets?: { properties?: { title?: string } }[] };
+      const exists = data.sheets?.some((sheet) => sheet.properties?.title === tab);
+      if (!exists) {
+        const created = await fetchImpl(
+          `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(options.sheetId)}:batchUpdate`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${options.accessToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ requests: [{ addSheet: { properties: { title: tab } } }] }),
+          },
+        );
+        if (!created.ok) {
+          const body = await created.text();
+          explain(new Error(`${created.status} ${body.slice(0, 300)}`));
+        }
+      }
+      const current = exists ? await request(`/values/${encodeURIComponent(quoteTab(tab))}?valueRenderOption=FORMATTED_VALUE`) as { values?: string[][] } : { values: [] };
+      const header = current.values?.[0] ?? [];
+      if (header.some((cell) => String(cell ?? "").trim())) return;
+      await request(`/values/${encodeURIComponent(`${quoteTab(tab)}!A1`)}?valueInputOption=RAW`, {
+        method: "PUT",
+        body: { values: [headers] },
+      });
+    },
     async deleteRow(tab, rowNumber) {
       if (rowNumber < 2) throw new HubError("Refusing to delete the header row.");
       const sheetId = await sheetNumber(tab);

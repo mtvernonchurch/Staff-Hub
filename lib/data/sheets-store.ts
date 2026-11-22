@@ -1,6 +1,7 @@
 import type {
   ActionItem,
   Announcement,
+  CareNote,
   ChecklistItem,
   DeskRequest,
   FolderLink,
@@ -17,6 +18,7 @@ import { assertColumns, assertWritable, columnLetter, findDataRow, gridToRecords
 import {
   actionCells,
   announcementCells,
+  careNoteCells,
   checklistCells,
   documentCells,
   folderCells,
@@ -27,6 +29,7 @@ import {
   requestCells,
   toActionItem,
   toAnnouncement,
+  toCareNote,
   toCardAction,
   toChecklist,
   toDocument,
@@ -214,6 +217,28 @@ export class SheetsStore implements HubStore {
   }
   async deleteAnnouncement(id: string) {
     await this.remove("Announcements", "Announcement ID", id);
+  }
+  async listCareNotes() {
+    await this.api.ensureTab("Care Notes", [...COLUMNS.careNotes]);
+    this.cache.delete("Care Notes");
+    return (await this.records("Care Notes", COLUMNS.careNotes)).map(toCareNote).filter((row) => row !== null);
+  }
+  async createCareNote(row: CareNote) {
+    await this.api.ensureTab("Care Notes", [...COLUMNS.careNotes]);
+    this.cache.delete("Care Notes");
+    await this.append("Care Notes", COLUMNS.careNotes, careNoteCells(row));
+  }
+  async updateCareNote(id: string, changes: Partial<CareNote>) {
+    await this.api.ensureTab("Care Notes", [...COLUMNS.careNotes]);
+    this.cache.delete("Care Notes");
+    const cells = careNoteCells(changes);
+    delete cells["Care Note ID"];
+    await this.patch("Care Notes", "Care Note ID", id, cells);
+  }
+  async deleteCareNote(id: string) {
+    await this.api.ensureTab("Care Notes", [...COLUMNS.careNotes]);
+    this.cache.delete("Care Notes");
+    await this.remove("Care Notes", "Care Note ID", id);
   }
   async listOpenIssues() {
     return (await this.records("Open Issues", COLUMNS.openIssues)).map(toIssue).filter((row) => row !== null);

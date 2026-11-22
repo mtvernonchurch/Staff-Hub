@@ -22,6 +22,10 @@ class FakeSheets implements SheetsApi {
     this.grids[tab].push(...rows.map((row) => [...row]));
   }
 
+  async ensureTab(tab: string, headers: string[]) {
+    if (!this.grids[tab]) this.grids[tab] = [[...headers]];
+  }
+
   async deleteRow(tab: string, rowNumber: number) {
     this.writes.push({ type: "delete", tab, updates: [{ range: String(rowNumber), value: "" }] });
     this.grids[tab].splice(rowNumber - 1, 1);

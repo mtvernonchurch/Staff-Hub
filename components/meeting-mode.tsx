@@ -4,26 +4,31 @@ import { useRef, useState } from "react";
 import {
   addLiveAction,
   addLiveAnnouncement,
+  addLiveCareNote,
   editLiveAction,
-  editLiveAnnouncement,
+  editLiveCareNote,
   finishLiveMeeting,
   removeLiveAction,
   removeLiveAnnouncement,
+  removeLiveCareNote,
   saveMeetingText,
 } from "@/app/(hub)/meeting/live-actions";
-import type { ActionItem, Announcement, Meeting, Ministry, StaffMember } from "@/lib/data/types";
+import type { ActionItem, Announcement, CareNote, Meeting, Ministry, StaffMember } from "@/lib/data/types";
 import { formatFriendly, toInputDate } from "@/lib/domain/dates";
+import { CARE_ACTIONS, careActionLabel } from "@/lib/domain/care";
 
 export function MeetingMode({
   meeting,
   initialItems,
   initialAnnouncements,
+  initialCareNotes,
   staff,
   ministries,
 }: {
   meeting: Meeting;
   initialItems: ActionItem[];
   initialAnnouncements: Announcement[];
+  initialCareNotes: CareNote[];
   staff: StaffMember[];
   ministries: Ministry[];
 }) {
@@ -32,6 +37,8 @@ export function MeetingMode({
   const [notes, setNotes] = useState(meeting.notes);
   const [items, setItems] = useState(initialItems);
   const [announcements, setAnnouncements] = useState(initialAnnouncements);
+  const [careNotes, setCareNotes] = useState(initialCareNotes);
+  const [careAction, setCareAction] = useState<string>("Call");
   const [status, setStatus] = useState(meeting.status);
   const [message, setMessage] = useState("");
   const [saved, setSaved] = useState("");
@@ -159,6 +166,95 @@ export function MeetingMode({
             onError={(error) => remember("", false, error)}
             onSaved={(label) => remember(label, true)}
           />
+        ))}
+      </section>
+
+      <section className="card">
+        <h2>Care notes</h2>
+        <p className="hint">Everyone on staff can see these. Keep them to a name and the practical help.</p>
+        <form
+          className="live-grid care"
+          onSubmit={async (event) => {
+            event.preventDefault();
+            const form = new FormData(event.currentTarget);
+            const result = await addLiveCareNote({
+              meetingId: meeting.id,
+              person: String(form.get("person") ?? ""),
+              action: String(form.get("action") ?? ""),
+              custom: String(form.get("custom") ?? ""),
+              details: String(form.get("details") ?? ""),
+              assignee: String(form.get("assignee") ?? ""),
+            });
+            if (!result.ok) return remember("", false, result.error);
+            setCareNotes((current) => [result.data, ...current]);
+            event.currentTarget.reset();
+            setCareAction("Call");
+            remember("Care note added.", true);
+          }}
+        >
+          <input name="person" required placeholder="Name" aria-label="Person needing care" />
+          <select name="action" aria-label="Care action" value={careAction} onChange={(event) => setCareAction(event.target.value)}>
+            {CARE_ACTIONS.map((action) => (
+              <option key={action} value={action}>{action}</option>
+            ))}
+          </select>
+          {careAction === "Other" ? <input name="custom" required placeholder="What kind of help" aria-label="Other care action" /> : <input name="custom" type="hidden" value="" />}
+          <input name="details" placeholder="Details" aria-label="Care details" />
+          <select name="assignee" aria-label="Assigned staff" defaultValue="">
+            <option value="">Unassigned</option>
+            {people.map((person) => (
+              <option key={person.email} value={person.name}>{person.name}</option>
+            ))}
+          </select>
+          <button className="btn btn-primary" type="submit">Add</button>
+        </form>
+        {careNotes.map((note) => (
+          <article key={note.id} className="item">
+            <div>
+              <h3>{note.person}</h3>
+              <p className="meta">
+                <span>{careActionLabel(note)}</span>
+                {note.assignee ? <span>{note.assignee}</span> : <span>Unassigned</span>}
+                <span className={note.done ? "chip chip-done" : "chip"}>{note.done ? "Done" : "Open"}</span>
+              </p>
+              {note.details ? <p className="note">{note.details}</p> : null}
+            </div>
+            <div className="button-row">
+              <label className="checks">
+                <input
+                  type="checkbox"
+                  checked={note.done}
+                  onChange={async (event) => {
+                    const done = event.target.checked;
+                    const result = await editLiveCareNote(note.id, {
+                      person: note.person,
+                      action: note.action,
+                      custom: note.custom,
+                      details: note.details,
+                      assignee: note.assignee,
+                      done,
+                    });
+                    if (!result.ok) return remember("", false, result.error);
+                    setCareNotes((current) => current.map((row) => (row.id === note.id ? result.data : row)));
+                  }}
+                  aria-label={`Done for ${note.person}`}
+                />
+                Done
+              </label>
+              <button
+                className="btn btn-small"
+                type="button"
+                onClick={async () => {
+                  const result = await removeLiveCareNote(note.id);
+                  if (!result.ok) return remember("", false, result.error);
+                  setCareNotes((current) => current.filter((row) => row.id !== note.id));
+                  remember("Care note removed.", true);
+                }}
+              >
+                Remove
+              </button>
+            </div>
+          </article>
         ))}
       </section>
 

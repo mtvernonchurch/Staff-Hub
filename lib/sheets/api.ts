@@ -5,4 +5,5 @@ export interface SheetsApi {
   appendRows(tab: string, rows: string[][]): Promise<void>;
   updateCells(updates: CellUpdate[]): Promise<void>;
   deleteRow(tab: string, rowNumber: number): Promise<void>;
+  ensureTab(tab: string, headers: string[]): Promise<void>;
 }

@@ -2,6 +2,7 @@ import type {
   ActionItem,
   Announcement,
   CardAction,
+  CareNote,
   ChecklistItem,
   ChecklistTemplateRow,
   DeskRequest,
@@ -329,6 +330,36 @@ export function toFolder(record: Record<string, string>): FolderLink | null {
     url: cell(record, "URL"),
     icon: cell(record, "Icon"),
     order: cell(record, "Order"),
+  };
+}
+
+export function careNoteCells(row: Partial<CareNote>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Care Note ID"] = row.id;
+  if (row.meetingId !== undefined) cells.Meeting = row.meetingId;
+  if (row.person !== undefined) cells.Name = row.person;
+  if (row.action !== undefined) cells.Action = row.action;
+  if (row.custom !== undefined) cells.Custom = row.custom;
+  if (row.details !== undefined) cells.Details = row.details;
+  if (row.assignee !== undefined) cells.Assignee = row.assignee;
+  if (row.done !== undefined) cells.Done = formatBool(row.done);
+  if (row.actionItemId !== undefined) cells["Action Item"] = row.actionItemId;
+  return cells;
+}
+
+export function toCareNote(record: Record<string, string>): CareNote | null {
+  const id = cell(record, "Care Note ID");
+  if (!id) return null;
+  return {
+    id,
+    meetingId: cell(record, "Meeting"),
+    person: cell(record, "Name"),
+    action: cell(record, "Action"),
+    custom: cell(record, "Custom"),
+    details: cell(record, "Details"),
+    assignee: cell(record, "Assignee"),
+    done: parseBool(cell(record, "Done")),
+    actionItemId: cell(record, "Action Item"),
   };
 }
 

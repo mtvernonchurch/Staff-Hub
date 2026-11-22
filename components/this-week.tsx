@@ -1,16 +1,19 @@
 import Link from "next/link";
-import type { ActionItem, Announcement, Meeting } from "@/lib/data/types";
+import type { ActionItem, Announcement, CareNote, Meeting } from "@/lib/data/types";
 import { formatFriendly, isClosedStatus } from "@/lib/domain/dates";
+import { careActionLabel } from "@/lib/domain/care";
 
 export function ThisWeekView({
   meeting,
   announcements,
   items,
+  careNotes,
   archive,
 }: {
   meeting: Meeting | null;
   announcements: Announcement[];
   items: ActionItem[];
+  careNotes: CareNote[];
   archive: Meeting[];
 }) {
   if (!meeting) {
@@ -48,6 +51,22 @@ export function ThisWeekView({
                 {row.owner ? <span>{row.owner}</span> : null}
               </p>
               {row.details ? <p className="note">{row.details}</p> : null}
+            </div>
+          </article>
+        ))}
+      </section>
+      <section className="card">
+        <h2>Care notes</h2>
+        {careNotes.length === 0 ? <p className="empty">None from this meeting.</p> : careNotes.map((note) => (
+          <article key={note.id} className="item">
+            <div>
+              <h3>{note.person}</h3>
+              <p className="meta">
+                <span>{careActionLabel(note)}</span>
+                {note.assignee ? <span>{note.assignee}</span> : <span>Unassigned</span>}
+                <span className={note.done ? "chip chip-done" : "chip"}>{note.done ? "Done" : "Open"}</span>
+              </p>
+              {note.details ? <p className="note">{note.details}</p> : null}
             </div>
           </article>
         ))}

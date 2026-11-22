@@ -7,14 +7,17 @@ import { requireStaff } from "@/lib/session";
 import {
   createActionItem,
   createAnnouncement,
+  createCareNote,
   deleteActionItem,
   deleteAnnouncement,
+  deleteCareNote,
   finishMeeting,
   updateActionItem,
   updateAnnouncement,
+  updateCareNote,
   updateMeeting,
 } from "@/lib/services/hub";
-import type { ActionItem, Announcement, Meeting } from "@/lib/data/types";
+import type { ActionItem, Announcement, CareNote, Meeting } from "@/lib/data/types";
 
 export type LiveResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -110,6 +113,31 @@ export async function editLiveAnnouncement(
 export async function removeLiveAnnouncement(id: string): Promise<LiveResult<boolean>> {
   return asAdmin(async (deps) => {
     await deleteAnnouncement(deps, id);
+    return true;
+  });
+}
+
+export async function addLiveCareNote(input: {
+  meetingId: string;
+  person: string;
+  action: string;
+  custom: string;
+  details: string;
+  assignee: string;
+}): Promise<LiveResult<CareNote>> {
+  return asAdmin((deps) => createCareNote(deps, input));
+}
+
+export async function editLiveCareNote(
+  id: string,
+  input: { person: string; action: string; custom: string; details: string; assignee: string; done: boolean },
+): Promise<LiveResult<CareNote>> {
+  return asAdmin((deps) => updateCareNote(deps, id, input));
+}
+
+export async function removeLiveCareNote(id: string): Promise<LiveResult<boolean>> {
+  return asAdmin(async (deps) => {
+    await deleteCareNote(deps, id);
     return true;
   });
 }

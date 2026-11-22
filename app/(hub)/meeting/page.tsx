@@ -12,12 +12,15 @@ export default async function MeetingModePage() {
   const { staff, store } = await requireStaff();
   if (!isAdmin(staff)) redirect("/this-week");
   const meeting = await ensureMondayMeeting({ store, actor: staff });
-  const [items, announcements, people, ministries] = await Promise.all([
+  const [items, announcements, careNotes, people, ministries] = await Promise.all([
     store.listActionItems(),
     store.listAnnouncements(),
+    store.listCareNotes(),
     store.listStaff(),
     store.listMinistries(),
   ]);
+  const meetingNotes = careNotes.filter((note) => note.meetingId === meeting.id);
+  const linked = new Set(meetingNotes.map((note) => note.actionItemId).filter(Boolean));
 
   return (
     <>
@@ -28,8 +31,9 @@ export default async function MeetingModePage() {
       />
       <MeetingMode
         meeting={meeting}
-        initialItems={items.filter((item) => item.meetingId === meeting.id)}
+        initialItems={items.filter((item) => item.meetingId === meeting.id && !linked.has(item.id))}
         initialAnnouncements={announcements.filter((row) => row.meetingId === meeting.id)}
+        initialCareNotes={meetingNotes}
         staff={people}
         ministries={ministries}
       />

@@ -84,6 +84,18 @@ export type Announcement = {
   ministry: string;
 };
 
+export type CareNote = {
+  id: string;
+  meetingId: string;
+  person: string;
+  action: string;
+  custom: string;
+  details: string;
+  assignee: string;
+  done: boolean;
+  actionItemId: string;
+};
+
 export type OpenIssue = {
   id: string;
   issue: string;
@@ -172,6 +184,7 @@ export type HubData = {
   ministryUpdates: MinistryUpdate[];
   ministries: Ministry[];
   announcements: Announcement[];
+  careNotes: CareNote[];
   openIssues: OpenIssue[];
   requests: DeskRequest[];
   documents: PinnedDocument[];
@@ -205,6 +218,10 @@ export interface HubStore {
   createAnnouncement(row: Announcement): Promise<void>;
   updateAnnouncement(id: string, changes: Partial<Announcement>): Promise<void>;
   deleteAnnouncement(id: string): Promise<void>;
+  listCareNotes(): Promise<CareNote[]>;
+  createCareNote(row: CareNote): Promise<void>;
+  updateCareNote(id: string, changes: Partial<CareNote>): Promise<void>;
+  deleteCareNote(id: string): Promise<void>;
   listOpenIssues(): Promise<OpenIssue[]>;
   createOpenIssue(row: OpenIssue): Promise<void>;
   updateOpenIssue(id: string, changes: Partial<OpenIssue>): Promise<void>;

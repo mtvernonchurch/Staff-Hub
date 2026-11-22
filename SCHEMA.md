@@ -11,6 +11,7 @@ Dates are text in `M/D/YYYY`. People are stored by name. Optional columns are ad
 | Meetings | Meeting ID, Date, Title, Status, Attendees, Notes By, Prayer Requests, Wins, Calendar Look-ahead, Care Update, Notes | |
 | Action Items | Item ID, Action, Owner, Due, Status, Meeting, Update, Created, Completed On | Ministry |
 | Announcements | Announcement ID, Date, Event, Kind, Owner, Announced Where, Details, Link, Audience | Meeting, Ministry |
+| Care Notes | Care Note ID, Meeting, Name, Action, Custom, Details, Assignee, Done, Action Item | |
 | Sunday Checklist | Check ID, Meeting, Order, Area, Owner, What's Covered, Ready, Notes | |
 | Ministry Updates | Update ID, Meeting, Ministry, Lead, Update, Coming Up, Need From Team, Submitted By, Submitted On | |
 | Open Issues | Issue ID, Issue, Owner, Next Step, Due, Status, Created | |
@@ -25,6 +26,7 @@ Meeting mode uses the existing Meetings, Action Items, and Announcements tabs.
 - An action item's **Meeting** cell is the meeting id, so it also appears on that person's open items.
 - An announcement's **Meeting** cell is the meeting id. **Ministry** is the ministry name when one was chosen.
 - Removing an item during the live meeting deletes that one row. The header row is never deleted.
+- Care notes live on the **Care Notes** tab. Action is Visit, Card, Flowers, Call, Meal, or Other. Custom is the words used when Action is Other. Done is TRUE or FALSE. If Assignee is filled in, Action Item holds the id of the matching row on Action Items, and that row shows on the assignee's own list. The hub adds the Care Notes tab, with its header row, the first time a note is saved and the tab is not there yet.
 
 ## Tabs the hub only reads
 

@@ -99,6 +99,22 @@ export class MemoryStore implements HubStore {
     }
     this.data.announcements = next;
   }
+  async listCareNotes() {
+    return clone(this.data.careNotes);
+  }
+  async createCareNote(row: HubData["careNotes"][number]) {
+    this.data.careNotes.push(clone(row));
+  }
+  async updateCareNote(id: string, changes: Partial<HubData["careNotes"][number]>) {
+    merge(this.data.careNotes, id, changes, "care note");
+  }
+  async deleteCareNote(id: string) {
+    const next = this.data.careNotes.filter((row) => row.id !== id);
+    if (next.length === this.data.careNotes.length) {
+      throw new HubError("That care note is no longer on the list. Refresh and try again.");
+    }
+    this.data.careNotes = next;
+  }
   async listOpenIssues() {
     return clone(this.data.openIssues);
   }
