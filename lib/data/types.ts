@@ -1,0 +1,221 @@
+export type StaffMember = {
+  name: string;
+  email: string;
+  title: string;
+  role: string;
+  photo: string;
+  active: boolean;
+};
+
+export type Meeting = {
+  id: string;
+  date: string;
+  title: string;
+  status: string;
+  attendees: string;
+  notesBy: string;
+  prayer: string;
+  wins: string;
+  lookahead: string;
+  care: string;
+  notes: string;
+};
+
+export type ActionItem = {
+  id: string;
+  action: string;
+  owner: string;
+  due: string;
+  status: string;
+  meetingId: string;
+  update: string;
+  created: string;
+  completedOn: string;
+};
+
+export type ChecklistItem = {
+  id: string;
+  meetingId: string;
+  order: string;
+  area: string;
+  owner: string;
+  covered: string;
+  ready: boolean;
+  notes: string;
+};
+
+export type ChecklistTemplateRow = {
+  order: string;
+  area: string;
+  owner: string;
+  covered: string;
+};
+
+export type MinistryUpdate = {
+  id: string;
+  meetingId: string;
+  ministry: string;
+  lead: string;
+  update: string;
+  comingUp: string;
+  need: string;
+  submittedBy: string;
+  submittedOn: string;
+};
+
+export type Ministry = {
+  ministry: string;
+  lead: string;
+  order: string;
+};
+
+export type Announcement = {
+  id: string;
+  date: string;
+  event: string;
+  kind: string;
+  owner: string;
+  announcedWhere: string;
+  details: string;
+  link: string;
+  audience: string;
+};
+
+export type OpenIssue = {
+  id: string;
+  issue: string;
+  owner: string;
+  nextStep: string;
+  due: string;
+  status: string;
+  created: string;
+};
+
+export type DeskRequest = {
+  id: string;
+  title: string;
+  requestedBy: string;
+  neededBy: string;
+  details: string;
+  needed: string;
+  link: string;
+  status: string;
+  assignedTo: string;
+  draftLink: string;
+  created: string;
+};
+
+export type PinnedDocument = {
+  id: string;
+  title: string;
+  group: string;
+  link: string;
+  notes: string;
+};
+
+export type QuickLink = {
+  id: string;
+  name: string;
+  url: string;
+  icon: string;
+  order: string;
+};
+
+export type FolderLink = {
+  id: string;
+  name: string;
+  url: string;
+  icon: string;
+  order: string;
+};
+
+export type WorkflowCard = {
+  id: string;
+  workflow: string;
+  step: string;
+  forPerson: string;
+  assignee: string;
+  assigneeEmail: string;
+  overdue: string;
+  movedToStep: string;
+  link: string;
+  firstSeen: string;
+  lastSynced: string;
+  personId: string;
+  workflowId: string;
+  assigneeId: string;
+};
+
+export type CardAction = {
+  id: string;
+  cardId: string;
+  action: string;
+  note: string;
+  snoozeDays: string;
+  newAssignee: string;
+  requestedBy: string;
+  requestedAt: string;
+  status: string;
+  result: string;
+  doneAt: string;
+};
+
+export type HubData = {
+  staff: StaffMember[];
+  meetings: Meeting[];
+  actionItems: ActionItem[];
+  checklist: ChecklistItem[];
+  checklistTemplate: ChecklistTemplateRow[];
+  ministryUpdates: MinistryUpdate[];
+  ministries: Ministry[];
+  announcements: Announcement[];
+  openIssues: OpenIssue[];
+  requests: DeskRequest[];
+  documents: PinnedDocument[];
+  quickLinks: QuickLink[];
+  folders: FolderLink[];
+  workflowCards: WorkflowCard[];
+  cardActions: CardAction[];
+};
+
+export interface HubStore {
+  listStaff(): Promise<StaffMember[]>;
+  listMeetings(): Promise<Meeting[]>;
+  getMeeting(id: string): Promise<Meeting | null>;
+  createMeeting(meeting: Meeting): Promise<void>;
+  updateMeeting(id: string, changes: Partial<Meeting>): Promise<void>;
+  listActionItems(): Promise<ActionItem[]>;
+  getActionItem(id: string): Promise<ActionItem | null>;
+  createActionItem(item: ActionItem): Promise<void>;
+  updateActionItem(id: string, changes: Partial<ActionItem>): Promise<void>;
+  listChecklist(): Promise<ChecklistItem[]>;
+  getChecklistItem(id: string): Promise<ChecklistItem | null>;
+  createChecklistItems(items: ChecklistItem[]): Promise<void>;
+  updateChecklistItem(id: string, changes: Partial<ChecklistItem>): Promise<void>;
+  listChecklistTemplate(): Promise<ChecklistTemplateRow[]>;
+  listMinistryUpdates(): Promise<MinistryUpdate[]>;
+  createMinistryUpdate(update: MinistryUpdate): Promise<void>;
+  updateMinistryUpdate(id: string, changes: Partial<MinistryUpdate>): Promise<void>;
+  listMinistries(): Promise<Ministry[]>;
+  listAnnouncements(): Promise<Announcement[]>;
+  createAnnouncement(row: Announcement): Promise<void>;
+  updateAnnouncement(id: string, changes: Partial<Announcement>): Promise<void>;
+  listOpenIssues(): Promise<OpenIssue[]>;
+  createOpenIssue(row: OpenIssue): Promise<void>;
+  updateOpenIssue(id: string, changes: Partial<OpenIssue>): Promise<void>;
+  listRequests(): Promise<DeskRequest[]>;
+  getRequest(id: string): Promise<DeskRequest | null>;
+  createRequest(row: DeskRequest): Promise<void>;
+  updateRequest(id: string, changes: Partial<DeskRequest>): Promise<void>;
+  listDocuments(): Promise<PinnedDocument[]>;
+  createDocument(row: PinnedDocument): Promise<void>;
+  updateDocument(id: string, changes: Partial<PinnedDocument>): Promise<void>;
+  listQuickLinks(): Promise<QuickLink[]>;
+  createQuickLink(row: QuickLink): Promise<void>;
+  updateQuickLink(id: string, changes: Partial<QuickLink>): Promise<void>;
+  listFolders(): Promise<FolderLink[]>;
+  createFolder(row: FolderLink): Promise<void>;
+  updateFolder(id: string, changes: Partial<FolderLink>): Promise<void>;
+  listWorkflowCards(): Promise<WorkflowCard[]>;
+  listCardActions(): Promise<CardAction[]>;
+}

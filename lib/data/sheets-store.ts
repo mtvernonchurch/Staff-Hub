@@ -1,0 +1,243 @@
+import type {
+  ActionItem,
+  Announcement,
+  ChecklistItem,
+  DeskRequest,
+  FolderLink,
+  HubStore,
+  Meeting,
+  MinistryUpdate,
+  OpenIssue,
+  PinnedDocument,
+  QuickLink,
+} from "@/lib/data/types";
+import { HubError } from "@/lib/hub-error";
+import type { SheetsApi } from "@/lib/sheets/api";
+import { assertColumns, assertWritable, findDataRow, gridToRecords, headersOf, planCellUpdates, recordToAppendRow } from "@/lib/sheets/codec";
+import {
+  actionCells,
+  announcementCells,
+  checklistCells,
+  documentCells,
+  folderCells,
+  issueCells,
+  meetingCells,
+  ministryUpdateCells,
+  quickLinkCells,
+  requestCells,
+  toActionItem,
+  toAnnouncement,
+  toCardAction,
+  toChecklist,
+  toDocument,
+  toFolder,
+  toIssue,
+  toMeeting,
+  toMinistry,
+  toMinistryUpdate,
+  toQuickLink,
+  toRequest,
+  toStaff,
+  toTemplate,
+  toWorkflowCard,
+} from "@/lib/sheets/mappers";
+import { COLUMNS } from "@/lib/sheets/schema";
+
+/**
+ * Reads a tab, then writes only the cells that changed (or appends a new row).
+ * The full tab is never rewritten. Workflow Cards, Card Actions, Staff,
+ * Ministries, and Checklist Template have no write path.
+ */
+export class SheetsStore implements HubStore {
+  private cache = new Map<string, string[][]>();
+
+  constructor(private api: SheetsApi) {}
+
+  private async grid(tab: string): Promise<string[][]> {
+    const hit = this.cache.get(tab);
+    if (hit) return hit;
+    const value = await this.api.get(tab);
+    this.cache.set(tab, value);
+    return value;
+  }
+
+  private async records(tab: string, required: readonly string[]) {
+    const grid = await this.grid(tab);
+    const headers = headersOf(grid);
+    if (headers.every((header) => !header)) {
+      throw new HubError(`${tab} has no header row. The hub left it unchanged.`);
+    }
+    assertColumns(headers, required, tab);
+    return gridToRecords(grid);
+  }
+
+  private async append(tab: string, required: readonly string[], record: Record<string, string>) {
+    assertWritable(tab);
+    const grid = await this.grid(tab);
+    const headers = headersOf(grid);
+    assertColumns(headers, required, tab);
+    const row = recordToAppendRow(headers, record);
+    await this.api.appendRows(tab, [row]);
+    this.cache.delete(tab);
+  }
+
+  private async appendMany(tab: string, required: readonly string[], records: Record<string, string>[]) {
+    assertWritable(tab);
+    if (records.length === 0) return;
+    const grid = await this.grid(tab);
+    const headers = headersOf(grid);
+    assertColumns(headers, required, tab);
+    await this.api.appendRows(tab, records.map((record) => recordToAppendRow(headers, record)));
+    this.cache.delete(tab);
+  }
+
+  private async patch(tab: string, idColumn: string, id: string, changes: Record<string, string>) {
+    assertWritable(tab);
+    const keys = Object.keys(changes);
+    if (keys.length === 0) return;
+    const grid = await this.grid(tab);
+    const headers = headersOf(grid);
+    const rowNumber = findDataRow(grid, idColumn, id);
+    const updates = planCellUpdates(tab, headers, rowNumber, changes);
+    await this.api.updateCells(updates);
+    this.cache.delete(tab);
+  }
+
+  async listStaff() {
+    return (await this.records("Staff", COLUMNS.staff)).map(toStaff).filter((row) => row !== null);
+  }
+  async listMeetings() {
+    return (await this.records("Meetings", COLUMNS.meetings)).map(toMeeting).filter((row) => row !== null);
+  }
+  async getMeeting(id: string) {
+    return (await this.listMeetings()).find((row) => row.id === id) ?? null;
+  }
+  async createMeeting(meeting: Meeting) {
+    await this.append("Meetings", COLUMNS.meetings, meetingCells(meeting));
+  }
+  async updateMeeting(id: string, changes: Partial<Meeting>) {
+    const cells = meetingCells(changes);
+    delete cells["Meeting ID"];
+    await this.patch("Meetings", "Meeting ID", id, cells);
+  }
+  async listActionItems() {
+    return (await this.records("Action Items", COLUMNS.actionItems)).map(toActionItem).filter((row) => row !== null);
+  }
+  async getActionItem(id: string) {
+    return (await this.listActionItems()).find((row) => row.id === id) ?? null;
+  }
+  async createActionItem(item: ActionItem) {
+    await this.append("Action Items", COLUMNS.actionItems, actionCells(item));
+  }
+  async updateActionItem(id: string, changes: Partial<ActionItem>) {
+    const cells = actionCells(changes);
+    delete cells["Item ID"];
+    await this.patch("Action Items", "Item ID", id, cells);
+  }
+  async listChecklist() {
+    return (await this.records("Sunday Checklist", COLUMNS.checklist)).map(toChecklist).filter((row) => row !== null);
+  }
+  async getChecklistItem(id: string) {
+    return (await this.listChecklist()).find((row) => row.id === id) ?? null;
+  }
+  async createChecklistItems(items: ChecklistItem[]) {
+    await this.appendMany("Sunday Checklist", COLUMNS.checklist, items.map((item) => checklistCells(item)));
+  }
+  async updateChecklistItem(id: string, changes: Partial<ChecklistItem>) {
+    const cells = checklistCells(changes);
+    delete cells["Check ID"];
+    await this.patch("Sunday Checklist", "Check ID", id, cells);
+  }
+  async listChecklistTemplate() {
+    return (await this.records("Checklist Template", COLUMNS.checklistTemplate)).map(toTemplate).filter((row) => row !== null);
+  }
+  async listMinistryUpdates() {
+    return (await this.records("Ministry Updates", COLUMNS.ministryUpdates)).map(toMinistryUpdate).filter((row) => row !== null);
+  }
+  async createMinistryUpdate(update: MinistryUpdate) {
+    await this.append("Ministry Updates", COLUMNS.ministryUpdates, ministryUpdateCells(update));
+  }
+  async updateMinistryUpdate(id: string, changes: Partial<MinistryUpdate>) {
+    const cells = ministryUpdateCells(changes);
+    delete cells["Update ID"];
+    await this.patch("Ministry Updates", "Update ID", id, cells);
+  }
+  async listMinistries() {
+    return (await this.records("Ministries", COLUMNS.ministries)).map(toMinistry).filter((row) => row !== null);
+  }
+  async listAnnouncements() {
+    return (await this.records("Announcements", COLUMNS.announcements)).map(toAnnouncement).filter((row) => row !== null);
+  }
+  async createAnnouncement(row: Announcement) {
+    await this.append("Announcements", COLUMNS.announcements, announcementCells(row));
+  }
+  async updateAnnouncement(id: string, changes: Partial<Announcement>) {
+    const cells = announcementCells(changes);
+    delete cells["Announcement ID"];
+    await this.patch("Announcements", "Announcement ID", id, cells);
+  }
+  async listOpenIssues() {
+    return (await this.records("Open Issues", COLUMNS.openIssues)).map(toIssue).filter((row) => row !== null);
+  }
+  async createOpenIssue(row: OpenIssue) {
+    await this.append("Open Issues", COLUMNS.openIssues, issueCells(row));
+  }
+  async updateOpenIssue(id: string, changes: Partial<OpenIssue>) {
+    const cells = issueCells(changes);
+    delete cells["Issue ID"];
+    await this.patch("Open Issues", "Issue ID", id, cells);
+  }
+  async listRequests() {
+    return (await this.records("Requests", COLUMNS.requests)).map(toRequest).filter((row) => row !== null);
+  }
+  async getRequest(id: string) {
+    return (await this.listRequests()).find((row) => row.id === id) ?? null;
+  }
+  async createRequest(row: DeskRequest) {
+    await this.append("Requests", COLUMNS.requests, requestCells(row));
+  }
+  async updateRequest(id: string, changes: Partial<DeskRequest>) {
+    const cells = requestCells(changes);
+    delete cells["Request ID"];
+    await this.patch("Requests", "Request ID", id, cells);
+  }
+  async listDocuments() {
+    return (await this.records("Documents", COLUMNS.documents)).map(toDocument).filter((row) => row !== null);
+  }
+  async createDocument(row: PinnedDocument) {
+    await this.append("Documents", COLUMNS.documents, documentCells(row));
+  }
+  async updateDocument(id: string, changes: Partial<PinnedDocument>) {
+    const cells = documentCells(changes);
+    delete cells["Doc ID"];
+    await this.patch("Documents", "Doc ID", id, cells);
+  }
+  async listQuickLinks() {
+    return (await this.records("Quick Links", COLUMNS.quickLinks)).map(toQuickLink).filter((row) => row !== null);
+  }
+  async createQuickLink(row: QuickLink) {
+    await this.append("Quick Links", COLUMNS.quickLinks, quickLinkCells(row));
+  }
+  async updateQuickLink(id: string, changes: Partial<QuickLink>) {
+    const cells = quickLinkCells(changes);
+    delete cells["Link ID"];
+    await this.patch("Quick Links", "Link ID", id, cells);
+  }
+  async listFolders() {
+    return (await this.records("Folders", COLUMNS.folders)).map(toFolder).filter((row) => row !== null);
+  }
+  async createFolder(row: FolderLink) {
+    await this.append("Folders", COLUMNS.folders, folderCells(row));
+  }
+  async updateFolder(id: string, changes: Partial<FolderLink>) {
+    const cells = folderCells(changes);
+    delete cells["Folder ID"];
+    await this.patch("Folders", "Folder ID", id, cells);
+  }
+  async listWorkflowCards() {
+    return (await this.records("Workflow Cards", COLUMNS.workflowCards)).map(toWorkflowCard).filter((row) => row !== null);
+  }
+  async listCardActions() {
+    return (await this.records("Card Actions", COLUMNS.cardActions)).map(toCardAction).filter((row) => row !== null);
+  }
+}

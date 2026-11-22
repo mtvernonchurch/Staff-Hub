@@ -1,0 +1,15 @@
+node_modules
+.next
+out
+dist
+*.tsbuildinfo
+coverage
+.DS_Store
+*.log
+.env
+.env.local
+.env.*.local
+credentials.json
+*-service-account*.json
+service-account*.json
+.vercel
