@@ -318,6 +318,21 @@ export function createSeed(now = new Date()): HubData {
       { id: "work_dana", date: formatUsDate(today), staff: "Dana Ruiz", place: "Out", note: "Conference." },
       { id: "work_blake_old", date: formatUsDate(addUtcDays(today, -1)), staff: "Blake Nguyen", place: "In office", note: "Yesterday only." },
     ],
+    calendarEvents: [
+      { id: "cal_sunday", date: formatUsDate(today), time: "9:00 AM", event: "Sunday gathering", ministry: "Worship", location: "Worship room", owner: "Ellis Park" },
+      { id: "cal_thanks", date: formatUsDate(addUtcDays(today, 4)), time: "6:00 PM", event: "Thanksgiving Eve service", ministry: "Worship", location: "Worship room", owner: "Avery Quinn" },
+      { id: "cal_students", date: formatUsDate(addUtcDays(today, 7)), time: "6:30 PM", event: "Student testimony night", ministry: "Students", location: "Student room", owner: "Blake Nguyen" },
+      { id: "cal_advent", date: formatUsDate(addUtcDays(today, 14)), time: "9:00 AM", event: "Advent Sunday", ministry: "Worship", location: "Worship room", owner: "Ellis Park" },
+      { id: "cal_kids", date: formatUsDate(addUtcDays(today, 21)), time: "4:00 PM", event: "Kids Christmas rehearsal", ministry: "Kids", location: "Kids hallway", owner: "Casey Brooks" },
+      { id: "cal_choir", date: formatUsDate(addUtcDays(today, 26)), time: "7:00 PM", event: "Choir night", ministry: "Worship", location: "Choir room", owner: "Ellis Park" },
+    ],
+    calendarChecks: [
+      { id: "chk_sunday", eventId: "cal_sunday", promotedEmail: true, promotedSocials: true, promotedPlatform: true, volunteersSet: true, graphicsRequested: true, notes: "" },
+      { id: "chk_thanks", eventId: "cal_thanks", promotedEmail: true, promotedSocials: false, promotedPlatform: false, volunteersSet: false, graphicsRequested: false, notes: "No childcare. Invite neighbors." },
+      { id: "chk_advent", eventId: "cal_advent", promotedEmail: false, promotedSocials: true, promotedPlatform: true, volunteersSet: false, graphicsRequested: true, notes: "" },
+      { id: "chk_kids", eventId: "cal_kids", promotedEmail: false, promotedSocials: false, promotedPlatform: false, volunteersSet: false, graphicsRequested: false, notes: "Dress rehearsal date is still loose." },
+      { id: "chk_choir", eventId: "cal_choir", promotedEmail: true, promotedSocials: false, promotedPlatform: false, volunteersSet: true, graphicsRequested: false, notes: "" },
+    ],
     announcements: [
       {
         id: "ann_last",
@@ -331,6 +346,7 @@ export function createSeed(now = new Date()): HubData {
         audience: "Church",
         meetingId: "mtg_last",
         ministry: "Guest Experience",
+        channels: "",
       },
       {
         id: "ann_thanks",
@@ -344,6 +360,7 @@ export function createSeed(now = new Date()): HubData {
         audience: "Church",
         meetingId: "mtg_monday",
         ministry: "Worship",
+        channels: "Email, Socials, Platform",
       },
       {
         id: "ann_office",
@@ -357,6 +374,7 @@ export function createSeed(now = new Date()): HubData {
         audience: "Staff",
         meetingId: "mtg_monday",
         ministry: "",
+        channels: "Email",
       },
     ],
     openIssues: [

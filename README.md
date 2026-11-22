@@ -50,8 +50,8 @@ If an earlier import is stuck, open the project → **Settings** → **Build and
 | Page | What staff do there |
 | --- | --- |
 | Home | A pinned note for everyone sits above a welcome by first name. Then only your open items, care notes, requests, and where you are working today. Shared announcements, who's out, and who's in sit below. Admins can switch to a team overview |
-| This week | Announcements, action items, prayer, celebrations, and notes from the latest staff meeting, plus earlier meetings |
-| Meeting mode | Admins only. Live entry during Monday's 1:00 PM staff meeting |
+| This week | Announcements grouped by email, socials, and platform, the next four weeks of church events, plus prayer, care notes, action items, and earlier meetings |
+| Meeting mode | Admins only. Live entry during Monday's 1:00 PM staff meeting, including announcement channels and the 4-week calendar check |
 | Action items | The one shared list. Filter mine or everyone's. Add, update, and mark done |
 | Meetings | Prayer, wins, the week ahead, ministry updates, discussion and decisions, and the items from that meeting |
 | Sunday checklist | The areas copied from the checklist template for a meeting |

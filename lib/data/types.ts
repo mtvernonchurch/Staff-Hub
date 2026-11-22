@@ -142,6 +142,28 @@ export type Announcement = {
   audience: string;
   meetingId: string;
   ministry: string;
+  channels: string;
+};
+
+export type CalendarEvent = {
+  id: string;
+  date: string;
+  time: string;
+  event: string;
+  ministry: string;
+  location: string;
+  owner: string;
+};
+
+export type CalendarCheck = {
+  id: string;
+  eventId: string;
+  promotedEmail: boolean;
+  promotedSocials: boolean;
+  promotedPlatform: boolean;
+  volunteersSet: boolean;
+  graphicsRequested: boolean;
+  notes: string;
 };
 
 export type CareNote = {
@@ -250,6 +272,8 @@ export type HubData = {
   graphicsRequests: GraphicsRequest[];
   timeAway: TimeAway[];
   workStatuses: WorkStatus[];
+  calendarEvents: CalendarEvent[];
+  calendarChecks: CalendarCheck[];
   careNotes: CareNote[];
   openIssues: OpenIssue[];
   requests: DeskRequest[];
@@ -301,6 +325,12 @@ export interface HubStore {
   listWorkStatuses(): Promise<WorkStatus[]>;
   createWorkStatus(row: WorkStatus): Promise<void>;
   updateWorkStatus(id: string, changes: Partial<WorkStatus>): Promise<void>;
+  listCalendarEvents(): Promise<CalendarEvent[]>;
+  createCalendarEvent(row: CalendarEvent): Promise<void>;
+  updateCalendarEvent(id: string, changes: Partial<CalendarEvent>): Promise<void>;
+  listCalendarChecks(): Promise<CalendarCheck[]>;
+  createCalendarCheck(row: CalendarCheck): Promise<void>;
+  updateCalendarCheck(id: string, changes: Partial<CalendarCheck>): Promise<void>;
   listCareNotes(): Promise<CareNote[]>;
   createCareNote(row: CareNote): Promise<void>;
   updateCareNote(id: string, changes: Partial<CareNote>): Promise<void>;

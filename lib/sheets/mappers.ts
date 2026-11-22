@@ -1,6 +1,8 @@
 import type {
   ActionItem,
   Announcement,
+  CalendarCheck,
+  CalendarEvent,
   CardAction,
   CareNote,
   ChecklistItem,
@@ -192,6 +194,7 @@ export function announcementCells(row: Partial<Announcement>): Record<string, st
   if (row.audience !== undefined) cells.Audience = row.audience;
   if (row.meetingId !== undefined) cells.Meeting = row.meetingId;
   if (row.ministry !== undefined) cells.Ministry = row.ministry;
+  if (row.channels !== undefined) cells.Channels = row.channels;
   return cells;
 }
 
@@ -210,6 +213,7 @@ export function toAnnouncement(record: Record<string, string>): Announcement | n
     audience: cell(record, "Audience"),
     meetingId: cell(record, "Meeting"),
     ministry: cell(record, "Ministry"),
+    channels: cell(record, "Channels"),
   };
 }
 
@@ -356,6 +360,60 @@ export function toWorkStatus(record: Record<string, string>): WorkStatus | null 
     staff: cell(record, "Staff"),
     place: cell(record, "Place"),
     note: cell(record, "Note"),
+  };
+}
+
+export function calendarEventCells(row: Partial<CalendarEvent>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Event ID"] = row.id;
+  if (row.date !== undefined) cells.Date = row.date;
+  if (row.time !== undefined) cells.Time = row.time;
+  if (row.event !== undefined) cells.Event = row.event;
+  if (row.ministry !== undefined) cells.Ministry = row.ministry;
+  if (row.location !== undefined) cells.Location = row.location;
+  if (row.owner !== undefined) cells.Owner = row.owner;
+  return cells;
+}
+
+export function toCalendarEvent(record: Record<string, string>): CalendarEvent | null {
+  const id = cell(record, "Event ID");
+  if (!id) return null;
+  return {
+    id,
+    date: cell(record, "Date"),
+    time: cell(record, "Time"),
+    event: cell(record, "Event"),
+    ministry: cell(record, "Ministry"),
+    location: cell(record, "Location"),
+    owner: cell(record, "Owner"),
+  };
+}
+
+export function calendarCheckCells(row: Partial<CalendarCheck>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Check ID"] = row.id;
+  if (row.eventId !== undefined) cells["Event ID"] = row.eventId;
+  if (row.promotedEmail !== undefined) cells.Email = formatBool(row.promotedEmail);
+  if (row.promotedSocials !== undefined) cells.Socials = formatBool(row.promotedSocials);
+  if (row.promotedPlatform !== undefined) cells.Platform = formatBool(row.promotedPlatform);
+  if (row.volunteersSet !== undefined) cells.Volunteers = formatBool(row.volunteersSet);
+  if (row.graphicsRequested !== undefined) cells.Graphics = formatBool(row.graphicsRequested);
+  if (row.notes !== undefined) cells.Notes = row.notes;
+  return cells;
+}
+
+export function toCalendarCheck(record: Record<string, string>): CalendarCheck | null {
+  const id = cell(record, "Check ID");
+  if (!id) return null;
+  return {
+    id,
+    eventId: cell(record, "Event ID"),
+    promotedEmail: parseBool(cell(record, "Email")),
+    promotedSocials: parseBool(cell(record, "Socials")),
+    promotedPlatform: parseBool(cell(record, "Platform")),
+    volunteersSet: parseBool(cell(record, "Volunteers")),
+    graphicsRequested: parseBool(cell(record, "Graphics")),
+    notes: cell(record, "Notes"),
   };
 }
 

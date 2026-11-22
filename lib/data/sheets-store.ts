@@ -1,6 +1,8 @@
 import type {
   ActionItem,
   Announcement,
+  CalendarCheck,
+  CalendarEvent,
   CareNote,
   ChecklistItem,
   DeskRequest,
@@ -23,6 +25,8 @@ import { assertColumns, assertWritable, columnLetter, findDataRow, gridToRecords
 import {
   actionCells,
   announcementCells,
+  calendarCheckCells,
+  calendarEventCells,
   careNoteCells,
   checklistCells,
   documentCells,
@@ -37,6 +41,8 @@ import {
   staffPinCells,
   toActionItem,
   toAnnouncement,
+  toCalendarCheck,
+  toCalendarEvent,
   toCareNote,
   toCardAction,
   toChecklist,
@@ -220,12 +226,12 @@ export class SheetsStore implements HubStore {
     return (await this.records("Announcements", COLUMNS.announcements)).map(toAnnouncement).filter((row) => row !== null);
   }
   async createAnnouncement(row: Announcement) {
-    await this.ensureHeaders("Announcements", ["Meeting", "Ministry"]);
+    await this.ensureHeaders("Announcements", ["Meeting", "Ministry", "Channels"]);
     await this.append("Announcements", COLUMNS.announcements, announcementCells(row));
   }
   async updateAnnouncement(id: string, changes: Partial<Announcement>) {
-    if (changes.meetingId !== undefined || changes.ministry !== undefined) {
-      await this.ensureHeaders("Announcements", ["Meeting", "Ministry"]);
+    if (changes.meetingId !== undefined || changes.ministry !== undefined || changes.channels !== undefined) {
+      await this.ensureHeaders("Announcements", ["Meeting", "Ministry", "Channels"]);
     }
     const cells = announcementCells(changes);
     delete cells["Announcement ID"];
@@ -339,6 +345,40 @@ export class SheetsStore implements HubStore {
     const cells = workStatusCells(changes);
     delete cells["Status ID"];
     await this.patch("Work Status", "Status ID", id, cells);
+  }
+  async listCalendarEvents() {
+    await this.api.ensureTab("Calendar", [...COLUMNS.calendarEvents]);
+    this.cache.delete("Calendar");
+    return (await this.records("Calendar", COLUMNS.calendarEvents)).map(toCalendarEvent).filter((row) => row !== null);
+  }
+  async createCalendarEvent(row: CalendarEvent) {
+    await this.api.ensureTab("Calendar", [...COLUMNS.calendarEvents]);
+    this.cache.delete("Calendar");
+    await this.append("Calendar", COLUMNS.calendarEvents, calendarEventCells(row));
+  }
+  async updateCalendarEvent(id: string, changes: Partial<CalendarEvent>) {
+    await this.api.ensureTab("Calendar", [...COLUMNS.calendarEvents]);
+    this.cache.delete("Calendar");
+    const cells = calendarEventCells(changes);
+    delete cells["Event ID"];
+    await this.patch("Calendar", "Event ID", id, cells);
+  }
+  async listCalendarChecks() {
+    await this.api.ensureTab("Calendar Checks", [...COLUMNS.calendarChecks]);
+    this.cache.delete("Calendar Checks");
+    return (await this.records("Calendar Checks", COLUMNS.calendarChecks)).map(toCalendarCheck).filter((row) => row !== null);
+  }
+  async createCalendarCheck(row: CalendarCheck) {
+    await this.api.ensureTab("Calendar Checks", [...COLUMNS.calendarChecks]);
+    this.cache.delete("Calendar Checks");
+    await this.append("Calendar Checks", COLUMNS.calendarChecks, calendarCheckCells(row));
+  }
+  async updateCalendarCheck(id: string, changes: Partial<CalendarCheck>) {
+    await this.api.ensureTab("Calendar Checks", [...COLUMNS.calendarChecks]);
+    this.cache.delete("Calendar Checks");
+    const cells = calendarCheckCells(changes);
+    delete cells["Check ID"];
+    await this.patch("Calendar Checks", "Check ID", id, cells);
   }
   async listCareNotes() {
     await this.api.ensureTab("Care Notes", [...COLUMNS.careNotes]);

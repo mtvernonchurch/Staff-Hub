@@ -6,6 +6,7 @@ import {
   addLiveAnnouncement,
   addLiveCareNote,
   editLiveAction,
+  editLiveAnnouncement,
   editLiveCareNote,
   finishLiveMeeting,
   removeLiveAction,
@@ -13,7 +14,9 @@ import {
   removeLiveCareNote,
   saveMeetingText,
 } from "@/app/(hub)/meeting/live-actions";
-import type { ActionItem, Announcement, CareNote, Meeting, Ministry, StaffMember } from "@/lib/data/types";
+import { CalendarCheckBoard } from "@/components/calendar-check";
+import type { ActionItem, Announcement, CalendarCheck, CalendarEvent, CareNote, Meeting, Ministry, StaffMember } from "@/lib/data/types";
+import { ANNOUNCE_CHANNELS, groupAnnouncements, parseChannels } from "@/lib/domain/channels";
 import { formatFriendly, toInputDate } from "@/lib/domain/dates";
 import { CARE_ACTIONS, careActionLabel } from "@/lib/domain/care";
 
@@ -24,6 +27,9 @@ export function MeetingMode({
   initialCareNotes,
   staff,
   ministries,
+  calendarEvents,
+  calendarChecks,
+  todayLabel,
 }: {
   meeting: Meeting;
   initialItems: ActionItem[];
@@ -31,6 +37,9 @@ export function MeetingMode({
   initialCareNotes: CareNote[];
   staff: StaffMember[];
   ministries: Ministry[];
+  calendarEvents: CalendarEvent[];
+  calendarChecks: CalendarCheck[];
+  todayLabel: string;
 }) {
   const [prayer, setPrayer] = useState(meeting.prayer);
   const [wins, setWins] = useState(meeting.wins);
@@ -39,6 +48,10 @@ export function MeetingMode({
   const [announcements, setAnnouncements] = useState(initialAnnouncements);
   const [careNotes, setCareNotes] = useState(initialCareNotes);
   const [careAction, setCareAction] = useState<string>("Call");
+  const [channels, setChannels] = useState<string[]>(() => {
+    const latest = [...initialAnnouncements].reverse().find((row) => parseChannels(row.channels).length > 0);
+    return latest ? parseChannels(latest.channels) : ["Platform"];
+  });
   const [status, setStatus] = useState(meeting.status);
   const [message, setMessage] = useState("");
   const [saved, setSaved] = useState("");
@@ -82,6 +95,7 @@ export function MeetingMode({
               details: String(form.get("details") ?? ""),
               date: String(form.get("date") ?? ""),
               ministry: String(form.get("ministry") ?? ""),
+              channels,
             });
             if (!result.ok) return remember("", false, result.error);
             setAnnouncements((current) => [result.data, ...current]);
@@ -96,32 +110,98 @@ export function MeetingMode({
           <MinistryField ministries={ministries} />
           <button className="btn btn-primary" type="submit">Add</button>
         </form>
-        {announcements.map((row) => (
-          <article key={row.id} className="item">
-            <div>
-              <h3>{row.event}</h3>
-              <p className="meta">
-                {row.date ? <span>{formatFriendly(row.date)}</span> : null}
-                {row.ministry ? <span>{row.ministry}</span> : null}
-              </p>
-              {row.details ? <p className="note">{row.details}</p> : null}
-            </div>
-            <div className="button-row">
+        <div className="channel-row" role="group" aria-label="Channels">
+          {ANNOUNCE_CHANNELS.map((channel) => {
+            const on = channels.includes(channel);
+            return (
               <button
-                className="btn btn-small"
+                key={channel}
                 type="button"
-                onClick={async () => {
-                  const result = await removeLiveAnnouncement(row.id);
-                  if (!result.ok) return remember("", false, result.error);
-                  setAnnouncements((current) => current.filter((item) => item.id !== row.id));
-                  remember("Announcement removed.", true);
-                }}
+                className={on ? "chip chip-on" : "chip"}
+                aria-pressed={on}
+                onClick={() => setChannels((current) => current.includes(channel) ? current.filter((item) => item !== channel) : [...current, channel])}
               >
-                Remove
+                {channel}
               </button>
-            </div>
-          </article>
-        ))}
+            );
+          })}
+        </div>
+        {groupAnnouncements(announcements, true)
+          .filter((group) => group.channel !== "Unsorted" || group.rows.length > 0)
+          .map((group) => (
+            <section key={group.channel}>
+              <h3>{group.channel} · {group.rows.length}</h3>
+              {group.rows.length === 0 ? <p className="empty">Nothing for {group.channel.toLowerCase()} yet.</p> : group.rows.map((row) => (
+                <article key={`${group.channel}-${row.id}`} className="item">
+                  <div>
+                    <h3>{row.event}</h3>
+                    <p className="meta">
+                      {row.date ? <span>{formatFriendly(row.date)}</span> : null}
+                      {row.ministry ? <span>{row.ministry}</span> : null}
+                    </p>
+                    {row.details ? <p className="note">{row.details}</p> : null}
+                    <div className="channel-row">
+                      {ANNOUNCE_CHANNELS.map((channel) => {
+                        const selected = parseChannels(row.channels);
+                        const on = selected.includes(channel);
+                        return (
+                          <button
+                            key={channel}
+                            type="button"
+                            className={on ? "chip chip-on" : "chip"}
+                            aria-pressed={on}
+                            onClick={async () => {
+                              const next = on ? selected.filter((item) => item !== channel) : [...selected, channel];
+                              const result = await editLiveAnnouncement(row.id, {
+                                event: row.event,
+                                details: row.details,
+                                date: row.date,
+                                ministry: row.ministry,
+                                channels: next.join(", "),
+                              });
+                              if (!result.ok) return remember("", false, result.error);
+                              setAnnouncements((current) => current.map((item) => item.id === row.id ? { ...item, channels: next.join(", ") } : item));
+                              setChannels(next.length ? next : channels);
+                              remember("Channels saved.", true);
+                            }}
+                          >
+                            {channel}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="button-row">
+                    <button
+                      className="btn btn-small"
+                      type="button"
+                      onClick={async () => {
+                        const result = await removeLiveAnnouncement(row.id);
+                        if (!result.ok) return remember("", false, result.error);
+                        setAnnouncements((current) => current.filter((item) => item.id !== row.id));
+                        remember("Announcement removed.", true);
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </section>
+          ))}
+      </section>
+
+      <section className="card">
+        <h2>Next 4 weeks</h2>
+        <CalendarCheckBoard
+          events={calendarEvents}
+          checks={calendarChecks}
+          todayLabel={todayLabel}
+          editable
+          staff={staff}
+          ministries={ministries}
+          onMessage={(label, error) => remember(label, !error, error)}
+        />
       </section>
 
       <section className="card tone-action">

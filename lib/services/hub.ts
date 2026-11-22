@@ -14,6 +14,7 @@ import { isAdmin } from "@/lib/domain/access";
 import { canonicalActionStatus, chicagoToday, formatUsDate, isClosedStatus, toSheetDate, upcomingMonday } from "@/lib/domain/dates";
 import { pickMondayMeeting } from "@/lib/domain/view";
 import { CARE_ACTIONS, careActionLabel, careTaskText } from "@/lib/domain/care";
+import { announcementRecap, formatChannels } from "@/lib/domain/channels";
 import { newId } from "@/lib/domain/ids";
 import { safeHttps } from "@/lib/domain/links";
 import { namesMatch } from "@/lib/domain/people";
@@ -285,6 +286,7 @@ export async function createAnnouncement(
     audience: string;
     meetingId?: string;
     ministry?: string;
+    channels?: string[];
   },
 ) {
   assertActive(deps.actor);
@@ -303,6 +305,7 @@ export async function createAnnouncement(
     audience: input.audience.trim(),
     meetingId: input.meetingId?.trim() ?? "",
     ministry: input.ministry?.trim() ?? "",
+    channels: formatChannels(input.channels ?? []),
   };
   await deps.store.createAnnouncement(row);
   return row;
@@ -324,6 +327,7 @@ export async function updateAnnouncement(deps: Deps, id: string, input: Partial<
   if (input.audience !== undefined) next.audience = input.audience.trim();
   if (input.meetingId !== undefined) next.meetingId = input.meetingId.trim();
   if (input.ministry !== undefined) next.ministry = input.ministry.trim();
+  if (input.channels !== undefined) next.channels = formatChannels(input.channels.split(","));
   await deps.store.updateAnnouncement(id, next);
 }
 
@@ -487,7 +491,7 @@ export async function finishMeeting(deps: Deps, id: string) {
     `${meeting.title} · ${meeting.date}`,
     meeting.prayer ? `Prayer: ${meeting.prayer}` : "",
     meeting.wins ? `Celebrations: ${meeting.wins}` : "",
-    announcements.length ? `Announcements:\n${announcements.map((row) => `- ${row.event}`).join("\n")}` : "",
+    announcementRecap(announcements),
     careNotes.length
       ? `Care notes:\n${careNotes.map((note) => `- ${careActionLabel(note)} for ${note.person}${note.assignee ? ` (${note.assignee})` : ""}${note.done ? " — done" : ""}`).join("\n")}`
       : "",

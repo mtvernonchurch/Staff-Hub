@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { MeetingMode } from "@/components/meeting-mode";
 import { PageHeader } from "@/components/ui";
 import { isAdmin } from "@/lib/domain/access";
-import { formatFriendly } from "@/lib/domain/dates";
+import { sheetCalendarSource } from "@/lib/calendar/source";
+import { chicagoToday, formatFriendly, formatUsDate } from "@/lib/domain/dates";
 import { requireStaff } from "@/lib/session";
 import { ensureMondayMeeting } from "@/lib/services/hub";
 
@@ -12,12 +13,14 @@ export default async function MeetingModePage() {
   const { staff, store } = await requireStaff();
   if (!isAdmin(staff)) redirect("/this-week");
   const meeting = await ensureMondayMeeting({ store, actor: staff });
-  const [items, announcements, careNotes, people, ministries] = await Promise.all([
+  const [items, announcements, careNotes, people, ministries, calendarEvents, calendarChecks] = await Promise.all([
     store.listActionItems(),
     store.listAnnouncements(),
     store.listCareNotes(),
     store.listStaff(),
     store.listMinistries(),
+    sheetCalendarSource(store).listEvents(),
+    store.listCalendarChecks(),
   ]);
   const meetingNotes = careNotes.filter((note) => note.meetingId === meeting.id);
   const linked = new Set(meetingNotes.map((note) => note.actionItemId).filter(Boolean));
@@ -36,6 +39,9 @@ export default async function MeetingModePage() {
         initialCareNotes={meetingNotes}
         staff={people}
         ministries={ministries}
+        calendarEvents={calendarEvents}
+        calendarChecks={calendarChecks}
+        todayLabel={formatUsDate(chicagoToday())}
       />
     </>
   );

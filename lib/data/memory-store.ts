@@ -157,6 +157,24 @@ export class MemoryStore implements HubStore {
   async updateWorkStatus(id: string, changes: Partial<HubData["workStatuses"][number]>) {
     merge(this.data.workStatuses, id, changes, "work status");
   }
+  async listCalendarEvents() {
+    return clone(this.data.calendarEvents);
+  }
+  async createCalendarEvent(row: HubData["calendarEvents"][number]) {
+    this.data.calendarEvents.push(clone(row));
+  }
+  async updateCalendarEvent(id: string, changes: Partial<HubData["calendarEvents"][number]>) {
+    merge(this.data.calendarEvents, id, changes, "calendar event");
+  }
+  async listCalendarChecks() {
+    return clone(this.data.calendarChecks);
+  }
+  async createCalendarCheck(row: HubData["calendarChecks"][number]) {
+    this.data.calendarChecks.push(clone(row));
+  }
+  async updateCalendarCheck(id: string, changes: Partial<HubData["calendarChecks"][number]>) {
+    merge(this.data.calendarChecks, id, changes, "calendar check");
+  }
   async listCareNotes() {
     return clone(this.data.careNotes);
   }

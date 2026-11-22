@@ -155,6 +155,7 @@ export async function createAnnouncementAction(formData: FormData) {
         details: field(formData, "details"),
         link: field(formData, "link"),
         audience: field(formData, "audience"),
+        channels: formData.getAll("channels").map((value) => String(value)),
       },
     );
   });
@@ -172,6 +173,7 @@ export async function editAnnouncementAction(formData: FormData) {
       details: field(formData, "details"),
       link: field(formData, "link"),
       audience: field(formData, "audience"),
+      channels: formData.getAll("channels").map((value) => String(value)).join(", "),
     });
   });
 }

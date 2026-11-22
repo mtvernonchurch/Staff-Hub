@@ -1,5 +1,7 @@
 import Link from "next/link";
-import type { ActionItem, Announcement, CareNote, Meeting } from "@/lib/data/types";
+import { AnnouncementGroups } from "@/components/announcement-groups";
+import { CalendarCheckBoard } from "@/components/calendar-check";
+import type { ActionItem, Announcement, CalendarCheck, CalendarEvent, CareNote, Meeting, Ministry, StaffMember } from "@/lib/data/types";
 import { formatFriendly, isClosedStatus } from "@/lib/domain/dates";
 import { careActionLabel } from "@/lib/domain/care";
 
@@ -9,12 +11,20 @@ export function ThisWeekView({
   items,
   careNotes,
   archive,
+  calendar,
 }: {
   meeting: Meeting | null;
   announcements: Announcement[];
   items: ActionItem[];
   careNotes: CareNote[];
   archive: Meeting[];
+  calendar?: {
+    events: CalendarEvent[];
+    checks: CalendarCheck[];
+    todayLabel: string;
+    staff: StaffMember[];
+    ministries: Ministry[];
+  };
 }) {
   if (!meeting) {
     return <p className="empty">No staff meeting is posted yet.</p>;
@@ -41,20 +51,21 @@ export function ThisWeekView({
       </section>
       <section className="card tone-news">
         <h2>Announcements</h2>
-        {announcements.length === 0 ? <p className="empty">None from this meeting.</p> : announcements.map((row) => (
-          <article key={row.id} className="item">
-            <div>
-              <h3>{row.event}</h3>
-              <p className="meta">
-                {row.date ? <span>{formatFriendly(row.date)}</span> : null}
-                {row.ministry ? <span>{row.ministry}</span> : null}
-                {row.owner ? <span>{row.owner}</span> : null}
-              </p>
-              {row.details ? <p className="note">{row.details}</p> : null}
-            </div>
-          </article>
-        ))}
+        <AnnouncementGroups rows={announcements} />
       </section>
+      {calendar ? (
+        <section className="card">
+          <h2>Next 4 weeks</h2>
+          <CalendarCheckBoard
+            events={calendar.events}
+            checks={calendar.checks}
+            todayLabel={calendar.todayLabel}
+            editable={false}
+            staff={calendar.staff}
+            ministries={calendar.ministries}
+          />
+        </section>
+      ) : null}
       <section className="card">
         <h2>Care notes</h2>
         {careNotes.length === 0 ? <p className="empty">None from this meeting.</p> : careNotes.map((note) => (

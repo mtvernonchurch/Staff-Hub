@@ -1,6 +1,7 @@
 import { createAnnouncementAction, editAnnouncementAction } from "@/app/(hub)/actions";
 import { Flash, OutLink, PageHeader } from "@/components/ui";
 import { isAdmin } from "@/lib/domain/access";
+import { ANNOUNCE_CHANNELS, parseChannels } from "@/lib/domain/channels";
 import { chicagoToday, formatFriendly, formatUsDate, toInputDate } from "@/lib/domain/dates";
 import { sortAnnouncements } from "@/lib/domain/view";
 import { requireStaff } from "@/lib/session";
@@ -33,6 +34,7 @@ export default async function AnnouncementsPage({
               <p className="meta">
                 <span>{formatFriendly(row.date)}</span>
                 {row.kind ? <span>{row.kind}</span> : null}
+                {parseChannels(row.channels).length > 0 ? <span>{parseChannels(row.channels).join(", ")}</span> : <span>Unsorted</span>}
                 {row.audience && row.audience.trim().toLowerCase() !== row.kind.trim().toLowerCase() ? <span>{row.audience}</span> : null}
                 {row.announcedWhere ? <span>{row.announcedWhere}</span> : null}
                 <span>{row.owner}</span>
@@ -66,7 +68,7 @@ function AnnouncementFields({
 }: {
   action: (formData: FormData) => Promise<void>;
   id?: string;
-  defaults: Partial<{ date: string; event: string; kind: string; announcedWhere: string; details: string; link: string; audience: string }>;
+  defaults: Partial<{ date: string; event: string; kind: string; announcedWhere: string; details: string; link: string; audience: string; channels: string }>;
 }) {
   return (
     <form action={action} className="stack-form">
@@ -79,6 +81,17 @@ function AnnouncementFields({
       <label className="field">Audience<input name="audience" defaultValue={defaults.audience} /></label>
       <label className="field">Details<textarea name="details" defaultValue={defaults.details} /></label>
       <label className="field">Link <span>optional, https</span><input name="link" defaultValue={defaults.link} placeholder="https://" /></label>
+      <fieldset className="field">
+        <legend>Channels</legend>
+        <div className="checks">
+          {ANNOUNCE_CHANNELS.map((channel) => (
+            <label key={channel}>
+              <input type="checkbox" name="channels" value={channel} defaultChecked={parseChannels(defaults.channels ?? "").includes(channel)} />
+              {channel}
+            </label>
+          ))}
+        </div>
+      </fieldset>
       <button className="btn btn-primary" type="submit">{id ? "Save" : "Post"}</button>
     </form>
   );
