@@ -70,6 +70,66 @@ export type Ministry = {
   order: string;
 };
 
+export type StaffPin = {
+  id: string;
+  title: string;
+  message: string;
+  link: string;
+  priority: string;
+  showUntil: string;
+  author: string;
+  posted: string;
+};
+
+export type StaffPinAck = {
+  id: string;
+  pinId: string;
+  staff: string;
+  acknowledgedOn: string;
+};
+
+export type HubSetting = {
+  key: string;
+  value: string;
+};
+
+export type GraphicsRequest = {
+  id: string;
+  requestedBy: string;
+  ministry: string;
+  needed: string;
+  platforms: string;
+  event: string;
+  eventDate: string;
+  neededBy: string;
+  description: string;
+  links: string;
+  status: string;
+  assignedTo: string;
+  created: string;
+};
+
+export type TimeAway = {
+  id: string;
+  requestedBy: string;
+  kind: string;
+  start: string;
+  end: string;
+  halfDay: boolean;
+  notes: string;
+  coverage: string;
+  status: string;
+  created: string;
+};
+
+export type WorkStatus = {
+  id: string;
+  date: string;
+  staff: string;
+  place: string;
+  note: string;
+};
+
 export type Announcement = {
   id: string;
   date: string;
@@ -184,6 +244,12 @@ export type HubData = {
   ministryUpdates: MinistryUpdate[];
   ministries: Ministry[];
   announcements: Announcement[];
+  staffPins: StaffPin[];
+  staffPinAcks: StaffPinAck[];
+  settings: HubSetting[];
+  graphicsRequests: GraphicsRequest[];
+  timeAway: TimeAway[];
+  workStatuses: WorkStatus[];
   careNotes: CareNote[];
   openIssues: OpenIssue[];
   requests: DeskRequest[];
@@ -218,6 +284,23 @@ export interface HubStore {
   createAnnouncement(row: Announcement): Promise<void>;
   updateAnnouncement(id: string, changes: Partial<Announcement>): Promise<void>;
   deleteAnnouncement(id: string): Promise<void>;
+  listStaffPins(): Promise<StaffPin[]>;
+  createStaffPin(row: StaffPin): Promise<void>;
+  updateStaffPin(id: string, changes: Partial<StaffPin>): Promise<void>;
+  deleteStaffPin(id: string): Promise<void>;
+  listStaffPinAcks(): Promise<StaffPinAck[]>;
+  createStaffPinAck(row: StaffPinAck): Promise<void>;
+  listSettings(): Promise<HubSetting[]>;
+  setSetting(key: string, value: string): Promise<void>;
+  listGraphicsRequests(): Promise<GraphicsRequest[]>;
+  createGraphicsRequest(row: GraphicsRequest): Promise<void>;
+  updateGraphicsRequest(id: string, changes: Partial<GraphicsRequest>): Promise<void>;
+  listTimeAway(): Promise<TimeAway[]>;
+  createTimeAway(row: TimeAway): Promise<void>;
+  updateTimeAway(id: string, changes: Partial<TimeAway>): Promise<void>;
+  listWorkStatuses(): Promise<WorkStatus[]>;
+  createWorkStatus(row: WorkStatus): Promise<void>;
+  updateWorkStatus(id: string, changes: Partial<WorkStatus>): Promise<void>;
   listCareNotes(): Promise<CareNote[]>;
   createCareNote(row: CareNote): Promise<void>;
   updateCareNote(id: string, changes: Partial<CareNote>): Promise<void>;

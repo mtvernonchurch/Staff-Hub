@@ -154,6 +154,16 @@ button { cursor: pointer; }
 .chip-overdue { background: #f3d2bc; color: var(--clay); }
 .chip-done { background: #d9f0e6; color: var(--mint-deep); }
 .chip-progress { background: #e4eef5; color: var(--navy-2); }
+.pin-board { display: grid; gap: 12px; margin-bottom: 18px; }
+.pin {
+  background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px 16px;
+  box-shadow: inset 4px 0 0 var(--navy);
+}
+.pin-urgent { background: #fff6ef; box-shadow: inset 4px 0 0 var(--clay); }
+.pin-quiet { opacity: 0.72; }
+.pin h2 { font-size: 1.35rem; margin: 6px 0; }
+.place-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.warn { color: var(--clay); font-weight: 650; }
 .item-actions, .button-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .btn, .btn-primary, .btn-ghost {
   min-height: 44px; border-radius: 12px; padding: 8px 14px; border: 1px solid transparent;

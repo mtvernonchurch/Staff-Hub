@@ -7,6 +7,8 @@ import type {
   ChecklistTemplateRow,
   DeskRequest,
   FolderLink,
+  GraphicsRequest,
+  HubSetting,
   Meeting,
   Ministry,
   MinistryUpdate,
@@ -14,7 +16,11 @@ import type {
   PinnedDocument,
   QuickLink,
   StaffMember,
+  StaffPin,
+  StaffPinAck,
+  TimeAway,
   WorkflowCard,
+  WorkStatus,
 } from "@/lib/data/types";
 import { cell, formatBool, parseBool } from "@/lib/sheets/codec";
 
@@ -204,6 +210,152 @@ export function toAnnouncement(record: Record<string, string>): Announcement | n
     audience: cell(record, "Audience"),
     meetingId: cell(record, "Meeting"),
     ministry: cell(record, "Ministry"),
+  };
+}
+
+export function staffPinCells(row: Partial<StaffPin>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Pin ID"] = row.id;
+  if (row.title !== undefined) cells.Title = row.title;
+  if (row.message !== undefined) cells.Message = row.message;
+  if (row.link !== undefined) cells.Link = row.link;
+  if (row.priority !== undefined) cells.Priority = row.priority;
+  if (row.showUntil !== undefined) cells["Show Until"] = row.showUntil;
+  if (row.author !== undefined) cells.Author = row.author;
+  if (row.posted !== undefined) cells.Posted = row.posted;
+  return cells;
+}
+
+export function toStaffPin(record: Record<string, string>): StaffPin | null {
+  const id = cell(record, "Pin ID");
+  if (!id) return null;
+  return {
+    id,
+    title: cell(record, "Title"),
+    message: cell(record, "Message"),
+    link: cell(record, "Link"),
+    priority: cell(record, "Priority") || "Normal",
+    showUntil: cell(record, "Show Until"),
+    author: cell(record, "Author"),
+    posted: cell(record, "Posted"),
+  };
+}
+
+export function staffPinAckCells(row: Partial<StaffPinAck>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Ack ID"] = row.id;
+  if (row.pinId !== undefined) cells["Pin ID"] = row.pinId;
+  if (row.staff !== undefined) cells.Staff = row.staff;
+  if (row.acknowledgedOn !== undefined) cells["Acknowledged On"] = row.acknowledgedOn;
+  return cells;
+}
+
+export function toStaffPinAck(record: Record<string, string>): StaffPinAck | null {
+  const id = cell(record, "Ack ID");
+  if (!id) return null;
+  return {
+    id,
+    pinId: cell(record, "Pin ID"),
+    staff: cell(record, "Staff"),
+    acknowledgedOn: cell(record, "Acknowledged On"),
+  };
+}
+
+export function toSetting(record: Record<string, string>): HubSetting | null {
+  const key = cell(record, "Setting");
+  if (!key) return null;
+  return { key, value: cell(record, "Value") };
+}
+
+export function graphicsCells(row: Partial<GraphicsRequest>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Request ID"] = row.id;
+  if (row.requestedBy !== undefined) cells["Requested By"] = row.requestedBy;
+  if (row.ministry !== undefined) cells.Ministry = row.ministry;
+  if (row.needed !== undefined) cells["What's Needed"] = row.needed;
+  if (row.platforms !== undefined) cells.Platforms = row.platforms;
+  if (row.event !== undefined) cells.Event = row.event;
+  if (row.eventDate !== undefined) cells["Event Date"] = row.eventDate;
+  if (row.neededBy !== undefined) cells["Needed By"] = row.neededBy;
+  if (row.description !== undefined) cells.Description = row.description;
+  if (row.links !== undefined) cells.Links = row.links;
+  if (row.status !== undefined) cells.Status = row.status;
+  if (row.assignedTo !== undefined) cells["Assigned To"] = row.assignedTo;
+  if (row.created !== undefined) cells.Created = row.created;
+  return cells;
+}
+
+export function toGraphicsRequest(record: Record<string, string>): GraphicsRequest | null {
+  const id = cell(record, "Request ID");
+  if (!id) return null;
+  return {
+    id,
+    requestedBy: cell(record, "Requested By"),
+    ministry: cell(record, "Ministry"),
+    needed: cell(record, "What's Needed"),
+    platforms: cell(record, "Platforms"),
+    event: cell(record, "Event"),
+    eventDate: cell(record, "Event Date"),
+    neededBy: cell(record, "Needed By"),
+    description: cell(record, "Description"),
+    links: cell(record, "Links"),
+    status: cell(record, "Status") || "New",
+    assignedTo: cell(record, "Assigned To"),
+    created: cell(record, "Created"),
+  };
+}
+
+export function timeAwayCells(row: Partial<TimeAway>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Away ID"] = row.id;
+  if (row.requestedBy !== undefined) cells["Requested By"] = row.requestedBy;
+  if (row.kind !== undefined) cells.Type = row.kind;
+  if (row.start !== undefined) cells.Start = row.start;
+  if (row.end !== undefined) cells.End = row.end;
+  if (row.halfDay !== undefined) cells["Half Day"] = formatBool(row.halfDay);
+  if (row.notes !== undefined) cells.Notes = row.notes;
+  if (row.coverage !== undefined) cells.Coverage = row.coverage;
+  if (row.status !== undefined) cells.Status = row.status;
+  if (row.created !== undefined) cells.Created = row.created;
+  return cells;
+}
+
+export function toTimeAway(record: Record<string, string>): TimeAway | null {
+  const id = cell(record, "Away ID");
+  if (!id) return null;
+  return {
+    id,
+    requestedBy: cell(record, "Requested By"),
+    kind: cell(record, "Type"),
+    start: cell(record, "Start"),
+    end: cell(record, "End"),
+    halfDay: parseBool(cell(record, "Half Day")),
+    notes: cell(record, "Notes"),
+    coverage: cell(record, "Coverage"),
+    status: cell(record, "Status") || "Pending",
+    created: cell(record, "Created"),
+  };
+}
+
+export function workStatusCells(row: Partial<WorkStatus>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Status ID"] = row.id;
+  if (row.date !== undefined) cells.Date = row.date;
+  if (row.staff !== undefined) cells.Staff = row.staff;
+  if (row.place !== undefined) cells.Place = row.place;
+  if (row.note !== undefined) cells.Note = row.note;
+  return cells;
+}
+
+export function toWorkStatus(record: Record<string, string>): WorkStatus | null {
+  const id = cell(record, "Status ID");
+  if (!id) return null;
+  return {
+    id,
+    date: cell(record, "Date"),
+    staff: cell(record, "Staff"),
+    place: cell(record, "Place"),
+    note: cell(record, "Note"),
   };
 }
 

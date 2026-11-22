@@ -5,12 +5,17 @@ import type {
   ChecklistItem,
   DeskRequest,
   FolderLink,
+  GraphicsRequest,
   HubStore,
   Meeting,
   MinistryUpdate,
   OpenIssue,
   PinnedDocument,
   QuickLink,
+  StaffPin,
+  StaffPinAck,
+  TimeAway,
+  WorkStatus,
 } from "@/lib/data/types";
 import { HubError } from "@/lib/hub-error";
 import type { SheetsApi } from "@/lib/sheets/api";
@@ -22,11 +27,14 @@ import {
   checklistCells,
   documentCells,
   folderCells,
+  graphicsCells,
   issueCells,
   meetingCells,
   ministryUpdateCells,
   quickLinkCells,
   requestCells,
+  staffPinAckCells,
+  staffPinCells,
   toActionItem,
   toAnnouncement,
   toCareNote,
@@ -34,6 +42,7 @@ import {
   toChecklist,
   toDocument,
   toFolder,
+  toGraphicsRequest,
   toIssue,
   toMeeting,
   toMinistry,
@@ -41,8 +50,15 @@ import {
   toQuickLink,
   toRequest,
   toStaff,
+  toSetting,
+  toStaffPin,
+  toStaffPinAck,
+  toTimeAway,
   toTemplate,
   toWorkflowCard,
+  toWorkStatus,
+  timeAwayCells,
+  workStatusCells,
 } from "@/lib/sheets/mappers";
 import { COLUMNS, normalizeHeader } from "@/lib/sheets/schema";
 
@@ -217,6 +233,112 @@ export class SheetsStore implements HubStore {
   }
   async deleteAnnouncement(id: string) {
     await this.remove("Announcements", "Announcement ID", id);
+  }
+  async listStaffPins() {
+    await this.api.ensureTab("Staff Announcements", [...COLUMNS.staffPins]);
+    this.cache.delete("Staff Announcements");
+    return (await this.records("Staff Announcements", COLUMNS.staffPins)).map(toStaffPin).filter((row) => row !== null);
+  }
+  async createStaffPin(row: StaffPin) {
+    await this.api.ensureTab("Staff Announcements", [...COLUMNS.staffPins]);
+    this.cache.delete("Staff Announcements");
+    await this.append("Staff Announcements", COLUMNS.staffPins, staffPinCells(row));
+  }
+  async updateStaffPin(id: string, changes: Partial<StaffPin>) {
+    await this.api.ensureTab("Staff Announcements", [...COLUMNS.staffPins]);
+    this.cache.delete("Staff Announcements");
+    const cells = staffPinCells(changes);
+    delete cells["Pin ID"];
+    await this.patch("Staff Announcements", "Pin ID", id, cells);
+  }
+  async deleteStaffPin(id: string) {
+    await this.api.ensureTab("Staff Announcements", [...COLUMNS.staffPins]);
+    await this.api.ensureTab("Staff Announcement Acks", [...COLUMNS.staffPinAcks]);
+    this.cache.delete("Staff Announcements");
+    this.cache.delete("Staff Announcement Acks");
+    const acks = (await this.records("Staff Announcement Acks", COLUMNS.staffPinAcks))
+      .map(toStaffPinAck)
+      .filter((row): row is NonNullable<typeof row> => row !== null && row.pinId === id);
+    await this.remove("Staff Announcements", "Pin ID", id);
+    for (const ack of acks) {
+      await this.remove("Staff Announcement Acks", "Ack ID", ack.id);
+    }
+  }
+  async listStaffPinAcks() {
+    await this.api.ensureTab("Staff Announcement Acks", [...COLUMNS.staffPinAcks]);
+    this.cache.delete("Staff Announcement Acks");
+    return (await this.records("Staff Announcement Acks", COLUMNS.staffPinAcks)).map(toStaffPinAck).filter((row) => row !== null);
+  }
+  async createStaffPinAck(row: StaffPinAck) {
+    await this.api.ensureTab("Staff Announcement Acks", [...COLUMNS.staffPinAcks]);
+    this.cache.delete("Staff Announcement Acks");
+    await this.append("Staff Announcement Acks", COLUMNS.staffPinAcks, staffPinAckCells(row));
+  }
+  async listSettings() {
+    await this.api.ensureTab("Hub Settings", [...COLUMNS.settings]);
+    this.cache.delete("Hub Settings");
+    return (await this.records("Hub Settings", COLUMNS.settings)).map(toSetting).filter((row) => row !== null);
+  }
+  async setSetting(key: string, value: string) {
+    await this.api.ensureTab("Hub Settings", [...COLUMNS.settings]);
+    this.cache.delete("Hub Settings");
+    const existing = (await this.listSettings()).some((row) => row.key === key);
+    if (!existing) {
+      await this.append("Hub Settings", COLUMNS.settings, { Setting: key, Value: value });
+      return;
+    }
+    await this.patch("Hub Settings", "Setting", key, { Value: value });
+  }
+  async listGraphicsRequests() {
+    await this.api.ensureTab("Graphics Requests", [...COLUMNS.graphicsRequests]);
+    this.cache.delete("Graphics Requests");
+    return (await this.records("Graphics Requests", COLUMNS.graphicsRequests)).map(toGraphicsRequest).filter((row) => row !== null);
+  }
+  async createGraphicsRequest(row: GraphicsRequest) {
+    await this.api.ensureTab("Graphics Requests", [...COLUMNS.graphicsRequests]);
+    this.cache.delete("Graphics Requests");
+    await this.append("Graphics Requests", COLUMNS.graphicsRequests, graphicsCells(row));
+  }
+  async updateGraphicsRequest(id: string, changes: Partial<GraphicsRequest>) {
+    await this.api.ensureTab("Graphics Requests", [...COLUMNS.graphicsRequests]);
+    this.cache.delete("Graphics Requests");
+    const cells = graphicsCells(changes);
+    delete cells["Request ID"];
+    await this.patch("Graphics Requests", "Request ID", id, cells);
+  }
+  async listTimeAway() {
+    await this.api.ensureTab("Time Away", [...COLUMNS.timeAway]);
+    this.cache.delete("Time Away");
+    return (await this.records("Time Away", COLUMNS.timeAway)).map(toTimeAway).filter((row) => row !== null);
+  }
+  async createTimeAway(row: TimeAway) {
+    await this.api.ensureTab("Time Away", [...COLUMNS.timeAway]);
+    this.cache.delete("Time Away");
+    await this.append("Time Away", COLUMNS.timeAway, timeAwayCells(row));
+  }
+  async updateTimeAway(id: string, changes: Partial<TimeAway>) {
+    await this.api.ensureTab("Time Away", [...COLUMNS.timeAway]);
+    this.cache.delete("Time Away");
+    const cells = timeAwayCells(changes);
+    delete cells["Away ID"];
+    await this.patch("Time Away", "Away ID", id, cells);
+  }
+  async listWorkStatuses() {
+    await this.api.ensureTab("Work Status", [...COLUMNS.workStatuses]);
+    this.cache.delete("Work Status");
+    return (await this.records("Work Status", COLUMNS.workStatuses)).map(toWorkStatus).filter((row) => row !== null);
+  }
+  async createWorkStatus(row: WorkStatus) {
+    await this.api.ensureTab("Work Status", [...COLUMNS.workStatuses]);
+    this.cache.delete("Work Status");
+    await this.append("Work Status", COLUMNS.workStatuses, workStatusCells(row));
+  }
+  async updateWorkStatus(id: string, changes: Partial<WorkStatus>) {
+    await this.api.ensureTab("Work Status", [...COLUMNS.workStatuses]);
+    this.cache.delete("Work Status");
+    const cells = workStatusCells(changes);
+    delete cells["Status ID"];
+    await this.patch("Work Status", "Status ID", id, cells);
   }
   async listCareNotes() {
     await this.api.ensureTab("Care Notes", [...COLUMNS.careNotes]);

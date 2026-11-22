@@ -49,7 +49,7 @@ If an earlier import is stuck, open the project → **Settings** → **Build and
 
 | Page | What staff do there |
 | --- | --- |
-| Home | Welcome by first name, then only your open items, care notes, and requests. Shared announcements and links sit below. Admins can switch to a team overview |
+| Home | A pinned note for everyone sits above a welcome by first name. Then only your open items, care notes, requests, and where you are working today. Shared announcements, who's out, and who's in sit below. Admins can switch to a team overview |
 | This week | Announcements, action items, prayer, celebrations, and notes from the latest staff meeting, plus earlier meetings |
 | Meeting mode | Admins only. Live entry during Monday's 1:00 PM staff meeting |
 | Action items | The one shared list. Filter mine or everyone's. Add, update, and mark done |
@@ -57,7 +57,7 @@ If an earlier import is stuck, open the project → **Settings** → **Build and
 | Sunday checklist | The areas copied from the checklist template for a meeting |
 | Announcements | What the church or the staff need to hear |
 | Documents | Quick links, shared folders, and pinned files. The files stay in Drive |
-| Requests | Ask for a graphic, email, text, social post, website change, or Sunday announcement |
+| Requests | Graphics and social, time away, or a general request for email, text, website, or a Sunday announcement |
 
 On a phone the navy menu moves to the top and scrolls sideways.
 
@@ -191,6 +191,11 @@ The icon says MV. Signing in lasts about 30 days.
 | Assign an item to someone else, or change the owner | No | Yes |
 | Edit meetings, announcements, links, folders, pinned documents | No | Yes |
 | Send a request, and approve or send back their own draft | Yes | Yes |
+| Pin a note on Home, and see who tapped Got it | No | Yes |
+| Tap Got it on a pinned note | Yes | Yes |
+| Send a graphics or time-away request | Yes | Yes |
+| Choose the graphics owner, and approve or deny time away | No | Yes |
+| Set where you are working today | Yes | Yes |
 | Move a request through the queue and attach a draft link | No | Yes |
 | Check off their own Sunday area | Yes | Yes, any area |
 | Start this week's checklist from the template, if it is empty | Yes | Yes |
@@ -206,10 +211,12 @@ The website does not download the sheet and upload a new copy. That would erase 
 - If two people save different fields of the same row, both saves keep.
 - If two people save the same field, the later save wins.
 - If an id is on more than one row, the hub refuses to write and asks you to fix the sheet.
-- Rows are never deleted from here. Mark an item done, or mark a request withdrawn.
+- Rows are not replaced in bulk. Mark an item done, or mark a request withdrawn. An admin can remove a pinned Home note, which deletes that one row and its Got it rows.
 - These tabs are read-only: **Workflow Cards**, **Card Actions**, **Staff**, **Ministries**, **Checklist Template**. Another automation maintains the workflow tabs. Do not let this app overwrite them.
 
 Dates are stored as `M/D/YYYY` text, which matches the sheet today. The clock for "overdue" and "this Monday" is Columbus time.
+
+Graphics requests are assigned from one cell, **Hub Settings** → `Graphics Owner`. The app does not hard-code a name. On the live sheet, set that cell to Steven Holland for now. Change the cell, or the control on Request Desk, when someone else should receive them. Sample mode uses Avery Quinn. The hub adds **Staff Announcements**, **Graphics Requests**, **Time Away**, **Work Status**, and **Hub Settings** the first time they are saved, if those tabs are missing. Column lists are in SCHEMA.md.
 
 ## Staff chat, later
 

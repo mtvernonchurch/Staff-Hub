@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { setWorkStatusAction } from "@/app/(hub)/extra-actions";
 import { ActionItemForm, ActionList } from "@/components/records";
+import { StaffPinBoard } from "@/components/staff-pins";
 import { Empty, Flash, OutLink, PageHeader } from "@/components/ui";
-import type { ActionItem, Meeting, WorkflowCard } from "@/lib/data/types";
+import type { ActionItem, Meeting, WorkflowCard, WorkStatus } from "@/lib/data/types";
 import { isAdmin } from "@/lib/domain/access";
 import { careActionLabel } from "@/lib/domain/care";
+import { graphicsForPerson, graphicsOpen, pendingTimeAway, timeAwayForPerson, whosOut, workForDay, WORK_PLACES } from "@/lib/domain/desk";
 import {
   chicagoToday,
   formatFriendly,
@@ -34,7 +37,7 @@ export default async function HomePage({
   const { staff, store } = await requireStaff();
   const teamView = isAdmin(staff) && query.view === "team";
   const today = chicagoToday();
-  const [items, meetings, announcements, links, checklist, requests, cards, people, careNotes] = await Promise.all([
+  const [items, meetings, announcements, links, checklist, requests, cards, people, careNotes, pins, acks, graphics, away, work] = await Promise.all([
     store.listActionItems(),
     store.listMeetings(),
     store.listAnnouncements(),
@@ -44,6 +47,11 @@ export default async function HomePage({
     store.listWorkflowCards(),
     store.listStaff(),
     store.listCareNotes(),
+    store.listStaffPins(),
+    store.listStaffPinAcks(),
+    store.listGraphicsRequests(),
+    store.listTimeAway(),
+    store.listWorkStatuses(),
   ]);
   const mineItems = items.filter((item) => namesMatch(item.owner, staff.name));
   const open = teamView
@@ -52,6 +60,13 @@ export default async function HomePage({
   const myNotes = careNotes.filter((note) => namesMatch(note.assignee, staff.name) && !note.done);
   const visibleNotes = teamView ? careNotes.filter((note) => !note.done) : myNotes;
   const waiting = requests.filter((request) => requestWaitingOn(staff, request));
+  const myGraphics = teamView ? graphicsOpen(graphics) : graphicsForPerson(graphics, staff.name);
+  const myAway = teamView ? pendingTimeAway(away) : timeAwayForPerson(away, staff.name, today);
+  const approvals = isAdmin(staff) && !teamView ? pendingTimeAway(away).filter((row) => !namesMatch(row.requestedBy, staff.name)) : [];
+  const todayLabel = formatUsDate(today);
+  const todayWork = workForDay(work, todayLabel);
+  const myWork = todayWork.find((row) => namesMatch(row.staff, staff.name));
+  const outToday = whosOut(away, today);
   const overdueCount = open.filter((item) => isOverdue(item.due, item.status, today)).length;
   const dueSoonCount = open.filter((item) => isDueSoon(item.due, item.status, today)).length;
   const weekStart = weekStartMonday(today);
@@ -71,12 +86,13 @@ export default async function HomePage({
 
   return (
     <>
+      <Flash error={query.error} notice={query.notice} />
+      <StaffPinBoard pins={pins} acks={acks} actor={staff} today={today} returnTo={returnTo} />
       <PageHeader
         kicker="Mt Vernon Church · Columbus"
         title={`Welcome, ${firstName(staff.name)}`}
         lede={`${greeting()} · ${formatLong(today)}`}
       />
-      <Flash error={query.error} notice={query.notice} />
       {isAdmin(staff) ? (
         <div className="filters" aria-label="Home view">
           <Link className={teamView ? "btn btn-small" : "btn btn-primary btn-small"} href="/">My home</Link>
@@ -94,7 +110,7 @@ export default async function HomePage({
             <strong>{dueSoonCount} due soon</strong>
             <strong>{open.length} open</strong>
             <strong>{visibleNotes.length} care {visibleNotes.length === 1 ? "note" : "notes"}</strong>
-            <strong>{waiting.length} {waiting.length === 1 ? "request" : "requests"}</strong>
+            <strong>{waiting.length + myGraphics.length + myAway.length + approvals.length} {waiting.length + myGraphics.length + myAway.length + approvals.length === 1 ? "request" : "requests"}</strong>
           </div>
           <WeekStrip today={today} items={teamView ? items : mineItems} meetings={meetings} />
         </div>
@@ -136,13 +152,39 @@ export default async function HomePage({
             <h2>{teamView ? "Requests that need an admin" : "Your requests"}</h2>
             <Link href="/requests">Request Desk</Link>
           </div>
-          {waiting.length === 0 ? <Empty>Nothing is waiting on you.</Empty> : waiting.map((request) => (
+          {waiting.length + myGraphics.length + myAway.length + approvals.length === 0 ? <Empty>Nothing is waiting on you.</Empty> : null}
+          {waiting.map((request) => (
             <Link key={request.id} href={`/requests/${request.id}`} className="meeting-link">
               <strong>{request.title}</strong>
               <span>{request.status} · {namesMatch(staff.name, request.requestedBy) ? "You asked" : request.requestedBy}</span>
             </Link>
           ))}
+          {myGraphics.map((request) => (
+            <Link key={request.id} href={`/requests/graphics/${request.id}`} className="meeting-link">
+              <strong>{request.event}</strong>
+              <span>Graphics · {request.status} · {namesMatch(staff.name, request.requestedBy) ? "You asked" : request.requestedBy}</span>
+            </Link>
+          ))}
+          {myAway.map((request) => (
+            <Link key={request.id} href={`/requests/away/${request.id}`} className="meeting-link">
+              <strong>{request.kind}</strong>
+              <span>Time away · {request.status} · {formatFriendly(request.start)}</span>
+            </Link>
+          ))}
+          {approvals.map((request) => (
+            <Link key={request.id} href={`/requests/away/${request.id}`} className="meeting-link">
+              <strong>{request.kind}</strong>
+              <span>Time away needs approval · {request.requestedBy}</span>
+            </Link>
+          ))}
         </section>
+        {teamView ? null : (
+          <section className="card">
+            <h2>Where I&apos;m working</h2>
+            <p className="hint">Today only. Tomorrow this starts blank.</p>
+            <WorkToday mine={myWork} returnTo={returnTo} />
+          </section>
+        )}
         {myCards.length > 0 && !teamView ? (
           <section className="card">
             <h2>Your workflow cards</h2>
@@ -151,6 +193,40 @@ export default async function HomePage({
           </section>
         ) : null}
         <h2 className="section-break">For the whole staff</h2>
+        <section className="card">
+          <h2>Who&apos;s out</h2>
+          {outToday.length === 0 ? <Empty>No approved time away covers today.</Empty> : outToday.map((row) => (
+            <article key={row.id} className="item">
+              <div>
+                <h3>{row.requestedBy}</h3>
+                <p className="meta">
+                  <span>{row.kind}</span>
+                  {row.halfDay ? <span>Half day</span> : null}
+                  <span>{formatFriendly(row.start)}{row.end !== row.start ? ` – ${formatFriendly(row.end)}` : ""}</span>
+                  {row.coverage ? <span>Covered by {row.coverage}</span> : null}
+                </p>
+              </div>
+            </article>
+          ))}
+        </section>
+        <section className="card">
+          <h2>Who&apos;s in today</h2>
+          <p className="hint">Yesterday&apos;s status is not carried over.</p>
+          {people.filter((person) => person.active).map((person) => {
+            const status = todayWork.find((row) => namesMatch(row.staff, person.name));
+            return (
+              <article key={person.email} className="item">
+                <div>
+                  <h3>{namesMatch(person.name, staff.name) ? "You" : person.name}</h3>
+                  <p className="meta">
+                    <span>{status?.place || "Not set"}</span>
+                    {status?.note ? <span>{status.note}</span> : null}
+                  </p>
+                </div>
+              </article>
+            );
+          })}
+        </section>
         <section className="card tone-news">
           <div className="card-head">
             <h2>This week</h2>
@@ -217,6 +293,24 @@ export default async function HomePage({
         </section>
       </div>
     </>
+  );
+}
+
+function WorkToday({ mine, returnTo }: { mine: WorkStatus | undefined; returnTo: string }) {
+  return (
+    <form action={setWorkStatusAction} className="stack-form">
+      <input type="hidden" name="returnTo" value={returnTo} />
+      <label className="field">Note <span>optional</span>
+        <input name="note" maxLength={200} defaultValue={mine?.note ?? ""} placeholder="Optional" />
+      </label>
+      <div className="place-row">
+        {WORK_PLACES.map((place) => (
+          <button key={place} className={mine?.place === place ? "btn btn-primary" : "btn"} name="place" value={place} type="submit">
+            {place}
+          </button>
+        ))}
+      </div>
+    </form>
   );
 }
 
