@@ -66,6 +66,7 @@ export function createSeed(now = new Date()): HubData {
         update: "Draft is in the staff meeting folder.",
         created: lastLabel,
         completedOn: "",
+        ministry: "",
       },
       {
         id: "ai_agenda",
@@ -77,6 +78,7 @@ export function createSeed(now = new Date()): HubData {
         update: "",
         created: formatUsDate(today),
         completedOn: "",
+        ministry: "",
       },
       {
         id: "ai_baptism",
@@ -88,6 +90,7 @@ export function createSeed(now = new Date()): HubData {
         update: "Two families have replied.",
         created: lastLabel,
         completedOn: "",
+        ministry: "",
       },
       {
         id: "ai_students",
@@ -99,6 +102,19 @@ export function createSeed(now = new Date()): HubData {
         update: "",
         created: lastLabel,
         completedOn: "",
+        ministry: "Students",
+      },
+      {
+        id: "ai_care_call",
+        action: "Care note: Call for the Parker family",
+        owner: "Blake Nguyen",
+        due: "",
+        status: "Open",
+        meetingId: "mtg_monday",
+        update: "They asked for a check-in this week.",
+        created: lastLabel,
+        completedOn: "",
+        ministry: "",
       },
       {
         id: "ai_lobby",
@@ -110,6 +126,7 @@ export function createSeed(now = new Date()): HubData {
         update: "Still need one door person.",
         created: lastLabel,
         completedOn: "",
+        ministry: "Guest Experience",
       },
       {
         id: "ai_supplies",
@@ -121,6 +138,7 @@ export function createSeed(now = new Date()): HubData {
         update: "",
         created: lastLabel,
         completedOn: "",
+        ministry: "",
       },
       {
         id: "ai_setlist",
@@ -132,6 +150,7 @@ export function createSeed(now = new Date()): HubData {
         update: "Posted for the band.",
         created: lastLabel,
         completedOn: doneOn,
+        ministry: "",
       },
       {
         id: "ai_signs",
@@ -143,6 +162,7 @@ export function createSeed(now = new Date()): HubData {
         update: "",
         created: formatUsDate(today),
         completedOn: "",
+        ministry: "Kids",
       },
     ],
     checklistTemplate: [
@@ -204,7 +224,44 @@ export function createSeed(now = new Date()): HubData {
         submittedOn: formatUsDate(today),
       },
     ],
+    careNotes: [
+      {
+        id: "care_call",
+        meetingId: "mtg_monday",
+        person: "the Parker family",
+        action: "Call",
+        custom: "",
+        details: "They asked for a check-in this week.",
+        assignee: "Blake Nguyen",
+        done: false,
+        actionItemId: "ai_care_call",
+      },
+      {
+        id: "care_meal",
+        meetingId: "mtg_monday",
+        person: "Sam Ellis",
+        action: "Meal",
+        custom: "",
+        details: "",
+        assignee: "",
+        done: false,
+        actionItemId: "",
+      },
+    ],
     announcements: [
+      {
+        id: "ann_last",
+        date: lastLabel,
+        event: "Two services this Sunday",
+        kind: "Sunday",
+        owner: "Harper Diaz",
+        announcedWhere: "Sunday",
+        details: "Second service starts at 11:00. Greeters at both doors.",
+        link: "",
+        audience: "Church",
+        meetingId: "mtg_last",
+        ministry: "Guest Experience",
+      },
       {
         id: "ann_thanks",
         date: formatUsDate(addUtcDays(monday, 3)),
@@ -215,6 +272,8 @@ export function createSeed(now = new Date()): HubData {
         details: "Thursday at 6:00 PM in the worship room. No childcare. Invite neighbors.",
         link: "https://mtvernon.church",
         audience: "Church",
+        meetingId: "mtg_monday",
+        ministry: "Worship",
       },
       {
         id: "ann_office",
@@ -226,6 +285,8 @@ export function createSeed(now = new Date()): HubData {
         details: "The office is closed the Friday after Thanksgiving. Urgent building needs go to Harper.",
         link: "",
         audience: "Staff",
+        meetingId: "mtg_monday",
+        ministry: "",
       },
     ],
     openIssues: [

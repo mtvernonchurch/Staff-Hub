@@ -172,6 +172,12 @@ input, select, textarea {
 }
 textarea { min-height: 110px; resize: vertical; }
 .form-grid, .stack-form { display: grid; gap: 12px; margin: 8px 0 16px; }
+.live-grid { display: grid; gap: 8px; margin: 8px 0 12px; align-items: center; }
+@media (min-width: 800px) {
+  .live-grid.tasks { grid-template-columns: 1.4fr 0.9fr 0.7fr 0.8fr auto; }
+  .live-grid.news { grid-template-columns: 1fr 1.2fr 0.7fr 0.8fr auto; }
+  .live-grid.care { grid-template-columns: 1fr 0.7fr 0.9fr 1fr 0.9fr auto; }
+}
 .checks { display: flex; flex-wrap: wrap; gap: 8px; }
 .checks label {
   display: flex; gap: 8px; align-items: center; background: white; border: 1px solid var(--line);

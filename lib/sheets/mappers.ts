@@ -2,6 +2,7 @@ import type {
   ActionItem,
   Announcement,
   CardAction,
+  CareNote,
   ChecklistItem,
   ChecklistTemplateRow,
   DeskRequest,
@@ -76,6 +77,7 @@ export function actionCells(item: Partial<ActionItem>): Record<string, string> {
   if (item.update !== undefined) cells.Update = item.update;
   if (item.created !== undefined) cells.Created = item.created;
   if (item.completedOn !== undefined) cells["Completed On"] = item.completedOn;
+  if (item.ministry !== undefined) cells.Ministry = item.ministry;
   return cells;
 }
 
@@ -92,6 +94,7 @@ export function toActionItem(record: Record<string, string>): ActionItem | null 
     update: cell(record, "Update"),
     created: cell(record, "Created"),
     completedOn: cell(record, "Completed On"),
+    ministry: cell(record, "Ministry"),
   };
 }
 
@@ -181,6 +184,8 @@ export function announcementCells(row: Partial<Announcement>): Record<string, st
   if (row.details !== undefined) cells.Details = row.details;
   if (row.link !== undefined) cells.Link = row.link;
   if (row.audience !== undefined) cells.Audience = row.audience;
+  if (row.meetingId !== undefined) cells.Meeting = row.meetingId;
+  if (row.ministry !== undefined) cells.Ministry = row.ministry;
   return cells;
 }
 
@@ -197,6 +202,8 @@ export function toAnnouncement(record: Record<string, string>): Announcement | n
     details: cell(record, "Details"),
     link: cell(record, "Link"),
     audience: cell(record, "Audience"),
+    meetingId: cell(record, "Meeting"),
+    ministry: cell(record, "Ministry"),
   };
 }
 
@@ -323,6 +330,36 @@ export function toFolder(record: Record<string, string>): FolderLink | null {
     url: cell(record, "URL"),
     icon: cell(record, "Icon"),
     order: cell(record, "Order"),
+  };
+}
+
+export function careNoteCells(row: Partial<CareNote>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Care Note ID"] = row.id;
+  if (row.meetingId !== undefined) cells.Meeting = row.meetingId;
+  if (row.person !== undefined) cells.Name = row.person;
+  if (row.action !== undefined) cells.Action = row.action;
+  if (row.custom !== undefined) cells.Custom = row.custom;
+  if (row.details !== undefined) cells.Details = row.details;
+  if (row.assignee !== undefined) cells.Assignee = row.assignee;
+  if (row.done !== undefined) cells.Done = formatBool(row.done);
+  if (row.actionItemId !== undefined) cells["Action Item"] = row.actionItemId;
+  return cells;
+}
+
+export function toCareNote(record: Record<string, string>): CareNote | null {
+  const id = cell(record, "Care Note ID");
+  if (!id) return null;
+  return {
+    id,
+    meetingId: cell(record, "Meeting"),
+    person: cell(record, "Name"),
+    action: cell(record, "Action"),
+    custom: cell(record, "Custom"),
+    details: cell(record, "Details"),
+    assignee: cell(record, "Assignee"),
+    done: parseBool(cell(record, "Done")),
+    actionItemId: cell(record, "Action Item"),
   };
 }
 

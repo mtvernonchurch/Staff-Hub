@@ -13,24 +13,35 @@ Staff open one site for:
 
 It is meant to be added to a phone home screen. The sample you can open today uses fictional people, so nothing private is in this public repository.
 
-## Try it on your computer first
+## Try it first, with no Google setup
 
-You do not need a Google account for this.
+The sample hub does not need environment variables. Avery Quinn and Blake Nguyen are fictional.
 
-1. Install Node.js 20 or newer from [https://nodejs.org](https://nodejs.org).
-2. Open Terminal (Mac) or Command Prompt (Windows).
-3. Go to this folder. If you downloaded it as a zip, `cd` into that folder.
-4. Run:
+### On your computer
+
+1. Install Node.js 22 from [https://nodejs.org](https://nodejs.org).
+2. Open Terminal (Mac) or Command Prompt (Windows), go to this folder, and run:
 
 ```bash
 npm install
 npm run dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000).
-6. Choose a sample person. **Avery Quinn** can assign work and edit meetings. **Blake Nguyen** can only update his own items and send requests.
+3. Open [http://localhost:3000](http://localhost:3000).
+4. Choose **Avery Quinn** (admin) or **Blake Nguyen** (staff).
 
-The green bar means you are looking at sample records, not the church sheet. Leave this running while you click around. Press Ctrl+C in the terminal when you are done.
+The green bar means you are looking at sample records, not the church sheet. Press Ctrl+C in the terminal when you are done.
+
+### On Vercel, still with no environment variables
+
+1. Go to [https://vercel.com](https://vercel.com) and choose **Add New** → **Project**.
+2. Import `mtvernonchurch/Staff-Hub`.
+3. Leave the defaults: **Framework Preset** is Next.js, **Root Directory** is the repository root, and the build command stays `next build`.
+4. Do not add environment variables. Deploy.
+
+Open the site and sign in as Avery or Blake. Sample mode is what you get until `DATA_MODE` and `AUTH_MODE` are set.
+
+If an earlier import is stuck, open the project → **Settings** → **Build and Deployment**. Set Framework Preset to **Next.js**, leave Root Directory as `./`, and clear any custom Output Directory. Then use **Deployments** → the failed deployment → **Redeploy**. You still do not add environment variables for the sample.
 
 `npm test` checks the rules for who can edit what, and that saves add a row or change single cells instead of rewriting a tab.
 
@@ -38,7 +49,9 @@ The green bar means you are looking at sample records, not the church sheet. Lea
 
 | Page | What staff do there |
 | --- | --- |
-| Home | Your open items, Monday at 1:00 PM, announcements, quick links, and your Planning Center cards |
+| Home | Your open items, this week from the staff meeting, Monday at 1:00 PM, quick links, and your Planning Center cards |
+| This week | Announcements, action items, prayer, celebrations, and notes from the latest staff meeting, plus earlier meetings |
+| Meeting mode | Admins only. Live entry during Monday's 1:00 PM staff meeting |
 | Action items | The one shared list. Filter mine or everyone's. Add, update, and mark done |
 | Meetings | Prayer, wins, the week ahead, ministry updates, discussion and decisions, and the items from that meeting |
 | Sunday checklist | The areas copied from the checklist template for a meeting |
@@ -49,6 +62,8 @@ The green bar means you are looking at sample records, not the church sheet. Lea
 On a phone the navy menu moves to the top and scrolls sideways.
 
 ## Connect the real spreadsheet
+
+Skip this until the sample site is up. With no environment variables the hub stays in sample mode. Setting `DATA_MODE=sheets` and `AUTH_MODE=google` is what switches it to the church sheet and Google sign-in.
 
 Do this once, in order. You will create a Google Cloud project, a robot user (a service account) that can edit the sheet, and a Google sign-in button that only accepts `@mtvernon.church` accounts.
 

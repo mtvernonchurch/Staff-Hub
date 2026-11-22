@@ -3,18 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const items = [
-  { href: "/", label: "Home" },
-  { href: "/action-items", label: "Action items" },
-  { href: "/meetings", label: "Meetings" },
-  { href: "/checklist", label: "Sunday checklist" },
-  { href: "/announcements", label: "Announcements" },
-  { href: "/documents", label: "Documents" },
-  { href: "/requests", label: "Requests" },
-];
-
-export function Nav() {
+export function Nav({ showMeetingMode = false }: { showMeetingMode?: boolean }) {
   const path = usePathname();
+  const items = [
+    { href: "/", label: "Home" },
+    { href: "/this-week", label: "This week" },
+    ...(showMeetingMode ? [{ href: "/meeting", label: "Meeting mode" }] : []),
+    { href: "/action-items", label: "Action items" },
+    { href: "/meetings", label: "Meetings" },
+    { href: "/checklist", label: "Sunday checklist" },
+    { href: "/announcements", label: "Announcements" },
+    { href: "/documents", label: "Documents" },
+    { href: "/requests", label: "Requests" },
+  ];
   return (
     <nav className="nav" aria-label="Staff hub">
       {items.map((item) => {

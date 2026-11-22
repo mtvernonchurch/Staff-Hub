@@ -6,6 +6,7 @@ export const WRITABLE_TABS = [
   "Sunday Checklist",
   "Ministry Updates",
   "Announcements",
+  "Care Notes",
   "Open Issues",
   "Requests",
   "Documents",
@@ -22,6 +23,7 @@ export const ALL_TABS = [
   "Ministry Updates",
   "Ministries",
   "Announcements",
+  "Care Notes",
   "Open Issues",
   "Requests",
   "Documents",
@@ -72,6 +74,7 @@ export const COLUMNS = {
     "Link",
     "Audience",
   ],
+  careNotes: ["Care Note ID", "Meeting", "Name", "Action", "Custom", "Details", "Assignee", "Done", "Action Item"],
   openIssues: ["Issue ID", "Issue", "Owner", "Next Step", "Due", "Status", "Created"],
   requests: [
     "Request ID",

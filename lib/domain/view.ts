@@ -41,6 +41,23 @@ export function pickMondayMeeting(meetings: Meeting[], today: Date): Meeting | n
   return onDay.find((meeting) => /staff/i.test(meeting.title)) ?? onDay[0] ?? null;
 }
 
+export function thisWeekMeeting(meetings: Meeting[], today: Date): Meeting | null {
+  return pickMondayMeeting(meetings, today) ?? latestPastMeeting(meetings, today);
+}
+
+export function latestPastMeeting(meetings: Meeting[], today: Date): Meeting | null {
+  const past = meetings.filter((meeting) => {
+    const date = parseSheetDate(meeting.date);
+    return date && date.getTime() <= today.getTime();
+  });
+  past.sort((a, b) => (parseSheetDate(b.date)?.getTime() ?? 0) - (parseSheetDate(a.date)?.getTime() ?? 0));
+  return past[0] ?? null;
+}
+
+export function announcementsForMeeting(announcements: Announcement[], meeting: Meeting): Announcement[] {
+  return announcements.filter((row) => row.meetingId === meeting.id || (!row.meetingId && sameDay(row.date, meeting.date)));
+}
+
 export function mine(items: ActionItem[], name: string): ActionItem[] {
   return items.filter((item) => item.owner.trim().toLowerCase() === name.trim().toLowerCase());
 }

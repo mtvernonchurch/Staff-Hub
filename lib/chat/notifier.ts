@@ -1,4 +1,4 @@
-import type { ActionItem } from "@/lib/data/types";
+import type { ActionItem, Meeting } from "@/lib/data/types";
 
 /**
  * Hook for a later staff-chat integration.
@@ -14,7 +14,8 @@ import type { ActionItem } from "@/lib/data/types";
  */
 export type StaffChatEvent =
   | { type: "action_item.created"; item: ActionItem; actorName: string }
-  | { type: "action_item.overdue"; items: ActionItem[] };
+  | { type: "action_item.overdue"; items: ActionItem[] }
+  | { type: "meeting.finished"; meeting: Meeting; actorName: string; recap: string };
 
 export interface StaffChatNotifier {
   notify(event: StaffChatEvent): Promise<void>;

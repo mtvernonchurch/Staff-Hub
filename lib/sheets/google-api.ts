@@ -1,8 +1,10 @@
-import { google } from "googleapis";
+import { JWT } from "google-auth-library";
 import { HubError } from "@/lib/hub-error";
 import type { SheetsApi } from "@/lib/sheets/api";
-import { parseServiceAccount } from "@/lib/sheets/credentials";
 import { quoteTab } from "@/lib/sheets/codec";
+import { parseServiceAccount } from "@/lib/sheets/credentials";
+
+const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
 
 function explain(error: unknown): never {
   const message = error instanceof Error ? error.message : "Unknown Google Sheets error";
@@ -18,57 +20,167 @@ function explain(error: unknown): never {
   throw new HubError("The hub could not reach Google Sheets. Try again in a moment.");
 }
 
-export function createGoogleSheetsApi(env: NodeJS.ProcessEnv = process.env): SheetsApi {
-  const sheetId = env.GOOGLE_SHEET_ID?.trim();
-  if (!sheetId) throw new HubError("Set GOOGLE_SHEET_ID to the spreadsheet id from the sheet URL.");
-  const account = parseServiceAccount(env);
-  const auth = new google.auth.JWT({
-    email: account.clientEmail,
-    key: account.privateKey,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
-  const sheets = google.sheets({ version: "v4", auth });
+type FetchImpl = typeof fetch;
+
+/**
+ * Talks to the Sheets REST API with a bearer token. Tests pass a stand-in
+ * token and fetch so this never needs the network or the full Google client.
+ */
+export function createSheetsApi(options: {
+  sheetId: string;
+  accessToken: string;
+  fetchImpl?: FetchImpl;
+}): SheetsApi {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const root = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(options.sheetId)}`;
+
+  async function request(path: string, init?: { method?: string; body?: unknown }): Promise<unknown> {
+    const response = await fetchImpl(`${root}${path}`, {
+      method: init?.method ?? "GET",
+      headers: {
+        Authorization: `Bearer ${options.accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: init?.body === undefined ? undefined : JSON.stringify(init.body),
+    });
+    const text = await response.text();
+    if (!response.ok) explain(new Error(`${response.status} ${text.slice(0, 300)}`));
+    return text ? JSON.parse(text) : {};
+  }
+
+  async function sheetNumber(tab: string): Promise<number> {
+    const response = await fetchImpl(
+      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(options.sheetId)}?fields=sheets.properties`,
+      { headers: { Authorization: `Bearer ${options.accessToken}` } },
+    );
+    const text = await response.text();
+    if (!response.ok) explain(new Error(`${response.status} ${text.slice(0, 300)}`));
+    const data = JSON.parse(text) as { sheets?: { properties?: { title?: string; sheetId?: number } }[] };
+    const found = data.sheets?.find((sheet) => sheet.properties?.title === tab);
+    if (found?.properties?.sheetId == null) throw new HubError(`The ${tab} tab was not found.`);
+    return found.properties.sheetId;
+  }
 
   return {
+    async ensureTab(tab, headers) {
+      const response = await fetchImpl(
+        `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(options.sheetId)}?fields=sheets.properties`,
+        { headers: { Authorization: `Bearer ${options.accessToken}` } },
+      );
+      const text = await response.text();
+      if (!response.ok) explain(new Error(`${response.status} ${text.slice(0, 300)}`));
+      const data = JSON.parse(text) as { sheets?: { properties?: { title?: string } }[] };
+      const exists = data.sheets?.some((sheet) => sheet.properties?.title === tab);
+      if (!exists) {
+        const created = await fetchImpl(
+          `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(options.sheetId)}:batchUpdate`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${options.accessToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ requests: [{ addSheet: { properties: { title: tab } } }] }),
+          },
+        );
+        if (!created.ok) {
+          const body = await created.text();
+          explain(new Error(`${created.status} ${body.slice(0, 300)}`));
+        }
+      }
+      const current = exists ? await request(`/values/${encodeURIComponent(quoteTab(tab))}?valueRenderOption=FORMATTED_VALUE`) as { values?: string[][] } : { values: [] };
+      const header = current.values?.[0] ?? [];
+      if (header.some((cell) => String(cell ?? "").trim())) return;
+      await request(`/values/${encodeURIComponent(`${quoteTab(tab)}!A1`)}?valueInputOption=RAW`, {
+        method: "PUT",
+        body: { values: [headers] },
+      });
+    },
+    async deleteRow(tab, rowNumber) {
+      if (rowNumber < 2) throw new HubError("Refusing to delete the header row.");
+      const sheetId = await sheetNumber(tab);
+      const response = await fetchImpl(
+        `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(options.sheetId)}:batchUpdate`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${options.accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            requests: [
+              {
+                deleteDimension: {
+                  range: { sheetId, dimension: "ROWS", startIndex: rowNumber - 1, endIndex: rowNumber },
+                },
+              },
+            ],
+          }),
+        },
+      );
+      if (!response.ok) {
+        const text = await response.text();
+        explain(new Error(`${response.status} ${text.slice(0, 300)}`));
+      }
+    },
     async get(tab) {
       try {
-        const response = await sheets.spreadsheets.values.get({
-          spreadsheetId: sheetId,
-          range: quoteTab(tab),
-          valueRenderOption: "FORMATTED_VALUE",
-        });
-        return (response.data.values ?? []).map((row) => row.map((cell) => String(cell ?? "")));
+        const range = encodeURIComponent(quoteTab(tab));
+        const data = (await request(`/values/${range}?valueRenderOption=FORMATTED_VALUE`)) as {
+          values?: unknown[][];
+        };
+        return (data.values ?? []).map((row) => row.map((cell) => String(cell ?? "")));
       } catch (error) {
+        if (error instanceof HubError) throw error;
         explain(error);
       }
     },
     async appendRows(tab, rows) {
       if (rows.length === 0) return;
       try {
-        await sheets.spreadsheets.values.append({
-          spreadsheetId: sheetId,
-          range: `${quoteTab(tab)}!A1`,
-          valueInputOption: "USER_ENTERED",
-          insertDataOption: "INSERT_ROWS",
-          requestBody: { values: rows },
+        const range = encodeURIComponent(`${quoteTab(tab)}!A1`);
+        await request(`/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, {
+          method: "POST",
+          body: { values: rows },
         });
       } catch (error) {
+        if (error instanceof HubError) throw error;
         explain(error);
       }
     },
     async updateCells(updates) {
       if (updates.length === 0) return;
       try {
-        await sheets.spreadsheets.values.batchUpdate({
-          spreadsheetId: sheetId,
-          requestBody: {
+        await request("/values:batchUpdate", {
+          method: "POST",
+          body: {
             valueInputOption: "USER_ENTERED",
             data: updates.map((update) => ({ range: update.range, values: [[update.value]] })),
           },
         });
       } catch (error) {
+        if (error instanceof HubError) throw error;
         explain(error);
       }
     },
   };
+}
+
+export async function createGoogleSheetsApi(env: NodeJS.ProcessEnv = process.env): Promise<SheetsApi> {
+  const sheetId = env.GOOGLE_SHEET_ID?.trim();
+  if (!sheetId) throw new HubError("Set GOOGLE_SHEET_ID to the spreadsheet id from the sheet URL.");
+  const account = parseServiceAccount(env);
+  const client = new JWT({
+    email: account.clientEmail,
+    key: account.privateKey,
+    scopes: [SHEETS_SCOPE],
+  });
+  let token: string | null | undefined;
+  try {
+    token = (await client.getAccessToken()).token;
+  } catch (error) {
+    explain(error);
+  }
+  if (!token) throw new HubError("The hub could not sign in to Google Sheets. Check the service account key.");
+  return createSheetsApi({ sheetId, accessToken: token });
 }

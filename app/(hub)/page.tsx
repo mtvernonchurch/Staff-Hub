@@ -16,7 +16,7 @@ import {
   workWeek,
 } from "@/lib/domain/dates";
 import { firstName, normalizeEmail } from "@/lib/domain/people";
-import { mine, pickMondayMeeting, sortActionItems, sortAnnouncements, sortByOrder } from "@/lib/domain/view";
+import { announcementsForMeeting, mine, pickMondayMeeting, sortActionItems, sortAnnouncements, sortByOrder, thisWeekMeeting } from "@/lib/domain/view";
 import { requireStaff } from "@/lib/session";
 import { requestWaitingOn } from "@/lib/services/hub";
 
@@ -50,6 +50,9 @@ export default async function HomePage({
   }).length;
   const ringTotal = doneThisWeek + open.length;
   const monday = pickMondayMeeting(meetings, today);
+  const weekMeeting = thisWeekMeeting(meetings, today);
+  const weekNews = weekMeeting ? announcementsForMeeting(announcements, weekMeeting) : [];
+  const weekItems = weekMeeting ? items.filter((item) => item.meetingId === weekMeeting.id) : [];
   const mondayChecklist = checklist.filter((row) => monday && row.meetingId === monday.id);
   const readyCount = mondayChecklist.filter((row) => row.ready).length;
   const waiting = requests.filter((request) => requestWaitingOn(staff, request));
@@ -89,6 +92,21 @@ export default async function HomePage({
           </details>
         </section>
         <div className="stack">
+          <section className="card tone-news">
+            <div className="card-head">
+              <h2>This week</h2>
+              <Link href="/this-week">Open</Link>
+            </div>
+            {weekMeeting ? (
+              <>
+                <p><strong>{weekMeeting.title}</strong></p>
+                <p className="hint">{formatFriendly(weekMeeting.date)} · {weekNews.length} announcement{weekNews.length === 1 ? "" : "s"} · {weekItems.filter((item) => !isClosedStatus(item.status)).length} open items</p>
+                {weekNews[0] ? <p className="note">{weekNews[0].event}</p> : <p className="empty">No announcements from this meeting yet.</p>}
+              </>
+            ) : (
+              <p className="empty">The staff meeting is not posted yet.</p>
+            )}
+          </section>
           <section className="card tone-meeting">
             <div className="card-head">
               <h2>Monday, 1:00 PM</h2>
