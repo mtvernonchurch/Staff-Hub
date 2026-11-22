@@ -55,7 +55,7 @@ export function Shell({
             <span className="brand-sub">Mt Vernon Church</span>
           </span>
         </Link>
-        <Nav />
+        <Nav showMeetingMode={isAdmin(staff)} />
         {foot}
       </aside>
       <div className="topbar">
@@ -66,7 +66,7 @@ export function Shell({
             <span className="brand-sub">{staff.name}</span>
           </span>
         </Link>
-        <Nav />
+        <Nav showMeetingMode={isAdmin(staff)} />
         <div className="button-row">
           {preview ? (
             <form action={previewAsAction} className="button-row">

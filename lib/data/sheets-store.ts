@@ -13,7 +13,7 @@ import type {
 } from "@/lib/data/types";
 import { HubError } from "@/lib/hub-error";
 import type { SheetsApi } from "@/lib/sheets/api";
-import { assertColumns, assertWritable, findDataRow, gridToRecords, headersOf, planCellUpdates, recordToAppendRow } from "@/lib/sheets/codec";
+import { assertColumns, assertWritable, columnLetter, findDataRow, gridToRecords, headersOf, planCellUpdates, quoteTab, recordToAppendRow } from "@/lib/sheets/codec";
 import {
   actionCells,
   announcementCells,
@@ -41,7 +41,7 @@ import {
   toTemplate,
   toWorkflowCard,
 } from "@/lib/sheets/mappers";
-import { COLUMNS } from "@/lib/sheets/schema";
+import { COLUMNS, normalizeHeader } from "@/lib/sheets/schema";
 
 /**
  * Reads a tab, then writes only the cells that changed (or appends a new row).
@@ -91,6 +91,33 @@ export class SheetsStore implements HubStore {
     this.cache.delete(tab);
   }
 
+  private async ensureHeaders(tab: string, names: readonly string[]) {
+    const grid = await this.grid(tab);
+    const headers = headersOf(grid);
+    const missing = names.filter((name) => !headers.some((header) => normalizeHeader(header) === normalizeHeader(name)));
+    if (missing.length === 0) return;
+    let column = headers.findIndex((header) => header.trim() === "");
+    if (column < 0) column = headers.length;
+    const updates = missing.map((name) => {
+      const update = { range: `${quoteTab(tab)}!${columnLetter(column)}1`, value: name };
+      headers[column] = name;
+      column += 1;
+      return update;
+    });
+    await this.api.updateCells(updates);
+    const next = grid.map((row) => [...row]);
+    next[0] = headers;
+    this.cache.set(tab, next);
+  }
+
+  private async remove(tab: string, idColumn: string, id: string) {
+    assertWritable(tab);
+    const grid = await this.grid(tab);
+    const rowNumber = findDataRow(grid, idColumn, id);
+    await this.api.deleteRow(tab, rowNumber);
+    this.cache.delete(tab);
+  }
+
   private async patch(tab: string, idColumn: string, id: string, changes: Record<string, string>) {
     assertWritable(tab);
     const keys = Object.keys(changes);
@@ -127,12 +154,17 @@ export class SheetsStore implements HubStore {
     return (await this.listActionItems()).find((row) => row.id === id) ?? null;
   }
   async createActionItem(item: ActionItem) {
+    await this.ensureHeaders("Action Items", ["Ministry"]);
     await this.append("Action Items", COLUMNS.actionItems, actionCells(item));
   }
   async updateActionItem(id: string, changes: Partial<ActionItem>) {
+    if (changes.ministry !== undefined) await this.ensureHeaders("Action Items", ["Ministry"]);
     const cells = actionCells(changes);
     delete cells["Item ID"];
     await this.patch("Action Items", "Item ID", id, cells);
+  }
+  async deleteActionItem(id: string) {
+    await this.remove("Action Items", "Item ID", id);
   }
   async listChecklist() {
     return (await this.records("Sunday Checklist", COLUMNS.checklist)).map(toChecklist).filter((row) => row !== null);
@@ -169,12 +201,19 @@ export class SheetsStore implements HubStore {
     return (await this.records("Announcements", COLUMNS.announcements)).map(toAnnouncement).filter((row) => row !== null);
   }
   async createAnnouncement(row: Announcement) {
+    await this.ensureHeaders("Announcements", ["Meeting", "Ministry"]);
     await this.append("Announcements", COLUMNS.announcements, announcementCells(row));
   }
   async updateAnnouncement(id: string, changes: Partial<Announcement>) {
+    if (changes.meetingId !== undefined || changes.ministry !== undefined) {
+      await this.ensureHeaders("Announcements", ["Meeting", "Ministry"]);
+    }
     const cells = announcementCells(changes);
     delete cells["Announcement ID"];
     await this.patch("Announcements", "Announcement ID", id, cells);
+  }
+  async deleteAnnouncement(id: string) {
+    await this.remove("Announcements", "Announcement ID", id);
   }
   async listOpenIssues() {
     return (await this.records("Open Issues", COLUMNS.openIssues)).map(toIssue).filter((row) => row !== null);

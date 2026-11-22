@@ -31,6 +31,7 @@ export type ActionItem = {
   update: string;
   created: string;
   completedOn: string;
+  ministry: string;
 };
 
 export type ChecklistItem = {
@@ -79,6 +80,8 @@ export type Announcement = {
   details: string;
   link: string;
   audience: string;
+  meetingId: string;
+  ministry: string;
 };
 
 export type OpenIssue = {
@@ -188,6 +191,7 @@ export interface HubStore {
   getActionItem(id: string): Promise<ActionItem | null>;
   createActionItem(item: ActionItem): Promise<void>;
   updateActionItem(id: string, changes: Partial<ActionItem>): Promise<void>;
+  deleteActionItem(id: string): Promise<void>;
   listChecklist(): Promise<ChecklistItem[]>;
   getChecklistItem(id: string): Promise<ChecklistItem | null>;
   createChecklistItems(items: ChecklistItem[]): Promise<void>;
@@ -200,6 +204,7 @@ export interface HubStore {
   listAnnouncements(): Promise<Announcement[]>;
   createAnnouncement(row: Announcement): Promise<void>;
   updateAnnouncement(id: string, changes: Partial<Announcement>): Promise<void>;
+  deleteAnnouncement(id: string): Promise<void>;
   listOpenIssues(): Promise<OpenIssue[]>;
   createOpenIssue(row: OpenIssue): Promise<void>;
   updateOpenIssue(id: string, changes: Partial<OpenIssue>): Promise<void>;

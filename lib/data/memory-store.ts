@@ -49,6 +49,13 @@ export class MemoryStore implements HubStore {
   async updateActionItem(id: string, changes: Partial<HubData["actionItems"][number]>) {
     merge(this.data.actionItems, id, changes, "action item");
   }
+  async deleteActionItem(id: string) {
+    const next = this.data.actionItems.filter((row) => row.id !== id);
+    if (next.length === this.data.actionItems.length) {
+      throw new HubError("That action item is no longer on the list. Refresh and try again.");
+    }
+    this.data.actionItems = next;
+  }
   async listChecklist() {
     return clone(this.data.checklist);
   }
@@ -84,6 +91,13 @@ export class MemoryStore implements HubStore {
   }
   async updateAnnouncement(id: string, changes: Partial<HubData["announcements"][number]>) {
     merge(this.data.announcements, id, changes, "announcement");
+  }
+  async deleteAnnouncement(id: string) {
+    const next = this.data.announcements.filter((row) => row.id !== id);
+    if (next.length === this.data.announcements.length) {
+      throw new HubError("That announcement is no longer on the list. Refresh and try again.");
+    }
+    this.data.announcements = next;
   }
   async listOpenIssues() {
     return clone(this.data.openIssues);

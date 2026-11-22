@@ -11,7 +11,8 @@ import type {
   StaffMember,
 } from "@/lib/data/types";
 import { isAdmin } from "@/lib/domain/access";
-import { canonicalActionStatus, chicagoToday, formatUsDate, isClosedStatus, toSheetDate } from "@/lib/domain/dates";
+import { canonicalActionStatus, chicagoToday, formatUsDate, isClosedStatus, toSheetDate, upcomingMonday } from "@/lib/domain/dates";
+import { pickMondayMeeting } from "@/lib/domain/view";
 import { newId } from "@/lib/domain/ids";
 import { safeHttps } from "@/lib/domain/links";
 import { namesMatch } from "@/lib/domain/people";
@@ -65,7 +66,7 @@ function optionalHttps(value: string, label: string): string {
 
 export async function createActionItem(
   deps: Deps,
-  input: { action: string; owner: string; due: string; meetingId: string; update: string },
+  input: { action: string; owner: string; due: string; meetingId: string; update: string; ministry?: string },
 ): Promise<ActionItem> {
   assertActive(deps.actor);
   const action = input.action.trim();
@@ -96,6 +97,7 @@ export async function createActionItem(
     update,
     created: day(deps),
     completedOn: "",
+    ministry: input.ministry?.trim() ?? "",
   };
   await deps.store.createActionItem(item);
   try {
@@ -109,7 +111,7 @@ export async function createActionItem(
 export async function updateActionItem(
   deps: Deps,
   id: string,
-  changes: { action?: string; owner?: string; due?: string; status?: string; update?: string; meetingId?: string },
+  changes: { action?: string; owner?: string; due?: string; status?: string; update?: string; meetingId?: string; ministry?: string },
 ): Promise<void> {
   assertActive(deps.actor);
   const existing = await deps.store.getActionItem(id);
@@ -139,6 +141,7 @@ export async function updateActionItem(
     if (meetingId && !(await deps.store.getMeeting(meetingId))) throw new HubError("That meeting is not on the list.");
     next.meetingId = meetingId;
   }
+  if (changes.ministry !== undefined) next.ministry = changes.ministry.trim();
   if (changes.status !== undefined) {
     const status = canonicalActionStatus(changes.status);
     if (!status) throw new HubError("Status must be Open, In progress, or Done.");
@@ -265,7 +268,17 @@ export async function updateMinistryUpdate(
 
 export async function createAnnouncement(
   deps: Deps,
-  input: { date: string; event: string; kind: string; announcedWhere: string; details: string; link: string; audience: string },
+  input: {
+    date: string;
+    event: string;
+    kind: string;
+    announcedWhere: string;
+    details: string;
+    link: string;
+    audience: string;
+    meetingId?: string;
+    ministry?: string;
+  },
 ) {
   assertActive(deps.actor);
   if (!canManageRecords(deps.actor)) throw new HubError("Only an admin can post an announcement.");
@@ -281,8 +294,11 @@ export async function createAnnouncement(
     details: limit(input.details, 2000, "Details"),
     link: optionalHttps(input.link, "The link"),
     audience: input.audience.trim(),
+    meetingId: input.meetingId?.trim() ?? "",
+    ministry: input.ministry?.trim() ?? "",
   };
   await deps.store.createAnnouncement(row);
+  return row;
 }
 
 export async function updateAnnouncement(deps: Deps, id: string, input: Partial<Announcement>) {
@@ -299,7 +315,76 @@ export async function updateAnnouncement(deps: Deps, id: string, input: Partial<
   if (input.details !== undefined) next.details = limit(input.details, 2000, "Details");
   if (input.link !== undefined) next.link = optionalHttps(input.link, "The link");
   if (input.audience !== undefined) next.audience = input.audience.trim();
+  if (input.meetingId !== undefined) next.meetingId = input.meetingId.trim();
+  if (input.ministry !== undefined) next.ministry = input.ministry.trim();
   await deps.store.updateAnnouncement(id, next);
+}
+
+export async function deleteActionItem(deps: Deps, id: string) {
+  assertActive(deps.actor);
+  if (!isAdmin(deps.actor)) throw new HubError("Only an admin can remove an action item.");
+  const existing = await deps.store.getActionItem(id);
+  if (!existing) throw new HubError("That action item is no longer on the list.");
+  await deps.store.deleteActionItem(id);
+}
+
+export async function deleteAnnouncement(deps: Deps, id: string) {
+  assertActive(deps.actor);
+  if (!isAdmin(deps.actor)) throw new HubError("Only an admin can remove an announcement.");
+  const existing = (await deps.store.listAnnouncements()).find((row) => row.id === id);
+  if (!existing) throw new HubError("That announcement is no longer on the list.");
+  await deps.store.deleteAnnouncement(id);
+}
+
+export async function ensureMondayMeeting(deps: Deps) {
+  assertActive(deps.actor);
+  if (!canManageRecords(deps.actor)) throw new HubError("Only an admin can open the staff meeting.");
+  const today = deps.today ?? chicagoToday();
+  const existing = pickMondayMeeting(await deps.store.listMeetings(), today);
+  if (existing) return existing;
+  const people = (await deps.store.listStaff()).filter((person) => person.active);
+  const meeting = {
+    id: newId("mtg"),
+    date: formatUsDate(upcomingMonday(today)),
+    title: "Weekly Staff Meeting",
+    status: "Upcoming",
+    attendees: people.map((person) => person.name).join(", "),
+    notesBy: deps.actor.name,
+    prayer: "",
+    wins: "",
+    lookahead: "",
+    care: "",
+    notes: "",
+  };
+  await deps.store.createMeeting(meeting);
+  return meeting;
+}
+
+export async function finishMeeting(deps: Deps, id: string) {
+  assertActive(deps.actor);
+  if (!canManageRecords(deps.actor)) throw new HubError("Only an admin can finish the meeting.");
+  const meeting = await deps.store.getMeeting(id);
+  if (!meeting) throw new HubError("That meeting is no longer on the list.");
+  await deps.store.updateMeeting(id, { status: "Done", notesBy: deps.actor.name });
+  const items = (await deps.store.listActionItems()).filter((item) => item.meetingId === id);
+  const announcements = (await deps.store.listAnnouncements()).filter((row) => row.meetingId === id);
+  const recap = [
+    `${meeting.title} · ${meeting.date}`,
+    meeting.prayer ? `Prayer: ${meeting.prayer}` : "",
+    meeting.wins ? `Celebrations: ${meeting.wins}` : "",
+    announcements.length ? `Announcements:\n${announcements.map((row) => `- ${row.event}`).join("\n")}` : "",
+    items.length ? `Action items:\n${items.map((item) => `- ${item.action} (${item.owner}${item.due ? `, due ${item.due}` : ""})`).join("\n")}` : "",
+    meeting.notes ? `Notes: ${meeting.notes}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+  const finished = { ...meeting, status: "Done", notesBy: deps.actor.name };
+  try {
+    await (deps.chat ?? createStaffChat()).notify({ type: "meeting.finished", meeting: finished, actorName: deps.actor.name, recap });
+  } catch (error) {
+    console.error("staff chat hook failed", error instanceof Error ? error.message : "unknown");
+  }
+  return finished;
 }
 
 export const REQUEST_CHANNELS = [

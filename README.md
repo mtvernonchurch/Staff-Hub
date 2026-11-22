@@ -49,7 +49,9 @@ If an earlier import is stuck, open the project → **Settings** → **Build and
 
 | Page | What staff do there |
 | --- | --- |
-| Home | Your open items, Monday at 1:00 PM, announcements, quick links, and your Planning Center cards |
+| Home | Your open items, this week from the staff meeting, Monday at 1:00 PM, quick links, and your Planning Center cards |
+| This week | Announcements, action items, prayer, celebrations, and notes from the latest staff meeting, plus earlier meetings |
+| Meeting mode | Admins only. Live entry during Monday's 1:00 PM staff meeting |
 | Action items | The one shared list. Filter mine or everyone's. Add, update, and mark done |
 | Meetings | Prayer, wins, the week ahead, ministry updates, discussion and decisions, and the items from that meeting |
 | Sunday checklist | The areas copied from the checklist template for a meeting |

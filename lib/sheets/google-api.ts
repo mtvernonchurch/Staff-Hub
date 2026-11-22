@@ -48,7 +48,47 @@ export function createSheetsApi(options: {
     return text ? JSON.parse(text) : {};
   }
 
+  async function sheetNumber(tab: string): Promise<number> {
+    const response = await fetchImpl(
+      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(options.sheetId)}?fields=sheets.properties`,
+      { headers: { Authorization: `Bearer ${options.accessToken}` } },
+    );
+    const text = await response.text();
+    if (!response.ok) explain(new Error(`${response.status} ${text.slice(0, 300)}`));
+    const data = JSON.parse(text) as { sheets?: { properties?: { title?: string; sheetId?: number } }[] };
+    const found = data.sheets?.find((sheet) => sheet.properties?.title === tab);
+    if (found?.properties?.sheetId == null) throw new HubError(`The ${tab} tab was not found.`);
+    return found.properties.sheetId;
+  }
+
   return {
+    async deleteRow(tab, rowNumber) {
+      if (rowNumber < 2) throw new HubError("Refusing to delete the header row.");
+      const sheetId = await sheetNumber(tab);
+      const response = await fetchImpl(
+        `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(options.sheetId)}:batchUpdate`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${options.accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            requests: [
+              {
+                deleteDimension: {
+                  range: { sheetId, dimension: "ROWS", startIndex: rowNumber - 1, endIndex: rowNumber },
+                },
+              },
+            ],
+          }),
+        },
+      );
+      if (!response.ok) {
+        const text = await response.text();
+        explain(new Error(`${response.status} ${text.slice(0, 300)}`));
+      }
+    },
     async get(tab) {
       try {
         const range = encodeURIComponent(quoteTab(tab));

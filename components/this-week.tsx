@@ -1,0 +1,89 @@
+import Link from "next/link";
+import type { ActionItem, Announcement, Meeting } from "@/lib/data/types";
+import { formatFriendly, isClosedStatus } from "@/lib/domain/dates";
+
+export function ThisWeekView({
+  meeting,
+  announcements,
+  items,
+  archive,
+}: {
+  meeting: Meeting | null;
+  announcements: Announcement[];
+  items: ActionItem[];
+  archive: Meeting[];
+}) {
+  if (!meeting) {
+    return <p className="empty">No staff meeting is posted yet.</p>;
+  }
+  return (
+    <div className="stack">
+      <section className="card tone-meeting">
+        <div className="card-head">
+          <h2>{meeting.title}</h2>
+          <span>{formatFriendly(meeting.date)} · {meeting.status || "Upcoming"}</span>
+        </div>
+        {meeting.prayer ? (
+          <>
+            <h3>Prayer</h3>
+            <p className="prose">{meeting.prayer}</p>
+          </>
+        ) : null}
+        {meeting.wins ? (
+          <>
+            <h3>Celebrations</h3>
+            <p className="prose">{meeting.wins}</p>
+          </>
+        ) : null}
+      </section>
+      <section className="card tone-news">
+        <h2>Announcements</h2>
+        {announcements.length === 0 ? <p className="empty">None from this meeting.</p> : announcements.map((row) => (
+          <article key={row.id} className="item">
+            <div>
+              <h3>{row.event}</h3>
+              <p className="meta">
+                {row.date ? <span>{formatFriendly(row.date)}</span> : null}
+                {row.ministry ? <span>{row.ministry}</span> : null}
+                {row.owner ? <span>{row.owner}</span> : null}
+              </p>
+              {row.details ? <p className="note">{row.details}</p> : null}
+            </div>
+          </article>
+        ))}
+      </section>
+      <section className="card tone-action">
+        <h2>Action items</h2>
+        {items.length === 0 ? <p className="empty">None from this meeting.</p> : items.map((item) => (
+          <article key={item.id} className="item">
+            <div>
+              <h3>{item.action}</h3>
+              <p className="meta">
+                <span>{item.owner}</span>
+                {item.due ? <span>Due {formatFriendly(item.due)}</span> : null}
+                {item.ministry ? <span>{item.ministry}</span> : null}
+                <span className={isClosedStatus(item.status) ? "chip chip-done" : "chip"}>{item.status}</span>
+              </p>
+            </div>
+          </article>
+        ))}
+      </section>
+      <section className="card">
+        <h2>Notes</h2>
+        <p className="prose">{meeting.notes || "No notes yet."}</p>
+        {meeting.lookahead ? <p className="note"><strong>Look-ahead. </strong>{meeting.lookahead}</p> : null}
+      </section>
+      {archive.length > 0 ? (
+        <section className="card">
+          <h2>Earlier meetings</h2>
+          {archive.map((row) => (
+            <Link key={row.id} className="meeting-link" href={`/this-week/${row.id}`}>
+              <strong>{row.title}</strong>
+              <span>{formatFriendly(row.date)} · {row.status || "Upcoming"}</span>
+            </Link>
+          ))}
+        </section>
+      ) : null}
+    </div>
+  );
+}

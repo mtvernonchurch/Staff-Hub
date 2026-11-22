@@ -22,6 +22,11 @@ class FakeSheets implements SheetsApi {
     this.grids[tab].push(...rows.map((row) => [...row]));
   }
 
+  async deleteRow(tab: string, rowNumber: number) {
+    this.writes.push({ type: "delete", tab, updates: [{ range: String(rowNumber), value: "" }] });
+    this.grids[tab].splice(rowNumber - 1, 1);
+  }
+
   async updateCells(updates: { range: string; value: string }[]) {
     this.writes.push({ type: "update", updates });
     for (const update of updates) {
@@ -48,7 +53,7 @@ function actionGrid() {
 describe("sheet writes", () => {
   it("appends a row without rewriting the rows already there", async () => {
     const fake = new FakeSheets({ "Action Items": actionGrid() });
-    const before = fake.grids["Action Items"].slice(0, 3).map((row) => [...row]);
+    const before = fake.grids["Action Items"].slice(1, 3).map((row) => row.slice(0, 10));
     const store = new SheetsStore(fake);
     await store.createActionItem({
       id: "ai_new",
@@ -60,12 +65,15 @@ describe("sheet writes", () => {
       update: "",
       created: "11/22/2026",
       completedOn: "",
+      ministry: "",
     });
-    expect(fake.grids["Action Items"].slice(0, 3)).toEqual(before);
+    expect(fake.grids["Action Items"][0]).toContain("Ministry");
+    expect(fake.grids["Action Items"].slice(1, 3).map((row) => row.slice(0, 10))).toEqual(before);
     expect(fake.grids["Action Items"][3][0]).toBe("ai_new");
     expect(fake.grids["Action Items"][3][1]).toBe("New item");
     expect(fake.grids["Action Items"][3].at(-1)).toBe("");
-    expect(fake.writes[0]?.type).toBe("append");
+    expect(fake.writes.some((write) => write.type === "append")).toBe(true);
+    expect(fake.writes.some((write) => write.type === "update")).toBe(true);
   });
 
   it("updates only the cells that changed", async () => {

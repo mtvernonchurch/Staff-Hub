@@ -76,6 +76,7 @@ export function actionCells(item: Partial<ActionItem>): Record<string, string> {
   if (item.update !== undefined) cells.Update = item.update;
   if (item.created !== undefined) cells.Created = item.created;
   if (item.completedOn !== undefined) cells["Completed On"] = item.completedOn;
+  if (item.ministry !== undefined) cells.Ministry = item.ministry;
   return cells;
 }
 
@@ -92,6 +93,7 @@ export function toActionItem(record: Record<string, string>): ActionItem | null 
     update: cell(record, "Update"),
     created: cell(record, "Created"),
     completedOn: cell(record, "Completed On"),
+    ministry: cell(record, "Ministry"),
   };
 }
 
@@ -181,6 +183,8 @@ export function announcementCells(row: Partial<Announcement>): Record<string, st
   if (row.details !== undefined) cells.Details = row.details;
   if (row.link !== undefined) cells.Link = row.link;
   if (row.audience !== undefined) cells.Audience = row.audience;
+  if (row.meetingId !== undefined) cells.Meeting = row.meetingId;
+  if (row.ministry !== undefined) cells.Ministry = row.ministry;
   return cells;
 }
 
@@ -197,6 +201,8 @@ export function toAnnouncement(record: Record<string, string>): Announcement | n
     details: cell(record, "Details"),
     link: cell(record, "Link"),
     audience: cell(record, "Audience"),
+    meetingId: cell(record, "Meeting"),
+    ministry: cell(record, "Ministry"),
   };
 }
 
