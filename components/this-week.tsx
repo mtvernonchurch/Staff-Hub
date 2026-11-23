@@ -1,5 +1,9 @@
 import Link from "next/link";
-import type { ActionItem, Announcement, CareNote, Meeting } from "@/lib/data/types";
+import { CalendarDays, Heart, Megaphone, SquareCheck, StickyNote } from "lucide-react";
+import { Heading } from "@/components/heading";
+import { AnnouncementGroups } from "@/components/announcement-groups";
+import { CalendarCheckBoard } from "@/components/calendar-check";
+import type { ActionItem, Announcement, CalendarCheck, CalendarEvent, CareNote, Meeting, Ministry, StaffMember } from "@/lib/data/types";
 import { formatFriendly, isClosedStatus } from "@/lib/domain/dates";
 import { careActionLabel } from "@/lib/domain/care";
 
@@ -9,12 +13,20 @@ export function ThisWeekView({
   items,
   careNotes,
   archive,
+  calendar,
 }: {
   meeting: Meeting | null;
   announcements: Announcement[];
   items: ActionItem[];
   careNotes: CareNote[];
   archive: Meeting[];
+  calendar?: {
+    events: CalendarEvent[];
+    checks: CalendarCheck[];
+    todayLabel: string;
+    staff: StaffMember[];
+    ministries: Ministry[];
+  };
 }) {
   if (!meeting) {
     return <p className="empty">No staff meeting is posted yet.</p>;
@@ -40,23 +52,24 @@ export function ThisWeekView({
         ) : null}
       </section>
       <section className="card tone-news">
-        <h2>Announcements</h2>
-        {announcements.length === 0 ? <p className="empty">None from this meeting.</p> : announcements.map((row) => (
-          <article key={row.id} className="item">
-            <div>
-              <h3>{row.event}</h3>
-              <p className="meta">
-                {row.date ? <span>{formatFriendly(row.date)}</span> : null}
-                {row.ministry ? <span>{row.ministry}</span> : null}
-                {row.owner ? <span>{row.owner}</span> : null}
-              </p>
-              {row.details ? <p className="note">{row.details}</p> : null}
-            </div>
-          </article>
-        ))}
+        <Heading icon={Megaphone}>Announcements</Heading>
+        <AnnouncementGroups rows={announcements} />
       </section>
+      {calendar ? (
+        <section className="card">
+          <Heading icon={CalendarDays}>Next 4 weeks</Heading>
+          <CalendarCheckBoard
+            events={calendar.events}
+            checks={calendar.checks}
+            todayLabel={calendar.todayLabel}
+            editable={false}
+            staff={calendar.staff}
+            ministries={calendar.ministries}
+          />
+        </section>
+      ) : null}
       <section className="card">
-        <h2>Care notes</h2>
+        <Heading icon={Heart}>Care notes</Heading>
         {careNotes.length === 0 ? <p className="empty">None from this meeting.</p> : careNotes.map((note) => (
           <article key={note.id} className="item">
             <div>
@@ -72,7 +85,7 @@ export function ThisWeekView({
         ))}
       </section>
       <section className="card tone-action">
-        <h2>Action items</h2>
+        <Heading icon={SquareCheck}>Action items</Heading>
         {items.length === 0 ? <p className="empty">None from this meeting.</p> : items.map((item) => (
           <article key={item.id} className="item">
             <div>
@@ -88,13 +101,13 @@ export function ThisWeekView({
         ))}
       </section>
       <section className="card">
-        <h2>Notes</h2>
+        <Heading icon={StickyNote}>Notes</Heading>
         <p className="prose">{meeting.notes || "No notes yet."}</p>
         {meeting.lookahead ? <p className="note"><strong>Look-ahead. </strong>{meeting.lookahead}</p> : null}
       </section>
       {archive.length > 0 ? (
         <section className="card">
-          <h2>Earlier meetings</h2>
+          <Heading icon={CalendarDays}>Earlier meetings</Heading>
           {archive.map((row) => (
             <Link key={row.id} className="meeting-link" href={`/this-week/${row.id}`}>
               <strong>{row.title}</strong>

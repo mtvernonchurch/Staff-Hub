@@ -1,16 +1,24 @@
 import type {
   ActionItem,
   Announcement,
+  AttendanceCount,
+  CalendarCheck,
+  CalendarEvent,
   CareNote,
   ChecklistItem,
   DeskRequest,
   FolderLink,
+  GraphicsRequest,
   HubStore,
   Meeting,
   MinistryUpdate,
   OpenIssue,
   PinnedDocument,
   QuickLink,
+  StaffPin,
+  StaffPinAck,
+  TimeAway,
+  WorkStatus,
 } from "@/lib/data/types";
 import { HubError } from "@/lib/hub-error";
 import type { SheetsApi } from "@/lib/sheets/api";
@@ -18,31 +26,51 @@ import { assertColumns, assertWritable, columnLetter, findDataRow, gridToRecords
 import {
   actionCells,
   announcementCells,
+  attendanceCells,
+  calendarCheckCells,
+  calendarEventCells,
   careNoteCells,
   checklistCells,
   documentCells,
   folderCells,
+  graphicsCells,
   issueCells,
   meetingCells,
   ministryUpdateCells,
   quickLinkCells,
   requestCells,
+  staffPinAckCells,
+  staffPinCells,
   toActionItem,
   toAnnouncement,
+  toAttendance,
+  toCalendarCheck,
+  toCalendarEvent,
   toCareNote,
   toCardAction,
   toChecklist,
   toDocument,
+  toCardMonth,
+  toCardTransaction,
   toFolder,
+  toGraphicsRequest,
   toIssue,
   toMeeting,
   toMinistry,
+  toMinistryBudget,
   toMinistryUpdate,
   toQuickLink,
   toRequest,
   toStaff,
+  toSetting,
+  toStaffPin,
+  toStaffPinAck,
+  toTimeAway,
   toTemplate,
   toWorkflowCard,
+  toWorkStatus,
+  timeAwayCells,
+  workStatusCells,
 } from "@/lib/sheets/mappers";
 import { COLUMNS, normalizeHeader } from "@/lib/sheets/schema";
 
@@ -204,12 +232,12 @@ export class SheetsStore implements HubStore {
     return (await this.records("Announcements", COLUMNS.announcements)).map(toAnnouncement).filter((row) => row !== null);
   }
   async createAnnouncement(row: Announcement) {
-    await this.ensureHeaders("Announcements", ["Meeting", "Ministry"]);
+    await this.ensureHeaders("Announcements", ["Meeting", "Ministry", "Channels"]);
     await this.append("Announcements", COLUMNS.announcements, announcementCells(row));
   }
   async updateAnnouncement(id: string, changes: Partial<Announcement>) {
-    if (changes.meetingId !== undefined || changes.ministry !== undefined) {
-      await this.ensureHeaders("Announcements", ["Meeting", "Ministry"]);
+    if (changes.meetingId !== undefined || changes.ministry !== undefined || changes.channels !== undefined) {
+      await this.ensureHeaders("Announcements", ["Meeting", "Ministry", "Channels"]);
     }
     const cells = announcementCells(changes);
     delete cells["Announcement ID"];
@@ -217,6 +245,146 @@ export class SheetsStore implements HubStore {
   }
   async deleteAnnouncement(id: string) {
     await this.remove("Announcements", "Announcement ID", id);
+  }
+  async listStaffPins() {
+    await this.api.ensureTab("Staff Announcements", [...COLUMNS.staffPins]);
+    this.cache.delete("Staff Announcements");
+    return (await this.records("Staff Announcements", COLUMNS.staffPins)).map(toStaffPin).filter((row) => row !== null);
+  }
+  async createStaffPin(row: StaffPin) {
+    await this.api.ensureTab("Staff Announcements", [...COLUMNS.staffPins]);
+    this.cache.delete("Staff Announcements");
+    await this.append("Staff Announcements", COLUMNS.staffPins, staffPinCells(row));
+  }
+  async updateStaffPin(id: string, changes: Partial<StaffPin>) {
+    await this.api.ensureTab("Staff Announcements", [...COLUMNS.staffPins]);
+    this.cache.delete("Staff Announcements");
+    const cells = staffPinCells(changes);
+    delete cells["Pin ID"];
+    await this.patch("Staff Announcements", "Pin ID", id, cells);
+  }
+  async deleteStaffPin(id: string) {
+    await this.api.ensureTab("Staff Announcements", [...COLUMNS.staffPins]);
+    await this.api.ensureTab("Staff Announcement Acks", [...COLUMNS.staffPinAcks]);
+    this.cache.delete("Staff Announcements");
+    this.cache.delete("Staff Announcement Acks");
+    const acks = (await this.records("Staff Announcement Acks", COLUMNS.staffPinAcks))
+      .map(toStaffPinAck)
+      .filter((row): row is NonNullable<typeof row> => row !== null && row.pinId === id);
+    await this.remove("Staff Announcements", "Pin ID", id);
+    for (const ack of acks) {
+      await this.remove("Staff Announcement Acks", "Ack ID", ack.id);
+    }
+  }
+  async listStaffPinAcks() {
+    await this.api.ensureTab("Staff Announcement Acks", [...COLUMNS.staffPinAcks]);
+    this.cache.delete("Staff Announcement Acks");
+    return (await this.records("Staff Announcement Acks", COLUMNS.staffPinAcks)).map(toStaffPinAck).filter((row) => row !== null);
+  }
+  async createStaffPinAck(row: StaffPinAck) {
+    await this.api.ensureTab("Staff Announcement Acks", [...COLUMNS.staffPinAcks]);
+    this.cache.delete("Staff Announcement Acks");
+    await this.append("Staff Announcement Acks", COLUMNS.staffPinAcks, staffPinAckCells(row));
+  }
+  async listSettings() {
+    await this.api.ensureTab("Hub Settings", [...COLUMNS.settings]);
+    this.cache.delete("Hub Settings");
+    return (await this.records("Hub Settings", COLUMNS.settings)).map(toSetting).filter((row) => row !== null);
+  }
+  async setSetting(key: string, value: string) {
+    await this.api.ensureTab("Hub Settings", [...COLUMNS.settings]);
+    this.cache.delete("Hub Settings");
+    const existing = (await this.listSettings()).some((row) => row.key === key);
+    if (!existing) {
+      await this.append("Hub Settings", COLUMNS.settings, { Setting: key, Value: value });
+      return;
+    }
+    await this.patch("Hub Settings", "Setting", key, { Value: value });
+  }
+  async listGraphicsRequests() {
+    await this.api.ensureTab("Graphics Requests", [...COLUMNS.graphicsRequests]);
+    this.cache.delete("Graphics Requests");
+    return (await this.records("Graphics Requests", COLUMNS.graphicsRequests)).map(toGraphicsRequest).filter((row) => row !== null);
+  }
+  async createGraphicsRequest(row: GraphicsRequest) {
+    await this.api.ensureTab("Graphics Requests", [...COLUMNS.graphicsRequests]);
+    this.cache.delete("Graphics Requests");
+    await this.append("Graphics Requests", COLUMNS.graphicsRequests, graphicsCells(row));
+  }
+  async updateGraphicsRequest(id: string, changes: Partial<GraphicsRequest>) {
+    await this.api.ensureTab("Graphics Requests", [...COLUMNS.graphicsRequests]);
+    this.cache.delete("Graphics Requests");
+    const cells = graphicsCells(changes);
+    delete cells["Request ID"];
+    await this.patch("Graphics Requests", "Request ID", id, cells);
+  }
+  async listTimeAway() {
+    await this.api.ensureTab("Time Away", [...COLUMNS.timeAway]);
+    this.cache.delete("Time Away");
+    return (await this.records("Time Away", COLUMNS.timeAway)).map(toTimeAway).filter((row) => row !== null);
+  }
+  async createTimeAway(row: TimeAway) {
+    await this.api.ensureTab("Time Away", [...COLUMNS.timeAway]);
+    this.cache.delete("Time Away");
+    await this.append("Time Away", COLUMNS.timeAway, timeAwayCells(row));
+  }
+  async updateTimeAway(id: string, changes: Partial<TimeAway>) {
+    await this.api.ensureTab("Time Away", [...COLUMNS.timeAway]);
+    this.cache.delete("Time Away");
+    const cells = timeAwayCells(changes);
+    delete cells["Away ID"];
+    await this.patch("Time Away", "Away ID", id, cells);
+  }
+  async listWorkStatuses() {
+    await this.api.ensureTab("Work Status", [...COLUMNS.workStatuses]);
+    this.cache.delete("Work Status");
+    return (await this.records("Work Status", COLUMNS.workStatuses)).map(toWorkStatus).filter((row) => row !== null);
+  }
+  async createWorkStatus(row: WorkStatus) {
+    await this.api.ensureTab("Work Status", [...COLUMNS.workStatuses]);
+    this.cache.delete("Work Status");
+    await this.append("Work Status", COLUMNS.workStatuses, workStatusCells(row));
+  }
+  async updateWorkStatus(id: string, changes: Partial<WorkStatus>) {
+    await this.api.ensureTab("Work Status", [...COLUMNS.workStatuses]);
+    this.cache.delete("Work Status");
+    const cells = workStatusCells(changes);
+    delete cells["Status ID"];
+    await this.patch("Work Status", "Status ID", id, cells);
+  }
+  async listCalendarEvents() {
+    await this.api.ensureTab("Calendar", [...COLUMNS.calendarEvents]);
+    this.cache.delete("Calendar");
+    return (await this.records("Calendar", COLUMNS.calendarEvents)).map(toCalendarEvent).filter((row) => row !== null);
+  }
+  async createCalendarEvent(row: CalendarEvent) {
+    await this.api.ensureTab("Calendar", [...COLUMNS.calendarEvents]);
+    this.cache.delete("Calendar");
+    await this.append("Calendar", COLUMNS.calendarEvents, calendarEventCells(row));
+  }
+  async updateCalendarEvent(id: string, changes: Partial<CalendarEvent>) {
+    await this.api.ensureTab("Calendar", [...COLUMNS.calendarEvents]);
+    this.cache.delete("Calendar");
+    const cells = calendarEventCells(changes);
+    delete cells["Event ID"];
+    await this.patch("Calendar", "Event ID", id, cells);
+  }
+  async listCalendarChecks() {
+    await this.api.ensureTab("Calendar Checks", [...COLUMNS.calendarChecks]);
+    this.cache.delete("Calendar Checks");
+    return (await this.records("Calendar Checks", COLUMNS.calendarChecks)).map(toCalendarCheck).filter((row) => row !== null);
+  }
+  async createCalendarCheck(row: CalendarCheck) {
+    await this.api.ensureTab("Calendar Checks", [...COLUMNS.calendarChecks]);
+    this.cache.delete("Calendar Checks");
+    await this.append("Calendar Checks", COLUMNS.calendarChecks, calendarCheckCells(row));
+  }
+  async updateCalendarCheck(id: string, changes: Partial<CalendarCheck>) {
+    await this.api.ensureTab("Calendar Checks", [...COLUMNS.calendarChecks]);
+    this.cache.delete("Calendar Checks");
+    const cells = calendarCheckCells(changes);
+    delete cells["Check ID"];
+    await this.patch("Calendar Checks", "Check ID", id, cells);
   }
   async listCareNotes() {
     await this.api.ensureTab("Care Notes", [...COLUMNS.careNotes]);
@@ -276,13 +444,47 @@ export class SheetsStore implements HubStore {
     delete cells["Doc ID"];
     await this.patch("Documents", "Doc ID", id, cells);
   }
+  async listMinistryBudgets() {
+    await this.api.ensureTab("Budgets", [...COLUMNS.budgets]);
+    this.cache.delete("Budgets");
+    return (await this.records("Budgets", COLUMNS.budgets)).map(toMinistryBudget).filter((row) => row !== null);
+  }
+  async listCardMonths() {
+    await this.api.ensureTab("Card Spend", [...COLUMNS.cardSpend]);
+    this.cache.delete("Card Spend");
+    return (await this.records("Card Spend", COLUMNS.cardSpend)).map(toCardMonth).filter((row) => row !== null);
+  }
+  async listAttendance() {
+    await this.api.ensureTab("Attendance", [...COLUMNS.attendance]);
+    this.cache.delete("Attendance");
+    return (await this.records("Attendance", COLUMNS.attendance)).map(toAttendance).filter((row) => row !== null);
+  }
+  async createAttendance(row: AttendanceCount) {
+    await this.api.ensureTab("Attendance", [...COLUMNS.attendance]);
+    this.cache.delete("Attendance");
+    await this.append("Attendance", COLUMNS.attendance, attendanceCells(row));
+  }
+  async updateAttendance(id: string, changes: Partial<AttendanceCount>) {
+    await this.api.ensureTab("Attendance", [...COLUMNS.attendance]);
+    this.cache.delete("Attendance");
+    const cells = attendanceCells(changes);
+    delete cells["Attendance ID"];
+    await this.patch("Attendance", "Attendance ID", id, cells);
+  }
+  async listCardTransactions() {
+    await this.api.ensureTab("Card Transactions", [...COLUMNS.cardTransactions]);
+    this.cache.delete("Card Transactions");
+    return (await this.records("Card Transactions", COLUMNS.cardTransactions)).map(toCardTransaction).filter((row) => row !== null);
+  }
   async listQuickLinks() {
     return (await this.records("Quick Links", COLUMNS.quickLinks)).map(toQuickLink).filter((row) => row !== null);
   }
   async createQuickLink(row: QuickLink) {
+    await this.ensureHeaders("Quick Links", ["Initials", "Color", "Visible To", "Hidden"]);
     await this.append("Quick Links", COLUMNS.quickLinks, quickLinkCells(row));
   }
   async updateQuickLink(id: string, changes: Partial<QuickLink>) {
+    await this.ensureHeaders("Quick Links", ["Initials", "Color", "Visible To", "Hidden"]);
     const cells = quickLinkCells(changes);
     delete cells["Link ID"];
     await this.patch("Quick Links", "Link ID", id, cells);

@@ -5,7 +5,7 @@ import {
 } from "@/app/(hub)/actions";
 import type { ActionItem, Meeting, StaffMember } from "@/lib/data/types";
 import { isAdmin } from "@/lib/domain/access";
-import { formatFriendly, isClosedStatus, isOverdue, toInputDate } from "@/lib/domain/dates";
+import { formatFriendly, isClosedStatus, isDueSoon, isOverdue, toInputDate } from "@/lib/domain/dates";
 import { namesMatch } from "@/lib/domain/people";
 
 export function StaffOptions({ staff }: { staff: StaffMember[] }) {
@@ -91,6 +91,7 @@ export function ActionList({
     <div>
       {items.map((item) => {
         const overdue = isOverdue(item.due, item.status, today);
+        const dueSoon = isDueSoon(item.due, item.status, today);
         const meeting = meetings.find((row) => row.id === item.meetingId);
         const mine = namesMatch(actor.name, item.owner);
         const canEdit = isAdmin(actor) || mine;
@@ -102,6 +103,7 @@ export function ActionList({
                 <span>{mine ? "Yours" : item.owner}</span>
                 {item.due ? <span>Due {formatFriendly(item.due)}</span> : <span>No due date</span>}
                 {overdue ? <span className="chip chip-overdue">Overdue</span> : null}
+                {dueSoon ? <span className="chip chip-progress">Due soon</span> : null}
                 {item.status === "In progress" ? <span className="chip chip-progress">In progress</span> : null}
                 {isClosedStatus(item.status) ? <span className="chip chip-done">Done</span> : null}
                 {meeting ? <span>From {meeting.title}</span> : null}

@@ -136,6 +136,14 @@ export function isOverdue(due: string, status: string, today: Date): boolean {
   return parsed.getTime() < today.getTime();
 }
 
+/** Open items due today through the next week, after overdue items. */
+export function isDueSoon(due: string, status: string, today: Date, withinDays = 7): boolean {
+  if (isClosedStatus(status) || isOverdue(due, status, today)) return false;
+  const parsed = parseSheetDate(due);
+  if (!parsed) return false;
+  return parsed.getTime() <= addUtcDays(today, withinDays).getTime();
+}
+
 export function canonicalActionStatus(status: string): "Open" | "In progress" | "Done" | null {
   const value = status.trim().toLowerCase();
   if (value === "open") return "Open";

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { createMeetingAction } from "@/app/(hub)/actions";
+import { CalendarDays } from "lucide-react";
+import { Heading } from "@/components/heading";
 import { Flash, PageHeader } from "@/components/ui";
 import { isAdmin } from "@/lib/domain/access";
 import { chicagoToday, formatFriendly, formatUsDate, sortMeetings, toInputDate, upcomingMonday } from "@/lib/domain/dates";
@@ -25,12 +27,13 @@ export default async function MeetingsPage({
     <>
       <PageHeader
         kicker="Mondays at 1:00 PM"
+        icon={CalendarDays}
         title="Staff meetings"
         lede="Prayer, wins, the week ahead, ministry updates, and the decisions that become action items."
       />
       <Flash error={query.error} notice={query.notice} />
       <section className="card tone-meeting">
-        <h2>This Monday</h2>
+        <Heading icon={CalendarDays}>This Monday</Heading>
         {monday ? (
           <Link className="meeting-link" href={`/meetings/${monday.id}`}>
             <strong>{monday.title}</strong>
@@ -50,7 +53,7 @@ export default async function MeetingsPage({
         )}
       </section>
       <section className="card" style={{ marginTop: 16 }}>
-        <h2>All meetings</h2>
+        <Heading icon={CalendarDays}>All meetings</Heading>
         {sortMeetings(meetings, today).map((meeting) => (
           <Link key={meeting.id} className="meeting-link" href={`/meetings/${meeting.id}`}>
             <strong>{meeting.title || "Staff meeting"}</strong>

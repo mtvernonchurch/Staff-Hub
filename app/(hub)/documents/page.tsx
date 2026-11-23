@@ -6,12 +6,14 @@ import {
   editFolderAction,
   editQuickLinkAction,
 } from "@/app/(hub)/actions";
+import { FileText, Folder, Link2 } from "lucide-react";
+import { Heading } from "@/components/heading";
 import { Flash, IconImage, OutLink, PageHeader } from "@/components/ui";
 import { isAdmin } from "@/lib/domain/access";
 import { sortByOrder } from "@/lib/domain/view";
 import { requireStaff } from "@/lib/session";
 
-export const metadata = { title: "Documents" };
+export const metadata = { title: "Resources" };
 
 export default async function DocumentsPage({
   searchParams,
@@ -32,12 +34,13 @@ export default async function DocumentsPage({
     <>
       <PageHeader
         kicker="Files stay where they are"
-        title="Documents and folders"
-        lede="Pins and folders open the real file. The hub does not copy anything."
+        icon={Folder}
+        title="Resources"
+        lede="Program tiles, folders, and pinned files. They open in a new tab. The hub does not copy anything."
       />
       <Flash error={query.error} notice={query.notice} />
       <section className="card">
-        <h2>Quick links</h2>
+        <Heading icon={Link2}>Quick links</Heading>
         <div className="quick-grid">
           {sortByOrder(links).map((link) => (
             <OutLink key={link.id} className="quick-link" href={link.url}>
@@ -55,6 +58,13 @@ export default async function DocumentsPage({
               <label className="field">URL<input name="url" required placeholder="https://" /></label>
               <label className="field">Icon word <span>drive, folder, chat, calendar, or link</span><input name="icon" defaultValue="link" /></label>
               <label className="field">Order<input name="order" defaultValue={String(links.length + 1)} /></label>
+              <label className="field">Initials<input name="initials" maxLength={3} /></label>
+              <label className="field">Color
+                <select name="color" defaultValue="navy">
+                  <option>navy</option><option>blue</option><option>green</option><option>mint</option><option>orange</option><option>rose</option>
+                </select>
+              </label>
+              <label className="field">Who can see it<input name="visibleTo" defaultValue="All" placeholder="All, Admin, or a ministry" /></label>
               <button className="btn" type="submit">Add link</button>
             </form>
             {links.map((link) => (
@@ -65,6 +75,14 @@ export default async function DocumentsPage({
                 <label className="field">URL<input name="url" defaultValue={link.url} /></label>
                 <label className="field">Icon<input name="icon" defaultValue={link.icon} /></label>
                 <label className="field">Order<input name="order" defaultValue={link.order} /></label>
+                <label className="field">Initials<input name="initials" defaultValue={link.initials} maxLength={3} /></label>
+                <label className="field">Color
+                  <select name="color" defaultValue={link.color || "navy"}>
+                    <option>navy</option><option>blue</option><option>green</option><option>mint</option><option>orange</option><option>rose</option>
+                  </select>
+                </label>
+                <label className="field">Who can see it<input name="visibleTo" defaultValue={link.visibleTo || "All"} /></label>
+                <label className="checks"><input type="checkbox" name="hidden" value="yes" defaultChecked={link.hidden} /> Hidden</label>
                 <button className="btn btn-small" type="submit">Save {link.name}</button>
               </form>
             ))}
@@ -72,7 +90,7 @@ export default async function DocumentsPage({
         ) : null}
       </section>
       <section className="card" style={{ marginTop: 16 }}>
-        <h2>Folders</h2>
+        <Heading icon={Folder}>Folders</Heading>
         <div className="folder-grid">
           {sortByOrder(folders).map((folder) => (
             <OutLink key={folder.id} className="folder-card" href={folder.url}>{folder.name}</OutLink>
@@ -102,7 +120,7 @@ export default async function DocumentsPage({
         ) : null}
       </section>
       <section className="card" style={{ marginTop: 16 }}>
-        <h2>Pinned documents</h2>
+        <Heading icon={FileText}>Pinned documents</Heading>
         {[...groups.entries()].map(([group, docs]) => (
           <div key={group}>
             <p className="group-title">{group}</p>

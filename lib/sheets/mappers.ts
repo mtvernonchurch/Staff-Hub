@@ -1,20 +1,32 @@
 import type {
   ActionItem,
   Announcement,
+  AttendanceCount,
+  CalendarCheck,
+  CalendarEvent,
   CardAction,
   CareNote,
   ChecklistItem,
   ChecklistTemplateRow,
   DeskRequest,
+  CardMonth,
+  CardTransaction,
   FolderLink,
+  GraphicsRequest,
+  HubSetting,
   Meeting,
   Ministry,
+  MinistryBudget,
   MinistryUpdate,
   OpenIssue,
   PinnedDocument,
   QuickLink,
   StaffMember,
+  StaffPin,
+  StaffPinAck,
+  TimeAway,
   WorkflowCard,
+  WorkStatus,
 } from "@/lib/data/types";
 import { cell, formatBool, parseBool } from "@/lib/sheets/codec";
 
@@ -186,6 +198,7 @@ export function announcementCells(row: Partial<Announcement>): Record<string, st
   if (row.audience !== undefined) cells.Audience = row.audience;
   if (row.meetingId !== undefined) cells.Meeting = row.meetingId;
   if (row.ministry !== undefined) cells.Ministry = row.ministry;
+  if (row.channels !== undefined) cells.Channels = row.channels;
   return cells;
 }
 
@@ -204,6 +217,213 @@ export function toAnnouncement(record: Record<string, string>): Announcement | n
     audience: cell(record, "Audience"),
     meetingId: cell(record, "Meeting"),
     ministry: cell(record, "Ministry"),
+    channels: cell(record, "Channels"),
+  };
+}
+
+export function staffPinCells(row: Partial<StaffPin>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Pin ID"] = row.id;
+  if (row.title !== undefined) cells.Title = row.title;
+  if (row.message !== undefined) cells.Message = row.message;
+  if (row.link !== undefined) cells.Link = row.link;
+  if (row.priority !== undefined) cells.Priority = row.priority;
+  if (row.showUntil !== undefined) cells["Show Until"] = row.showUntil;
+  if (row.author !== undefined) cells.Author = row.author;
+  if (row.posted !== undefined) cells.Posted = row.posted;
+  return cells;
+}
+
+export function toStaffPin(record: Record<string, string>): StaffPin | null {
+  const id = cell(record, "Pin ID");
+  if (!id) return null;
+  return {
+    id,
+    title: cell(record, "Title"),
+    message: cell(record, "Message"),
+    link: cell(record, "Link"),
+    priority: cell(record, "Priority") || "Normal",
+    showUntil: cell(record, "Show Until"),
+    author: cell(record, "Author"),
+    posted: cell(record, "Posted"),
+  };
+}
+
+export function staffPinAckCells(row: Partial<StaffPinAck>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Ack ID"] = row.id;
+  if (row.pinId !== undefined) cells["Pin ID"] = row.pinId;
+  if (row.staff !== undefined) cells.Staff = row.staff;
+  if (row.acknowledgedOn !== undefined) cells["Acknowledged On"] = row.acknowledgedOn;
+  return cells;
+}
+
+export function toStaffPinAck(record: Record<string, string>): StaffPinAck | null {
+  const id = cell(record, "Ack ID");
+  if (!id) return null;
+  return {
+    id,
+    pinId: cell(record, "Pin ID"),
+    staff: cell(record, "Staff"),
+    acknowledgedOn: cell(record, "Acknowledged On"),
+  };
+}
+
+export function toSetting(record: Record<string, string>): HubSetting | null {
+  const key = cell(record, "Setting");
+  if (!key) return null;
+  return { key, value: cell(record, "Value") };
+}
+
+export function graphicsCells(row: Partial<GraphicsRequest>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Request ID"] = row.id;
+  if (row.requestedBy !== undefined) cells["Requested By"] = row.requestedBy;
+  if (row.ministry !== undefined) cells.Ministry = row.ministry;
+  if (row.needed !== undefined) cells["What's Needed"] = row.needed;
+  if (row.platforms !== undefined) cells.Platforms = row.platforms;
+  if (row.event !== undefined) cells.Event = row.event;
+  if (row.eventDate !== undefined) cells["Event Date"] = row.eventDate;
+  if (row.neededBy !== undefined) cells["Needed By"] = row.neededBy;
+  if (row.description !== undefined) cells.Description = row.description;
+  if (row.links !== undefined) cells.Links = row.links;
+  if (row.status !== undefined) cells.Status = row.status;
+  if (row.assignedTo !== undefined) cells["Assigned To"] = row.assignedTo;
+  if (row.created !== undefined) cells.Created = row.created;
+  return cells;
+}
+
+export function toGraphicsRequest(record: Record<string, string>): GraphicsRequest | null {
+  const id = cell(record, "Request ID");
+  if (!id) return null;
+  return {
+    id,
+    requestedBy: cell(record, "Requested By"),
+    ministry: cell(record, "Ministry"),
+    needed: cell(record, "What's Needed"),
+    platforms: cell(record, "Platforms"),
+    event: cell(record, "Event"),
+    eventDate: cell(record, "Event Date"),
+    neededBy: cell(record, "Needed By"),
+    description: cell(record, "Description"),
+    links: cell(record, "Links"),
+    status: cell(record, "Status") || "New",
+    assignedTo: cell(record, "Assigned To"),
+    created: cell(record, "Created"),
+  };
+}
+
+export function timeAwayCells(row: Partial<TimeAway>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Away ID"] = row.id;
+  if (row.requestedBy !== undefined) cells["Requested By"] = row.requestedBy;
+  if (row.kind !== undefined) cells.Type = row.kind;
+  if (row.start !== undefined) cells.Start = row.start;
+  if (row.end !== undefined) cells.End = row.end;
+  if (row.halfDay !== undefined) cells["Half Day"] = formatBool(row.halfDay);
+  if (row.notes !== undefined) cells.Notes = row.notes;
+  if (row.coverage !== undefined) cells.Coverage = row.coverage;
+  if (row.status !== undefined) cells.Status = row.status;
+  if (row.created !== undefined) cells.Created = row.created;
+  return cells;
+}
+
+export function toTimeAway(record: Record<string, string>): TimeAway | null {
+  const id = cell(record, "Away ID");
+  if (!id) return null;
+  return {
+    id,
+    requestedBy: cell(record, "Requested By"),
+    kind: cell(record, "Type"),
+    start: cell(record, "Start"),
+    end: cell(record, "End"),
+    halfDay: parseBool(cell(record, "Half Day")),
+    notes: cell(record, "Notes"),
+    coverage: cell(record, "Coverage"),
+    status: cell(record, "Status") || "Pending",
+    created: cell(record, "Created"),
+  };
+}
+
+export function workStatusCells(row: Partial<WorkStatus>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Status ID"] = row.id;
+  if (row.date !== undefined) cells.Date = row.date;
+  if (row.staff !== undefined) cells.Staff = row.staff;
+  if (row.place !== undefined) cells.Place = row.place;
+  if (row.note !== undefined) cells.Note = row.note;
+  return cells;
+}
+
+export function toWorkStatus(record: Record<string, string>): WorkStatus | null {
+  const id = cell(record, "Status ID");
+  if (!id) return null;
+  return {
+    id,
+    date: cell(record, "Date"),
+    staff: cell(record, "Staff"),
+    place: cell(record, "Place"),
+    note: cell(record, "Note"),
+  };
+}
+
+export function calendarEventCells(row: Partial<CalendarEvent>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Event ID"] = row.id;
+  if (row.date !== undefined) cells.Date = row.date;
+  if (row.time !== undefined) cells.Time = row.time;
+  if (row.event !== undefined) cells.Event = row.event;
+  if (row.ministry !== undefined) cells.Ministry = row.ministry;
+  if (row.location !== undefined) cells.Location = row.location;
+  if (row.owner !== undefined) cells.Owner = row.owner;
+  if (row.plan) cells.Plan = row.plan;
+  if (row.volunteersReady) cells["Volunteers Ready"] = row.volunteersReady;
+  if (row.volunteersNeeded) cells["Volunteers Needed"] = row.volunteersNeeded;
+  return cells;
+}
+
+export function toCalendarEvent(record: Record<string, string>): CalendarEvent | null {
+  const id = cell(record, "Event ID");
+  if (!id) return null;
+  return {
+    id,
+    date: cell(record, "Date"),
+    time: cell(record, "Time"),
+    event: cell(record, "Event"),
+    ministry: cell(record, "Ministry"),
+    location: cell(record, "Location"),
+    owner: cell(record, "Owner"),
+    plan: cell(record, "Plan"),
+    volunteersReady: cell(record, "Volunteers Ready"),
+    volunteersNeeded: cell(record, "Volunteers Needed"),
+  };
+}
+
+export function calendarCheckCells(row: Partial<CalendarCheck>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Check ID"] = row.id;
+  if (row.eventId !== undefined) cells["Event ID"] = row.eventId;
+  if (row.promotedEmail !== undefined) cells["The Weekly"] = formatBool(row.promotedEmail);
+  if (row.promotedSocials !== undefined) cells.Social = formatBool(row.promotedSocials);
+  if (row.promotedPlatform !== undefined) cells.Platform = formatBool(row.promotedPlatform);
+  if (row.volunteersSet !== undefined) cells.Volunteers = formatBool(row.volunteersSet);
+  if (row.graphicsRequested !== undefined) cells.Graphics = formatBool(row.graphicsRequested);
+  if (row.notes !== undefined) cells.Notes = row.notes;
+  return cells;
+}
+
+export function toCalendarCheck(record: Record<string, string>): CalendarCheck | null {
+  const id = cell(record, "Check ID");
+  if (!id) return null;
+  return {
+    id,
+    eventId: cell(record, "Event ID"),
+    promotedEmail: parseBool(cell(record, "The Weekly", ["Email"])),
+    promotedSocials: parseBool(cell(record, "Social", ["Socials"])),
+    promotedPlatform: parseBool(cell(record, "Platform")),
+    volunteersSet: parseBool(cell(record, "Volunteers")),
+    graphicsRequested: parseBool(cell(record, "Graphics")),
+    notes: cell(record, "Notes"),
   };
 }
 
@@ -296,18 +516,103 @@ export function quickLinkCells(row: Partial<QuickLink>): Record<string, string> 
   if (row.url !== undefined) cells.URL = row.url;
   if (row.icon !== undefined) cells.Icon = row.icon;
   if (row.order !== undefined) cells.Order = row.order;
+  if (row.initials !== undefined) cells.Initials = row.initials;
+  if (row.color !== undefined) cells.Color = row.color;
+  if (row.visibleTo !== undefined) cells["Visible To"] = row.visibleTo;
+  if (row.hidden !== undefined) cells.Hidden = formatBool(row.hidden);
   return cells;
 }
 
 export function toQuickLink(record: Record<string, string>): QuickLink | null {
   const id = cell(record, "Link ID");
-  if (!id) return null;
+  const name = cell(record, "Name");
+  if (!id && !name) return null;
+  const words = name.split(/\s+/).filter(Boolean);
+  const fallback = words.slice(0, 2).map((word) => word[0]?.toUpperCase() ?? "").join("") || "?";
   return {
-    id,
-    name: cell(record, "Name"),
+    id: id || name,
+    name,
     url: cell(record, "URL"),
     icon: cell(record, "Icon"),
     order: cell(record, "Order"),
+    initials: cell(record, "Initials") || fallback,
+    color: cell(record, "Color") || "navy",
+    visibleTo: cell(record, "Visible To") || "All",
+    hidden: parseBool(cell(record, "Hidden")),
+  };
+}
+
+function moneyNumber(value: string): number {
+  const number = Number(value.replace(/[$,]/g, "").trim());
+  return Number.isFinite(number) ? number : 0;
+}
+
+export function toMinistryBudget(record: Record<string, string>): MinistryBudget | null {
+  const ministry = cell(record, "Ministry");
+  if (!ministry) return null;
+  return {
+    ministry,
+    fiscalYear: cell(record, "Fiscal Year"),
+    annual: moneyNumber(cell(record, "Annual Budget")),
+    spent: moneyNumber(cell(record, "Spent YTD")),
+    updated: cell(record, "Updated"),
+    monthly: cell(record, "Monthly")
+      .split(",")
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .map((part) => moneyNumber(part)),
+  };
+}
+
+export function toCardMonth(record: Record<string, string>): CardMonth | null {
+  const staff = cell(record, "Staff");
+  if (!staff) return null;
+  return {
+    staff,
+    month: cell(record, "Month"),
+    limit: moneyNumber(cell(record, "Limit")),
+    spent: moneyNumber(cell(record, "Spent")),
+  };
+}
+
+export function attendanceCells(row: Partial<AttendanceCount>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Attendance ID"] = row.id;
+  if (row.date !== undefined) cells.Date = row.date;
+  if (row.service !== undefined) cells.Service = row.service;
+  if (row.area !== undefined) cells.Area = row.area;
+  if (row.count !== undefined) cells.Count = String(row.count);
+  if (row.notes !== undefined) cells.Notes = row.notes;
+  return cells;
+}
+
+export function toAttendance(record: Record<string, string>): AttendanceCount | null {
+  const id = cell(record, "Attendance ID");
+  const area = cell(record, "Area");
+  if (!id && !area) return null;
+  const count = Number(cell(record, "Count").replace(/,/g, ""));
+  return {
+    id: id || `${cell(record, "Date")}-${cell(record, "Service")}-${area}`,
+    date: cell(record, "Date"),
+    service: cell(record, "Service"),
+    area,
+    count: Number.isFinite(count) ? count : 0,
+    notes: cell(record, "Notes"),
+  };
+}
+
+export function toCardTransaction(record: Record<string, string>): CardTransaction | null {
+  const id = cell(record, "Transaction ID");
+  const merchant = cell(record, "Merchant");
+  if (!id && !merchant) return null;
+  return {
+    id: id || merchant,
+    staff: cell(record, "Staff"),
+    month: cell(record, "Month"),
+    date: cell(record, "Date"),
+    merchant,
+    amount: moneyNumber(cell(record, "Amount")),
+    receiptMissing: parseBool(cell(record, "Receipt Missing")),
   };
 }
 

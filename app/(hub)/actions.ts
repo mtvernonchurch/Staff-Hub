@@ -155,6 +155,7 @@ export async function createAnnouncementAction(formData: FormData) {
         details: field(formData, "details"),
         link: field(formData, "link"),
         audience: field(formData, "audience"),
+        channels: formData.getAll("channels").map((value) => String(value)),
       },
     );
   });
@@ -172,6 +173,7 @@ export async function editAnnouncementAction(formData: FormData) {
       details: field(formData, "details"),
       link: field(formData, "link"),
       audience: field(formData, "audience"),
+      channels: formData.getAll("channels").map((value) => String(value)).join(", "),
     });
   });
 }
@@ -285,7 +287,16 @@ export async function createQuickLinkAction(formData: FormData) {
     const { staff, store } = await requireStaff();
     await createQuickLink(
       { store, actor: staff },
-      { name: field(formData, "name"), url: field(formData, "url"), icon: field(formData, "icon"), order: field(formData, "order") },
+      {
+        name: field(formData, "name"),
+        url: field(formData, "url"),
+        icon: field(formData, "icon"),
+        order: field(formData, "order"),
+        initials: field(formData, "initials"),
+        color: field(formData, "color"),
+        visibleTo: field(formData, "visibleTo"),
+        hidden: formData.get("hidden") === "yes",
+      },
     );
   });
 }
@@ -299,6 +310,10 @@ export async function editQuickLinkAction(formData: FormData) {
       url: field(formData, "url"),
       icon: field(formData, "icon"),
       order: field(formData, "order"),
+      initials: field(formData, "initials"),
+      color: field(formData, "color"),
+      visibleTo: field(formData, "visibleTo"),
+      hidden: formData.get("hidden") === "yes",
     });
   });
 }

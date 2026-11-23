@@ -54,6 +54,9 @@ describe("meeting mode rules", () => {
     expect(events[0]?.type).toBe("meeting.finished");
     if (events[0]?.type === "meeting.finished") {
       expect(events[0].recap).toContain("Thanksgiving Eve service");
+      expect(events[0].recap).toContain("The Weekly (2)");
+      expect(events[0].recap).toContain("Social (1)");
+      expect(events[0].recap).toContain("Platform (1)");
       expect(events[0].recap).toContain("Call for the Parker family");
     }
   });
@@ -114,13 +117,16 @@ describe("announcement sheet columns", () => {
       audience: "Staff",
       meetingId: "mtg_monday",
       ministry: "Care",
+      channels: "Email, Platform",
     });
     expect(api.grids.Announcements[0]).toContain("Meeting");
     expect(api.grids.Announcements[0]).toContain("Ministry");
+    expect(api.grids.Announcements[0]).toContain("Channels");
     expect(api.grids.Announcements[1][0]).toBe("ann_old");
     expect(api.grids.Announcements[1][2]).toBe("Old news");
     const saved = (await store.listAnnouncements()).find((row) => row.id === "ann_new");
     expect(saved?.meetingId).toBe("mtg_monday");
     expect(saved?.ministry).toBe("Care");
+    expect(saved?.channels).toBe("Email, Platform");
   });
 });

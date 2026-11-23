@@ -5,6 +5,8 @@ import {
   editMinistryUpdateAction,
   saveMeetingSectionAction,
 } from "@/app/(hub)/actions";
+import { CalendarDays, SquareCheck, Users } from "lucide-react";
+import { Heading } from "@/components/heading";
 import { ActionItemForm, ActionList } from "@/components/records";
 import { Flash, PageHeader } from "@/components/ui";
 import { isAdmin } from "@/lib/domain/access";
@@ -67,7 +69,7 @@ export default async function MeetingPage({
         <Section title="Wins" section="wins" value={meeting.wins} canEdit={admin} meetingId={meeting.id} returnTo={returnTo} />
         <Section title="Calendar look-ahead" section="lookahead" value={meeting.lookahead} canEdit={admin} meetingId={meeting.id} returnTo={returnTo} hint="Staff meeting, deadlines, days off, and office closures. Room booking stays in Planning Center." />
         <section className="card">
-          <h2>Ministry updates</h2>
+          <Heading icon={Users}>Ministry updates</Heading>
           {meetingUpdates.length === 0 ? <p className="empty">No updates for this meeting yet.</p> : meetingUpdates.map((update) => (
             <article key={update.id} className="item">
               <div>
@@ -114,7 +116,7 @@ export default async function MeetingPage({
         <Section title="Discussion and decisions" section="notes" value={meeting.notes} canEdit={admin} meetingId={meeting.id} returnTo={returnTo} hint="What you talked about, and what you decided. Leave pastoral care and personnel details out." />
         <Section title="Care update" section="care" value={meeting.care} canEdit={admin} meetingId={meeting.id} returnTo={returnTo} hint="Keep this general. Everyone on staff can read it." />
         <section className="card tone-action">
-          <h2>Action items from this meeting</h2>
+          <Heading icon={SquareCheck}>Action items from this meeting</Heading>
           <p className="hint">{openLinked.length} still open.</p>
           <ActionList items={linked} actor={staff} staff={people} meetings={[meeting]} today={today} returnTo={returnTo} />
           <details>
@@ -148,7 +150,7 @@ function Section({
 }) {
   return (
     <section className="card">
-      <h2>{title}</h2>
+      <Heading icon={CalendarDays}>{title}</Heading>
       {hint ? <p className="hint">{hint}</p> : null}
       {canEdit ? (
         <form action={saveMeetingSectionAction} className="stack-form">

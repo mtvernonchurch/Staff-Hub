@@ -14,6 +14,7 @@ export function Nav({ showMeetingMode = false }: { showMeetingMode?: boolean }) 
     { href: "/checklist", label: "Sunday checklist" },
     { href: "/announcements", label: "Announcements" },
     { href: "/documents", label: "Documents" },
+    { href: "/budgets", label: "Budgets" },
     { href: "/requests", label: "Requests" },
   ];
   return (

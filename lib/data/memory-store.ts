@@ -99,6 +99,82 @@ export class MemoryStore implements HubStore {
     }
     this.data.announcements = next;
   }
+  async listStaffPins() {
+    return clone(this.data.staffPins);
+  }
+  async createStaffPin(row: HubData["staffPins"][number]) {
+    this.data.staffPins.push(clone(row));
+  }
+  async updateStaffPin(id: string, changes: Partial<HubData["staffPins"][number]>) {
+    merge(this.data.staffPins, id, changes, "pinned post");
+  }
+  async deleteStaffPin(id: string) {
+    const next = this.data.staffPins.filter((row) => row.id !== id);
+    if (next.length === this.data.staffPins.length) {
+      throw new HubError("That pinned post is no longer on the list. Refresh and try again.");
+    }
+    this.data.staffPins = next;
+    this.data.staffPinAcks = this.data.staffPinAcks.filter((row) => row.pinId !== id);
+  }
+  async listStaffPinAcks() {
+    return clone(this.data.staffPinAcks);
+  }
+  async createStaffPinAck(row: HubData["staffPinAcks"][number]) {
+    this.data.staffPinAcks.push(clone(row));
+  }
+  async listSettings() {
+    return clone(this.data.settings);
+  }
+  async setSetting(key: string, value: string) {
+    const index = this.data.settings.findIndex((row) => row.key === key);
+    if (index < 0) this.data.settings.push({ key, value });
+    else this.data.settings[index] = { key, value };
+  }
+  async listGraphicsRequests() {
+    return clone(this.data.graphicsRequests);
+  }
+  async createGraphicsRequest(row: HubData["graphicsRequests"][number]) {
+    this.data.graphicsRequests.push(clone(row));
+  }
+  async updateGraphicsRequest(id: string, changes: Partial<HubData["graphicsRequests"][number]>) {
+    merge(this.data.graphicsRequests, id, changes, "graphics request");
+  }
+  async listTimeAway() {
+    return clone(this.data.timeAway);
+  }
+  async createTimeAway(row: HubData["timeAway"][number]) {
+    this.data.timeAway.push(clone(row));
+  }
+  async updateTimeAway(id: string, changes: Partial<HubData["timeAway"][number]>) {
+    merge(this.data.timeAway, id, changes, "time away request");
+  }
+  async listWorkStatuses() {
+    return clone(this.data.workStatuses);
+  }
+  async createWorkStatus(row: HubData["workStatuses"][number]) {
+    this.data.workStatuses.push(clone(row));
+  }
+  async updateWorkStatus(id: string, changes: Partial<HubData["workStatuses"][number]>) {
+    merge(this.data.workStatuses, id, changes, "work status");
+  }
+  async listCalendarEvents() {
+    return clone(this.data.calendarEvents);
+  }
+  async createCalendarEvent(row: HubData["calendarEvents"][number]) {
+    this.data.calendarEvents.push(clone(row));
+  }
+  async updateCalendarEvent(id: string, changes: Partial<HubData["calendarEvents"][number]>) {
+    merge(this.data.calendarEvents, id, changes, "calendar event");
+  }
+  async listCalendarChecks() {
+    return clone(this.data.calendarChecks);
+  }
+  async createCalendarCheck(row: HubData["calendarChecks"][number]) {
+    this.data.calendarChecks.push(clone(row));
+  }
+  async updateCalendarCheck(id: string, changes: Partial<HubData["calendarChecks"][number]>) {
+    merge(this.data.calendarChecks, id, changes, "calendar check");
+  }
   async listCareNotes() {
     return clone(this.data.careNotes);
   }
@@ -144,6 +220,24 @@ export class MemoryStore implements HubStore {
   }
   async updateDocument(id: string, changes: Partial<HubData["documents"][number]>) {
     merge(this.data.documents, id, changes, "document");
+  }
+  async listMinistryBudgets() {
+    return clone(this.data.ministryBudgets);
+  }
+  async listCardMonths() {
+    return clone(this.data.cardMonths);
+  }
+  async listCardTransactions() {
+    return clone(this.data.cardTransactions);
+  }
+  async listAttendance() {
+    return clone(this.data.attendance);
+  }
+  async createAttendance(row: HubData["attendance"][number]) {
+    this.data.attendance.push(clone(row));
+  }
+  async updateAttendance(id: string, changes: Partial<HubData["attendance"][number]>) {
+    merge(this.data.attendance, id, changes, "attendance count");
   }
   async listQuickLinks() {
     return clone(this.data.quickLinks);

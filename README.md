@@ -13,6 +13,8 @@ Staff open one site for:
 
 It is meant to be added to a phone home screen. The sample you can open today uses fictional people, so nothing private is in this public repository.
 
+The navy header shows the church mark from `public/logo.svg`. The file is a white, transparent SVG traced from the header logo on [mtvernon.church](https://mtvernon.church) (`Mt-Vernon-White.png`). To swap it, replace `public/logo.svg`, or set `NEXT_PUBLIC_LOGO_URL` to another image address and restart. The app reads that one value from `lib/brand.ts`.
+
 ## Try it first, with no Google setup
 
 The sample hub does not need environment variables. Avery Quinn and Blake Nguyen are fictional.
@@ -49,15 +51,16 @@ If an earlier import is stuck, open the project → **Settings** → **Build and
 
 | Page | What staff do there |
 | --- | --- |
-| Home | Your open items, this week from the staff meeting, Monday at 1:00 PM, quick links, and your Planning Center cards |
-| This week | Announcements, action items, prayer, celebrations, and notes from the latest staff meeting, plus earlier meetings |
-| Meeting mode | Admins only. Live entry during Monday's 1:00 PM staff meeting |
+| Home | Light greeting, where you are today, this week's Sunday, last Sunday's attendance, ministry budgets, program tiles, then your own items. Admins can switch to a team overview |
+| Calendar | This week (Monday–Sunday events and announcements), this month, and the Communications Calendar |
+| Meeting mode | Admins only. Live entry during Monday's 1:00 PM staff meeting, including announcement channels and the Communications Calendar |
 | Action items | The one shared list. Filter mine or everyone's. Add, update, and mark done |
 | Meetings | Prayer, wins, the week ahead, ministry updates, discussion and decisions, and the items from that meeting |
 | Sunday checklist | The areas copied from the checklist template for a meeting |
 | Announcements | What the church or the staff need to hear |
-| Documents | Quick links, shared folders, and pinned files. The files stay in Drive |
-| Requests | Ask for a graphic, email, text, social post, website change, or Sunday announcement |
+| Documents | Quick links, shared folders, and pinned files. Admins edit the program tiles here. The files stay in Drive |
+| Budgets | Ministry totals and staff cards. Sample numbers until BILL is connected. You only see amounts you are allowed to see |
+| Requests | Graphics and social, time away, or a general request for email, text, website, or a Sunday announcement |
 
 On a phone the navy menu moves to the top and scrolls sideways.
 
@@ -191,6 +194,11 @@ The icon says MV. Signing in lasts about 30 days.
 | Assign an item to someone else, or change the owner | No | Yes |
 | Edit meetings, announcements, links, folders, pinned documents | No | Yes |
 | Send a request, and approve or send back their own draft | Yes | Yes |
+| Pin a note on Home, and see who tapped Got it | No | Yes |
+| Tap Got it on a pinned note | Yes | Yes |
+| Send a graphics or time-away request | Yes | Yes |
+| Choose the graphics owner, and approve or deny time away | No | Yes |
+| Set where you are working today | Yes | Yes |
 | Move a request through the queue and attach a draft link | No | Yes |
 | Check off their own Sunday area | Yes | Yes, any area |
 | Start this week's checklist from the template, if it is empty | Yes | Yes |
@@ -206,10 +214,16 @@ The website does not download the sheet and upload a new copy. That would erase 
 - If two people save different fields of the same row, both saves keep.
 - If two people save the same field, the later save wins.
 - If an id is on more than one row, the hub refuses to write and asks you to fix the sheet.
-- Rows are never deleted from here. Mark an item done, or mark a request withdrawn.
+- Rows are not replaced in bulk. Mark an item done, or mark a request withdrawn. An admin can remove a pinned Home note, which deletes that one row and its Got it rows.
 - These tabs are read-only: **Workflow Cards**, **Card Actions**, **Staff**, **Ministries**, **Checklist Template**. Another automation maintains the workflow tabs. Do not let this app overwrite them.
 
 Dates are stored as `M/D/YYYY` text, which matches the sheet today. The clock for "overdue" and "this Monday" is Columbus time.
+
+Graphics requests are assigned from one cell, **Hub Settings** → `Graphics Owner`. The app does not hard-code a name. On the live sheet, set that cell to Steven Holland for now. Change the cell, or the control on Request Desk, when someone else should receive them. Sample mode uses Avery Quinn. The hub adds **Staff Announcements**, **Graphics Requests**, **Time Away**, **Work Status**, and **Hub Settings** the first time they are saved, if those tabs are missing. Column lists are in SCHEMA.md.
+
+Budgets default to sample numbers. Set `DATA_SOURCE_BUDGET=sheet` with `DATA_MODE=sheets` to read the **Budgets**, **Card Spend**, and **Card Transactions** tabs. `DATA_SOURCE_BUDGET=bill` does not call BILL yet. When you wire it, the Spend & Expense API (formerly Divvy) uses an `apiToken` from the BILL developer portal (`BILL_API_KEY`, `BILL_ORG_ID`). Confirm the current paths before coding them: `GET https://api.divvy.co/v1/budgets`, `GET https://api.divvy.co/v1/cards`, and `GET https://api.divvy.co/v1/transactions`. Attendance defaults to the **Attendance** tab in real mode. `DATA_SOURCE_ATTENDANCE=pco` does not call Planning Center yet. The Check-Ins API uses `PCO_APP_ID` and `PCO_SECRET`: `GET https://api.planningcenteronline.com/check-ins/v2/headcounts` and `GET https://api.planningcenteronline.com/check-ins/v2/check_ins`.
+
+Workflow cards on Home are the ones assigned to the signed-in email. Sample mode reads the **Workflow Cards** tab. `DATA_SOURCE_WORKFLOWS=pco` does not call Planning Center yet. The People API for that later step is `GET https://api.planningcenteronline.com/people/v2/workflows` and `GET https://api.planningcenteronline.com/people/v2/workflows/{workflow_id}/cards`.
 
 ## Staff chat, later
 

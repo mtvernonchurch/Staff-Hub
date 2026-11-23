@@ -1,39 +1,77 @@
-import { ThisWeekView } from "@/components/this-week";
+import Link from "next/link";
+import { Calendar, CalendarDays, Megaphone } from "lucide-react";
+import { MonthBoard, WeekEvents } from "@/components/calendar-board";
+import { CalendarCheckBoard } from "@/components/calendar-check";
+import { Heading } from "@/components/heading";
+import { HomeAnnouncements } from "@/components/home-announcements";
 import { PageHeader } from "@/components/ui";
-import { chicagoToday } from "@/lib/domain/dates";
-import { announcementsForMeeting, sortActionItems, thisWeekMeeting } from "@/lib/domain/view";
+import { sheetCalendarSource } from "@/lib/calendar/source";
+import { isAdmin } from "@/lib/domain/access";
+import { eventsInMonth, eventsInWeek, mondayWeek } from "@/lib/domain/calendar";
+import { chicagoToday, formatFriendly, formatUsDate } from "@/lib/domain/dates";
+import { announcementsForMeeting, thisWeekMeeting } from "@/lib/domain/view";
 import { requireStaff } from "@/lib/session";
 
-export const metadata = { title: "This week" };
+export const metadata = { title: "Calendar" };
 
 export default async function ThisWeekPage() {
-  const { store } = await requireStaff();
+  const { staff, store } = await requireStaff();
   const today = chicagoToday();
-  const [meetings, announcements, items, careNotes] = await Promise.all([
+  const todayLabel = formatUsDate(today);
+  const week = mondayWeek(today);
+  const [meetings, announcements, people, ministries, calendarEvents, calendarChecks] = await Promise.all([
     store.listMeetings(),
     store.listAnnouncements(),
-    store.listActionItems(),
-    store.listCareNotes(),
+    store.listStaff(),
+    store.listMinistries(),
+    sheetCalendarSource(store).listEvents(),
+    store.listCalendarChecks(),
   ]);
   const meeting = thisWeekMeeting(meetings, today);
-  const archive = meetings.filter((row) => row.id !== meeting?.id);
-  const weekNotes = meeting ? careNotes.filter((note) => note.meetingId === meeting.id) : [];
-  const linked = new Set(weekNotes.map((note) => note.actionItemId).filter(Boolean));
+  const weekNews = meeting ? announcementsForMeeting(announcements, meeting) : [];
 
   return (
     <>
       <PageHeader
-        kicker="From Monday's staff meeting"
-        title="This week"
-        lede="Announcements, action items, and notes for the whole staff."
+        kicker="Church calendar"
+        icon={CalendarDays}
+        title="Calendar"
+        lede="This week, this month, and where each event is being promoted."
       />
-      <ThisWeekView
-        meeting={meeting}
-        announcements={meeting ? announcementsForMeeting(announcements, meeting) : []}
-        items={meeting ? sortActionItems(items.filter((item) => item.meetingId === meeting.id && !linked.has(item.id)), today) : []}
-        careNotes={weekNotes}
-        archive={archive}
-      />
+      <p className="hint">
+        <Link href="/meetings">Meetings</Link>
+        {" · "}
+        <Link href="/checklist">Sunday checklist</Link>
+        {isAdmin(staff) ? <> · <Link href="/meeting">Meeting mode</Link> · <Link href="/announcements">Edit announcements</Link></> : null}
+      </p>
+      <nav className="jump-row" aria-label="Calendar sections">
+        <a href="#this-week">This Week</a>
+        <a href="#this-month">This Month</a>
+        <a href="#communications">Communications Calendar</a>
+      </nav>
+      <div className="stack">
+        <section className="card section-anchor" id="this-week">
+          <Heading icon={CalendarDays}>This Week</Heading>
+          <p className="hint">{formatFriendly(formatUsDate(week.start))} – {formatFriendly(formatUsDate(week.end))}</p>
+          <WeekEvents events={eventsInWeek(calendarEvents, week)} />
+          <HomeAnnouncements rows={weekNews} todayLabel={todayLabel} />
+        </section>
+        <section className="card section-anchor" id="this-month">
+          <Heading icon={Calendar}>This Month</Heading>
+          <MonthBoard events={eventsInMonth(calendarEvents, today)} todayLabel={todayLabel} />
+        </section>
+        <section className="card section-anchor" id="communications">
+          <Heading icon={Megaphone}>Communications Calendar</Heading>
+          <CalendarCheckBoard
+            events={calendarEvents}
+            checks={calendarChecks}
+            todayLabel={todayLabel}
+            editable={false}
+            staff={people}
+            ministries={ministries}
+          />
+        </section>
+      </div>
     </>
   );
 }

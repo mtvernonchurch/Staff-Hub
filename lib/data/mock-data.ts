@@ -1,5 +1,41 @@
-import type { HubData } from "@/lib/data/types";
+import type { HubData, QuickLink } from "@/lib/data/types";
+import { mostRecentSunday } from "@/lib/domain/attendance";
+import { upcomingSunday } from "@/lib/domain/calendar";
 import { addUtcDays, chicagoToday, formatUsDate, upcomingMonday } from "@/lib/domain/dates";
+
+function buildAttendance(today: Date): HubData["attendance"] {
+  const areas = ["Adults/Worship", "MV Kids", "Students", "Volunteers", "First-time guests"] as const;
+  const bases: Record<(typeof areas)[number], [number, number]> = {
+    "Adults/Worship": [180, 220],
+    "MV Kids": [72, 90],
+    Students: [28, 36],
+    Volunteers: [42, 48],
+    "First-time guests": [3, 5],
+  };
+  const sunday = mostRecentSunday(today);
+  const rows: HubData["attendance"] = [];
+  for (let week = 0; week < 8; week++) {
+    const date = formatUsDate(addUtcDays(sunday, -7 * week));
+    for (const [serviceIndex, service] of ["9:00", "10:30"].entries()) {
+      for (const area of areas) {
+        const wobble = ((week * 5 + area.length + serviceIndex) % 9) - 4;
+        rows.push({
+          id: `att_${week}_${serviceIndex}_${area.replace(/[^a-z]+/gi, "").slice(0, 6)}`,
+          date,
+          service,
+          area,
+          count: Math.max(0, bases[area][serviceIndex] - week + wobble),
+          notes: week === 0 && service === "9:00" && area === "Adults/Worship" ? "Sample counts for the previous Sunday." : "",
+        });
+      }
+    }
+  }
+  return rows;
+}
+
+function programLink(order: number, name: string, url: string, initials: string, color: string, visibleTo = "All"): QuickLink {
+  return { id: `lnk_${order}`, name, url, icon: "link", order: String(order), initials, color, visibleTo, hidden: false };
+}
 
 /**
  * Fictional people and records so the public repo can be previewed
@@ -248,6 +284,92 @@ export function createSeed(now = new Date()): HubData {
         actionItemId: "",
       },
     ],
+    staffPins: [
+      {
+        id: "pin_doors",
+        title: "Side doors unlock at 8:15 on Sunday",
+        message: "Setup starts earlier this week. Please be in the building by 8:15 so the lobby is ready before guests arrive.",
+        link: "",
+        priority: "Urgent",
+        showUntil: formatUsDate(addUtcDays(today, 14)),
+        author: "Avery Quinn",
+        posted: formatUsDate(today),
+      },
+    ],
+    staffPinAcks: [
+      {
+        id: "ack_doors_blake",
+        pinId: "pin_doors",
+        staff: "Blake Nguyen",
+        acknowledgedOn: formatUsDate(today),
+      },
+    ],
+    settings: [{ key: "Graphics Owner", value: "Avery Quinn" }],
+    graphicsRequests: [
+      {
+        id: "gfx_testimony",
+        requestedBy: "Blake Nguyen",
+        ministry: "Students",
+        needed: "Social post",
+        platforms: "Instagram, Facebook",
+        event: "Testimony night",
+        eventDate: formatUsDate(addUtcDays(today, 3)),
+        neededBy: formatUsDate(addUtcDays(today, 3)),
+        description: "Three students are sharing on Wednesday. Need a square post with the time and a photo from last month.",
+        links: "",
+        status: "New",
+        assignedTo: "Avery Quinn",
+        created: formatUsDate(today),
+      },
+    ],
+    timeAway: [
+      {
+        id: "away_blake",
+        requestedBy: "Blake Nguyen",
+        kind: "PTO/vacation",
+        start: formatUsDate(addUtcDays(today, 10)),
+        end: formatUsDate(addUtcDays(today, 12)),
+        halfDay: false,
+        notes: "Family trip. Back the following Monday.",
+        coverage: "Casey Brooks",
+        status: "Pending",
+        created: formatUsDate(today),
+      },
+      {
+        id: "away_dana",
+        requestedBy: "Dana Ruiz",
+        kind: "Conference/training",
+        start: formatUsDate(today),
+        end: formatUsDate(addUtcDays(today, 1)),
+        halfDay: false,
+        notes: "Care conference.",
+        coverage: "Avery Quinn",
+        status: "Approved",
+        created: lastLabel,
+      },
+    ],
+    workStatuses: [
+      { id: "work_avery", date: formatUsDate(today), staff: "Avery Quinn", place: "In office", note: "" },
+      { id: "work_ellis", date: formatUsDate(today), staff: "Ellis Park", place: "Working from home", note: "Rehearsal playlist from home." },
+      { id: "work_dana", date: formatUsDate(today), staff: "Dana Ruiz", place: "Out", note: "Conference." },
+      { id: "work_blake_old", date: formatUsDate(addUtcDays(today, -1)), staff: "Blake Nguyen", place: "In office", note: "Yesterday only." },
+    ],
+    calendarEvents: [
+      { id: "cal_sunday", date: formatUsDate(upcomingSunday(today)), time: "9:00 AM and 10:30 AM", event: "Sunday worship", ministry: "Worship", location: "Worship room", owner: "Ellis Park", plan: "Plan is set: 5 songs, sermon, baptism.", volunteersReady: "12", volunteersNeeded: "14" },
+      { id: "cal_comms", date: formatUsDate(today), time: "2:00 PM", event: "Comms check-in", ministry: "Communications", location: "Office", owner: "Harper Diaz", plan: "", volunteersReady: "", volunteersNeeded: "" },
+      { id: "cal_thanks", date: formatUsDate(addUtcDays(today, 4)), time: "6:00 PM", event: "Thanksgiving Eve service", ministry: "Worship", location: "Worship room", owner: "Avery Quinn", plan: "", volunteersReady: "", volunteersNeeded: "" },
+      { id: "cal_students", date: formatUsDate(addUtcDays(today, 7)), time: "6:30 PM", event: "Student testimony night", ministry: "Students", location: "Student room", owner: "Blake Nguyen", plan: "", volunteersReady: "", volunteersNeeded: "" },
+      { id: "cal_advent", date: formatUsDate(addUtcDays(today, 14)), time: "9:00 AM", event: "Advent Sunday", ministry: "Worship", location: "Worship room", owner: "Ellis Park", plan: "", volunteersReady: "", volunteersNeeded: "" },
+      { id: "cal_kids", date: formatUsDate(addUtcDays(today, 21)), time: "4:00 PM", event: "Kids Christmas rehearsal", ministry: "Kids", location: "Kids hallway", owner: "Casey Brooks", plan: "", volunteersReady: "", volunteersNeeded: "" },
+      { id: "cal_choir", date: formatUsDate(addUtcDays(today, 26)), time: "7:00 PM", event: "Choir night", ministry: "Worship", location: "Choir room", owner: "Ellis Park", plan: "", volunteersReady: "", volunteersNeeded: "" },
+    ],
+    calendarChecks: [
+      { id: "chk_sunday", eventId: "cal_sunday", promotedEmail: true, promotedSocials: true, promotedPlatform: true, volunteersSet: true, graphicsRequested: true, notes: "" },
+      { id: "chk_thanks", eventId: "cal_thanks", promotedEmail: true, promotedSocials: false, promotedPlatform: false, volunteersSet: false, graphicsRequested: false, notes: "No childcare. Invite neighbors." },
+      { id: "chk_advent", eventId: "cal_advent", promotedEmail: false, promotedSocials: true, promotedPlatform: true, volunteersSet: false, graphicsRequested: true, notes: "" },
+      { id: "chk_kids", eventId: "cal_kids", promotedEmail: false, promotedSocials: false, promotedPlatform: false, volunteersSet: false, graphicsRequested: false, notes: "Dress rehearsal date is still loose." },
+      { id: "chk_choir", eventId: "cal_choir", promotedEmail: true, promotedSocials: false, promotedPlatform: false, volunteersSet: true, graphicsRequested: false, notes: "" },
+    ],
     announcements: [
       {
         id: "ann_last",
@@ -261,6 +383,7 @@ export function createSeed(now = new Date()): HubData {
         audience: "Church",
         meetingId: "mtg_last",
         ministry: "Guest Experience",
+        channels: "",
       },
       {
         id: "ann_thanks",
@@ -274,6 +397,7 @@ export function createSeed(now = new Date()): HubData {
         audience: "Church",
         meetingId: "mtg_monday",
         ministry: "Worship",
+        channels: "Platform, The Weekly, Social",
       },
       {
         id: "ann_office",
@@ -287,6 +411,7 @@ export function createSeed(now = new Date()): HubData {
         audience: "Staff",
         meetingId: "mtg_monday",
         ministry: "",
+        channels: "The Weekly",
       },
     ],
     openIssues: [
@@ -364,12 +489,38 @@ export function createSeed(now = new Date()): HubData {
         notes: "Who locks up, and where the keys live.",
       },
     ],
+    ministryBudgets: [
+      { ministry: "Kids", fiscalYear: "2026", annual: 48000, spent: 34560, updated: formatUsDate(today), monthly: [4200, 4800, 5100, 5300, 5600, 5560] },
+      { ministry: "Students", fiscalYear: "2026", annual: 22000, spent: 20680, updated: formatUsDate(today), monthly: [2800, 3100, 3400, 3600, 3900, 3880] },
+      { ministry: "Worship", fiscalYear: "2026", annual: 36000, spent: 29160, updated: formatUsDate(today), monthly: [4000, 4200, 4500, 4800, 5000, 4660] },
+      { ministry: "Guest Experience", fiscalYear: "2026", annual: 15000, spent: 9450, updated: formatUsDate(today), monthly: [1200, 1400, 1500, 1600, 1800, 1950] },
+      { ministry: "Care", fiscalYear: "2026", annual: 18000, spent: 13860, updated: formatUsDate(today), monthly: [1800, 2000, 2100, 2300, 2500, 2160] },
+      { ministry: "Groups", fiscalYear: "2026", annual: 8000, spent: 2400, updated: formatUsDate(today), monthly: [300, 400, 350, 400, 450, 500] },
+      { ministry: "Communications", fiscalYear: "2026", annual: 12000, spent: 5400, updated: formatUsDate(today), monthly: [700, 800, 850, 900, 1000, 1150] },
+    ],
+    cardMonths: [
+      { staff: "Blake Nguyen", month: `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, "0")}`, limit: 500, spent: 310 },
+      { staff: "Avery Quinn", month: `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, "0")}`, limit: 800, spent: 120 },
+      { staff: "Ellis Park", month: `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, "0")}`, limit: 400, spent: 390 },
+      { staff: "Dana Ruiz", month: `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, "0")}`, limit: 350, spent: 40 },
+    ],
+    attendance: buildAttendance(today),
+    cardTransactions: [
+      { id: "txn_blake_1", staff: "Blake Nguyen", month: `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, "0")}`, date: formatUsDate(today), merchant: "Campus Coffee", amount: 18.4, receiptMissing: true },
+      { id: "txn_blake_2", staff: "Blake Nguyen", month: `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, "0")}`, date: formatUsDate(addUtcDays(today, -2)), merchant: "Office Depot", amount: 64.2, receiptMissing: false },
+      { id: "txn_blake_3", staff: "Blake Nguyen", month: `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, "0")}`, date: formatUsDate(addUtcDays(today, -6)), merchant: "Pizza Night", amount: 86, receiptMissing: false },
+      { id: "txn_avery_1", staff: "Avery Quinn", month: `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, "0")}`, date: formatUsDate(addUtcDays(today, -1)), merchant: "City Print Shop", amount: 42, receiptMissing: false },
+      { id: "txn_ellis_1", staff: "Ellis Park", month: `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, "0")}`, date: formatUsDate(addUtcDays(today, -3)), merchant: "Music Store", amount: 210, receiptMissing: true },
+    ],
     quickLinks: [
-      { id: "lnk_drive", name: "Drive", url: "https://drive.google.com", icon: "drive", order: "1" },
-      { id: "lnk_files", name: "Team files", url: "https://drive.google.com/drive/shared-drives", icon: "folder", order: "2" },
-      { id: "lnk_chat", name: "Staff chat", url: "https://chat.google.com", icon: "chat", order: "3" },
-      { id: "lnk_cal", name: "Staff out calendar", url: "https://calendar.google.com", icon: "calendar", order: "4" },
-      { id: "lnk_pc", name: "Planning Center", url: "https://planningcenter.com", icon: "link", order: "5" },
+      programLink(1, "Planning Center", "https://services.planningcenteronline.com", "PC", "blue"),
+      programLink(2, "Church Center", "https://churchcenter.com", "CC", "green"),
+      programLink(3, "BILL", "https://app.bill.com", "B", "navy", "Admin"),
+      programLink(4, "Clearstream", "https://app.clearstream.io", "CS", "orange"),
+      programLink(5, "Google Calendar", "https://calendar.google.com", "GC", "blue"),
+      programLink(6, "Adobe Express", "https://www.adobe.com/express/", "Ae", "rose"),
+      programLink(7, "Patriot Software", "https://www.patriotsoftware.com", "PS", "blue", "Admin"),
+      programLink(8, "Amazon Business", "https://business.amazon.com", "AB", "navy"),
     ],
     folders: [
       { id: "fld_meetings", name: "Staff meetings", url: "https://drive.google.com", icon: "folder", order: "1" },
@@ -410,6 +561,22 @@ export function createSeed(now = new Date()): HubData {
         personId: "person_family",
         workflowId: "wf_guest",
         assigneeId: "person_avery",
+      },
+      {
+        id: "card_student",
+        workflow: "Student follow up",
+        step: "Text the parent",
+        forPerson: "Sample student",
+        assignee: "Blake Nguyen",
+        assigneeEmail: "blake@mtvernon.church",
+        overdue: "Yes",
+        movedToStep: overdue,
+        link: "https://planningcenter.com",
+        firstSeen: overdue,
+        lastSynced: formatUsDate(today),
+        personId: "person_student",
+        workflowId: "wf_student",
+        assigneeId: "person_blake",
       },
     ],
     cardActions: [

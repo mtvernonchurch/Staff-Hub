@@ -61,3 +61,10 @@ export function announcementsForMeeting(announcements: Announcement[], meeting: 
 export function mine(items: ActionItem[], name: string): ActionItem[] {
   return items.filter((item) => item.owner.trim().toLowerCase() === name.trim().toLowerCase());
 }
+
+export function myOpenItems(items: ActionItem[], name: string, today: Date): ActionItem[] {
+  return sortActionItems(
+    mine(items, name).filter((item) => !isClosedStatus(item.status)),
+    today,
+  );
+}

@@ -6,12 +6,24 @@ export const WRITABLE_TABS = [
   "Sunday Checklist",
   "Ministry Updates",
   "Announcements",
+  "Staff Announcements",
+  "Staff Announcement Acks",
+  "Hub Settings",
+  "Graphics Requests",
+  "Time Away",
+  "Work Status",
+  "Calendar",
+  "Calendar Checks",
   "Care Notes",
   "Open Issues",
   "Requests",
   "Documents",
   "Quick Links",
   "Folders",
+  "Budgets",
+  "Card Spend",
+  "Card Transactions",
+  "Attendance",
 ] as const;
 
 export const ALL_TABS = [
@@ -23,12 +35,24 @@ export const ALL_TABS = [
   "Ministry Updates",
   "Ministries",
   "Announcements",
+  "Staff Announcements",
+  "Staff Announcement Acks",
+  "Hub Settings",
+  "Graphics Requests",
+  "Time Away",
+  "Work Status",
+  "Calendar",
+  "Calendar Checks",
   "Care Notes",
   "Open Issues",
   "Requests",
   "Documents",
   "Quick Links",
   "Folders",
+  "Budgets",
+  "Card Spend",
+  "Card Transactions",
+  "Attendance",
   "Workflow Cards",
   "Card Actions",
 ] as const;
@@ -74,6 +98,28 @@ export const COLUMNS = {
     "Link",
     "Audience",
   ],
+  staffPins: ["Pin ID", "Title", "Message", "Link", "Priority", "Show Until", "Author", "Posted"],
+  staffPinAcks: ["Ack ID", "Pin ID", "Staff", "Acknowledged On"],
+  settings: ["Setting", "Value"],
+  graphicsRequests: [
+    "Request ID",
+    "Requested By",
+    "Ministry",
+    "What's Needed",
+    "Platforms",
+    "Event",
+    "Event Date",
+    "Needed By",
+    "Description",
+    "Links",
+    "Status",
+    "Assigned To",
+    "Created",
+  ],
+  timeAway: ["Away ID", "Requested By", "Type", "Start", "End", "Half Day", "Notes", "Coverage", "Status", "Created"],
+  workStatuses: ["Status ID", "Date", "Staff", "Place", "Note"],
+  calendarEvents: ["Event ID", "Date", "Time", "Event", "Ministry", "Location", "Owner"],
+  calendarChecks: ["Check ID", "Event ID", "The Weekly", "Social", "Platform", "Volunteers", "Graphics", "Notes"],
   careNotes: ["Care Note ID", "Meeting", "Name", "Action", "Custom", "Details", "Assignee", "Done", "Action Item"],
   openIssues: ["Issue ID", "Issue", "Owner", "Next Step", "Due", "Status", "Created"],
   requests: [
@@ -91,6 +137,10 @@ export const COLUMNS = {
   ],
   documents: ["Doc ID", "Title", "Group", "Link", "Notes"],
   quickLinks: ["Link ID", "Name", "URL", "Icon", "Order"],
+  budgets: ["Ministry", "Fiscal Year", "Annual Budget", "Spent YTD", "Updated", "Monthly"],
+  cardSpend: ["Staff", "Month", "Limit", "Spent"],
+  cardTransactions: ["Transaction ID", "Staff", "Month", "Date", "Merchant", "Amount", "Receipt Missing"],
+  attendance: ["Attendance ID", "Date", "Service", "Area", "Count", "Notes"],
   folders: ["Folder ID", "Name", "URL", "Icon", "Order"],
   workflowCards: [
     "Card ID",
@@ -122,6 +172,12 @@ export const COLUMNS = {
     "Done At",
   ],
 } as const;
+
+/** Older Calendar Checks tabs used these headers. New tabs use the keys. */
+export const CALENDAR_CHECK_ALIASES: Record<string, readonly string[]> = {
+  "The Weekly": ["Email"],
+  Social: ["Socials"],
+};
 
 export function normalizeHeader(header: string): string {
   return header

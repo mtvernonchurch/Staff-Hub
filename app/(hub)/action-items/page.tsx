@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { createIssueAction, updateIssueAction } from "@/app/(hub)/actions";
+import { CircleAlert, SquareCheck } from "lucide-react";
+import { Heading } from "@/components/heading";
 import { ActionItemForm, ActionList, StaffOptions } from "@/components/records";
 import { Flash, PageHeader, cleanQuery } from "@/components/ui";
 import { isAdmin } from "@/lib/domain/access";
@@ -39,6 +41,7 @@ export default async function ActionItemsPage({
     <>
       <PageHeader
         kicker="The one shared list"
+        icon={SquareCheck}
         title="Action items"
         lede="Everyone can see the list. You update what you own. An admin can assign work to someone else."
       />
@@ -58,7 +61,7 @@ export default async function ActionItemsPage({
         </details>
       </section>
       <section className="card" style={{ marginTop: 16 }}>
-        <h2>Open issues</h2>
+        <Heading icon={CircleAlert}>Open issues</Heading>
         <p className="hint">Things that are stuck, not a person&apos;s to-do. Keep private details out.</p>
         {openIssues.length === 0 ? <p className="empty">No open issues.</p> : openIssues.map((issue) => {
           const canEdit = isAdmin(staff) || namesMatch(staff.name, issue.owner);

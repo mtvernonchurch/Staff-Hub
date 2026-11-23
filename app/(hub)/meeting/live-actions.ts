@@ -17,7 +17,8 @@ import {
   updateCareNote,
   updateMeeting,
 } from "@/lib/services/hub";
-import type { ActionItem, Announcement, CareNote, Meeting } from "@/lib/data/types";
+import type { ActionItem, Announcement, CalendarCheck, CalendarEvent, CareNote, Meeting } from "@/lib/data/types";
+import { createCalendarEvent, saveCalendarCheck, updateCalendarEvent } from "@/lib/services/calendar";
 
 export type LiveResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -84,6 +85,7 @@ export async function addLiveAnnouncement(input: {
   details: string;
   date: string;
   ministry: string;
+  channels: string[];
 }): Promise<LiveResult<Announcement>> {
   return asAdmin((deps) =>
     createAnnouncement(deps, {
@@ -96,13 +98,14 @@ export async function addLiveAnnouncement(input: {
       audience: "Staff",
       meetingId: input.meetingId,
       ministry: input.ministry,
+      channels: input.channels,
     }),
   );
 }
 
 export async function editLiveAnnouncement(
   id: string,
-  input: { event: string; details: string; date: string; ministry: string },
+  input: { event: string; details: string; date: string; ministry: string; channels: string },
 ): Promise<LiveResult<boolean>> {
   return asAdmin(async (deps) => {
     await updateAnnouncement(deps, id, input);
@@ -140,6 +143,31 @@ export async function removeLiveCareNote(id: string): Promise<LiveResult<boolean
     await deleteCareNote(deps, id);
     return true;
   });
+}
+
+export async function addLiveEvent(input: {
+  date: string;
+  time: string;
+  event: string;
+  ministry: string;
+  location: string;
+  owner: string;
+}): Promise<LiveResult<CalendarEvent>> {
+  return asAdmin((deps) => createCalendarEvent(deps, input));
+}
+
+export async function editLiveEvent(
+  id: string,
+  input: { date: string; time: string; event: string; ministry: string; location: string; owner: string },
+): Promise<LiveResult<CalendarEvent>> {
+  return asAdmin((deps) => updateCalendarEvent(deps, id, input));
+}
+
+export async function saveLiveCheck(
+  eventId: string,
+  input: Partial<Omit<CalendarCheck, "id" | "eventId">>,
+): Promise<LiveResult<CalendarCheck>> {
+  return asAdmin((deps) => saveCalendarCheck(deps, eventId, input));
 }
 
 export async function finishLiveMeeting(id: string): Promise<LiveResult<Meeting>> {

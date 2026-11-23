@@ -70,6 +70,66 @@ export type Ministry = {
   order: string;
 };
 
+export type StaffPin = {
+  id: string;
+  title: string;
+  message: string;
+  link: string;
+  priority: string;
+  showUntil: string;
+  author: string;
+  posted: string;
+};
+
+export type StaffPinAck = {
+  id: string;
+  pinId: string;
+  staff: string;
+  acknowledgedOn: string;
+};
+
+export type HubSetting = {
+  key: string;
+  value: string;
+};
+
+export type GraphicsRequest = {
+  id: string;
+  requestedBy: string;
+  ministry: string;
+  needed: string;
+  platforms: string;
+  event: string;
+  eventDate: string;
+  neededBy: string;
+  description: string;
+  links: string;
+  status: string;
+  assignedTo: string;
+  created: string;
+};
+
+export type TimeAway = {
+  id: string;
+  requestedBy: string;
+  kind: string;
+  start: string;
+  end: string;
+  halfDay: boolean;
+  notes: string;
+  coverage: string;
+  status: string;
+  created: string;
+};
+
+export type WorkStatus = {
+  id: string;
+  date: string;
+  staff: string;
+  place: string;
+  note: string;
+};
+
 export type Announcement = {
   id: string;
   date: string;
@@ -82,6 +142,32 @@ export type Announcement = {
   audience: string;
   meetingId: string;
   ministry: string;
+  channels: string;
+};
+
+export type CalendarEvent = {
+  id: string;
+  date: string;
+  time: string;
+  event: string;
+  ministry: string;
+  location: string;
+  owner: string;
+  /** Optional. Sample data can fill these; a blank sheet leaves them empty. */
+  plan: string;
+  volunteersReady: string;
+  volunteersNeeded: string;
+};
+
+export type CalendarCheck = {
+  id: string;
+  eventId: string;
+  promotedEmail: boolean;
+  promotedSocials: boolean;
+  promotedPlatform: boolean;
+  volunteersSet: boolean;
+  graphicsRequested: boolean;
+  notes: string;
 };
 
 export type CareNote = {
@@ -134,6 +220,47 @@ export type QuickLink = {
   url: string;
   icon: string;
   order: string;
+  initials: string;
+  color: string;
+  /** All, Admin, or a ministry name from the Ministries tab. */
+  visibleTo: string;
+  hidden: boolean;
+};
+
+export type MinistryBudget = {
+  ministry: string;
+  fiscalYear: string;
+  annual: number;
+  spent: number;
+  updated: string;
+  /** Last few months of spend, oldest first. Empty when the sheet has no trend. */
+  monthly: number[];
+};
+
+export type CardMonth = {
+  staff: string;
+  month: string;
+  limit: number;
+  spent: number;
+};
+
+export type AttendanceCount = {
+  id: string;
+  date: string;
+  service: string;
+  area: string;
+  count: number;
+  notes: string;
+};
+
+export type CardTransaction = {
+  id: string;
+  staff: string;
+  month: string;
+  date: string;
+  merchant: string;
+  amount: number;
+  receiptMissing: boolean;
 };
 
 export type FolderLink = {
@@ -184,11 +311,23 @@ export type HubData = {
   ministryUpdates: MinistryUpdate[];
   ministries: Ministry[];
   announcements: Announcement[];
+  staffPins: StaffPin[];
+  staffPinAcks: StaffPinAck[];
+  settings: HubSetting[];
+  graphicsRequests: GraphicsRequest[];
+  timeAway: TimeAway[];
+  workStatuses: WorkStatus[];
+  calendarEvents: CalendarEvent[];
+  calendarChecks: CalendarCheck[];
   careNotes: CareNote[];
   openIssues: OpenIssue[];
   requests: DeskRequest[];
   documents: PinnedDocument[];
   quickLinks: QuickLink[];
+  ministryBudgets: MinistryBudget[];
+  cardMonths: CardMonth[];
+  cardTransactions: CardTransaction[];
+  attendance: AttendanceCount[];
   folders: FolderLink[];
   workflowCards: WorkflowCard[];
   cardActions: CardAction[];
@@ -218,6 +357,29 @@ export interface HubStore {
   createAnnouncement(row: Announcement): Promise<void>;
   updateAnnouncement(id: string, changes: Partial<Announcement>): Promise<void>;
   deleteAnnouncement(id: string): Promise<void>;
+  listStaffPins(): Promise<StaffPin[]>;
+  createStaffPin(row: StaffPin): Promise<void>;
+  updateStaffPin(id: string, changes: Partial<StaffPin>): Promise<void>;
+  deleteStaffPin(id: string): Promise<void>;
+  listStaffPinAcks(): Promise<StaffPinAck[]>;
+  createStaffPinAck(row: StaffPinAck): Promise<void>;
+  listSettings(): Promise<HubSetting[]>;
+  setSetting(key: string, value: string): Promise<void>;
+  listGraphicsRequests(): Promise<GraphicsRequest[]>;
+  createGraphicsRequest(row: GraphicsRequest): Promise<void>;
+  updateGraphicsRequest(id: string, changes: Partial<GraphicsRequest>): Promise<void>;
+  listTimeAway(): Promise<TimeAway[]>;
+  createTimeAway(row: TimeAway): Promise<void>;
+  updateTimeAway(id: string, changes: Partial<TimeAway>): Promise<void>;
+  listWorkStatuses(): Promise<WorkStatus[]>;
+  createWorkStatus(row: WorkStatus): Promise<void>;
+  updateWorkStatus(id: string, changes: Partial<WorkStatus>): Promise<void>;
+  listCalendarEvents(): Promise<CalendarEvent[]>;
+  createCalendarEvent(row: CalendarEvent): Promise<void>;
+  updateCalendarEvent(id: string, changes: Partial<CalendarEvent>): Promise<void>;
+  listCalendarChecks(): Promise<CalendarCheck[]>;
+  createCalendarCheck(row: CalendarCheck): Promise<void>;
+  updateCalendarCheck(id: string, changes: Partial<CalendarCheck>): Promise<void>;
   listCareNotes(): Promise<CareNote[]>;
   createCareNote(row: CareNote): Promise<void>;
   updateCareNote(id: string, changes: Partial<CareNote>): Promise<void>;
@@ -232,6 +394,12 @@ export interface HubStore {
   listDocuments(): Promise<PinnedDocument[]>;
   createDocument(row: PinnedDocument): Promise<void>;
   updateDocument(id: string, changes: Partial<PinnedDocument>): Promise<void>;
+  listMinistryBudgets(): Promise<MinistryBudget[]>;
+  listCardMonths(): Promise<CardMonth[]>;
+  listCardTransactions(): Promise<CardTransaction[]>;
+  listAttendance(): Promise<AttendanceCount[]>;
+  createAttendance(row: AttendanceCount): Promise<void>;
+  updateAttendance(id: string, changes: Partial<AttendanceCount>): Promise<void>;
   listQuickLinks(): Promise<QuickLink[]>;
   createQuickLink(row: QuickLink): Promise<void>;
   updateQuickLink(id: string, changes: Partial<QuickLink>): Promise<void>;

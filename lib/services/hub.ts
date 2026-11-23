@@ -14,6 +14,8 @@ import { isAdmin } from "@/lib/domain/access";
 import { canonicalActionStatus, chicagoToday, formatUsDate, isClosedStatus, toSheetDate, upcomingMonday } from "@/lib/domain/dates";
 import { pickMondayMeeting } from "@/lib/domain/view";
 import { CARE_ACTIONS, careActionLabel, careTaskText } from "@/lib/domain/care";
+import { announcementRecap, formatChannels } from "@/lib/domain/channels";
+import { ATTENDANCE_AREAS, ATTENDANCE_SERVICES } from "@/lib/domain/attendance";
 import { newId } from "@/lib/domain/ids";
 import { safeHttps } from "@/lib/domain/links";
 import { namesMatch } from "@/lib/domain/people";
@@ -285,6 +287,7 @@ export async function createAnnouncement(
     audience: string;
     meetingId?: string;
     ministry?: string;
+    channels?: string[];
   },
 ) {
   assertActive(deps.actor);
@@ -303,6 +306,7 @@ export async function createAnnouncement(
     audience: input.audience.trim(),
     meetingId: input.meetingId?.trim() ?? "",
     ministry: input.ministry?.trim() ?? "",
+    channels: formatChannels(input.channels ?? []),
   };
   await deps.store.createAnnouncement(row);
   return row;
@@ -324,6 +328,7 @@ export async function updateAnnouncement(deps: Deps, id: string, input: Partial<
   if (input.audience !== undefined) next.audience = input.audience.trim();
   if (input.meetingId !== undefined) next.meetingId = input.meetingId.trim();
   if (input.ministry !== undefined) next.ministry = input.ministry.trim();
+  if (input.channels !== undefined) next.channels = formatChannels(input.channels.split(","));
   await deps.store.updateAnnouncement(id, next);
 }
 
@@ -487,7 +492,7 @@ export async function finishMeeting(deps: Deps, id: string) {
     `${meeting.title} · ${meeting.date}`,
     meeting.prayer ? `Prayer: ${meeting.prayer}` : "",
     meeting.wins ? `Celebrations: ${meeting.wins}` : "",
-    announcements.length ? `Announcements:\n${announcements.map((row) => `- ${row.event}`).join("\n")}` : "",
+    announcementRecap(announcements),
     careNotes.length
       ? `Care notes:\n${careNotes.map((note) => `- ${careActionLabel(note)} for ${note.person}${note.assignee ? ` (${note.assignee})` : ""}${note.done ? " — done" : ""}`).join("\n")}`
       : "",
@@ -684,28 +689,61 @@ export async function updateDocument(deps: Deps, id: string, input: Partial<Pinn
   await deps.store.updateDocument(id, next);
 }
 
-export async function createQuickLink(deps: Deps, input: { name: string; url: string; icon: string; order: string }) {
+export async function saveAttendanceGrid(
+  deps: Deps,
+  input: { date: string; notes: string; counts: { service: string; area: string; count: string }[] },
+) {
+  assertActive(deps.actor);
+  if (!canManageRecords(deps.actor)) throw new HubError("Only an admin can edit attendance.");
+  const date = toSheetDate(input.date);
+  const notes = limit(input.notes, 500, "Notes");
+  const existing = await deps.store.listAttendance();
+  for (const service of ATTENDANCE_SERVICES) {
+    for (const area of ATTENDANCE_AREAS) {
+      const raw = input.counts.find((row) => row.service === service && row.area === area);
+      if (!raw || raw.count.trim() === "") continue;
+      const count = Number(raw.count);
+      if (!Number.isInteger(count) || count < 0 || count > 10000) throw new HubError(`Enter a whole number for ${area} at ${service}.`);
+      const match = existing.find((row) => row.date === date && row.service === service && row.area === area);
+      const rowNotes = service === "9:00" && area === "Adults/Worship" ? notes : match?.notes ?? "";
+      if (match) await deps.store.updateAttendance(match.id, { count, notes: rowNotes });
+      else {
+        await deps.store.createAttendance({ id: newId("att"), date, service, area, count, notes: rowNotes });
+      }
+    }
+  }
+}
+
+export async function createQuickLink(
+  deps: Deps,
+  input: { name: string; url: string; icon: string; order: string; initials?: string; color?: string; visibleTo?: string; hidden?: boolean },
+) {
   assertActive(deps.actor);
   if (!canManageRecords(deps.actor)) throw new HubError("Only an admin can add a quick link.");
   const name = input.name.trim();
   if (!name) throw new HubError("Name the link.");
+  const words = name.split(/\s+/).filter(Boolean);
   await deps.store.createQuickLink({
     id: newId("lnk"),
     name,
     url: requireHttps(input.url, "link"),
     icon: input.icon.trim() || "link",
     order: input.order.trim() || "99",
+    initials: (input.initials ?? "").trim() || words.slice(0, 2).map((word) => word[0]?.toUpperCase() ?? "").join(""),
+    color: (input.color ?? "").trim() || "navy",
+    visibleTo: (input.visibleTo ?? "").trim() || "All",
+    hidden: Boolean(input.hidden),
   });
 }
 
 export async function updateQuickLink(
   deps: Deps,
   id: string,
-  input: Partial<{ name: string; url: string; icon: string; order: string }>,
+  input: Partial<{ name: string; url: string; icon: string; order: string; initials: string; color: string; visibleTo: string; hidden: boolean }>,
 ) {
   assertActive(deps.actor);
   if (!canManageRecords(deps.actor)) throw new HubError("Only an admin can edit a quick link.");
-  const next: Partial<{ name: string; url: string; icon: string; order: string }> = {};
+  const next: Partial<{ name: string; url: string; icon: string; order: string; initials: string; color: string; visibleTo: string; hidden: boolean }> = {};
   if (input.name !== undefined) {
     if (!input.name.trim()) throw new HubError("Name the link.");
     next.name = input.name.trim();
@@ -713,6 +751,10 @@ export async function updateQuickLink(
   if (input.url !== undefined) next.url = requireHttps(input.url, "link");
   if (input.icon !== undefined) next.icon = input.icon.trim() || "link";
   if (input.order !== undefined) next.order = input.order.trim() || "99";
+  if (input.initials !== undefined) next.initials = input.initials.trim();
+  if (input.color !== undefined) next.color = input.color.trim() || "navy";
+  if (input.visibleTo !== undefined) next.visibleTo = input.visibleTo.trim() || "All";
+  if (input.hidden !== undefined) next.hidden = input.hidden;
   await deps.store.updateQuickLink(id, next);
 }
 

@@ -159,6 +159,60 @@ describe("sheet writes", () => {
     expect(parseSheetDate("45292")?.toISOString().slice(0, 10)).toBe("2024-01-01");
   });
 
+  it("creates the staff announcement tab and appends one pin", async () => {
+    const fake = new FakeSheets({});
+    const store = new SheetsStore(fake);
+    await store.createStaffPin({
+      id: "pin_new",
+      title: "Doors",
+      message: "Unlock at 8:15.",
+      link: "",
+      priority: "Urgent",
+      showUntil: "",
+      author: "Avery Quinn",
+      posted: "11/22/2026",
+    });
+    expect(fake.grids["Staff Announcements"][0]).toContain("Title");
+    expect(fake.grids["Staff Announcements"][1][0]).toBe("pin_new");
+    expect(fake.grids["Announcements"]).toBeUndefined();
+    expect(fake.writes.some((write) => write.type === "append" && write.tab === "Staff Announcements")).toBe(true);
+  });
+
+  it("stores the graphics owner as a setting and does not rewrite other rows", async () => {
+    const fake = new FakeSheets({});
+    const store = new SheetsStore(fake);
+    await store.setSetting("Graphics Owner", "Avery Quinn");
+    await store.setSetting("Graphics Owner", "Harper Diaz");
+    expect(fake.grids["Hub Settings"]).toHaveLength(2);
+    expect(fake.grids["Hub Settings"][1][1]).toBe("Harper Diaz");
+    expect(fake.writes.filter((write) => write.type === "append")).toHaveLength(1);
+  });
+
+  it("reads and writes Calendar Checks when the headers are still Email and Socials", async () => {
+    const headers = ["Check ID", "Event ID", "Email", "Socials", "Platform", "Volunteers", "Graphics", "Notes"];
+    const fake = new FakeSheets({
+      "Calendar Checks": [headers, ["chk1", "cal1", "TRUE", "FALSE", "TRUE", "FALSE", "TRUE", "note"]],
+    });
+    const store = new SheetsStore(fake);
+    const rows = await store.listCalendarChecks();
+    expect(rows[0]).toMatchObject({ promotedEmail: true, promotedSocials: false, promotedPlatform: true, notes: "note" });
+    await store.updateCalendarCheck("chk1", { promotedSocials: true });
+    expect(fake.grids["Calendar Checks"][0]).toEqual(headers);
+    expect(fake.grids["Calendar Checks"][1][3]).toBe("TRUE");
+    await store.createCalendarCheck({
+      id: "chk2",
+      eventId: "cal2",
+      promotedEmail: false,
+      promotedSocials: true,
+      promotedPlatform: false,
+      volunteersSet: false,
+      graphicsRequested: false,
+      notes: "",
+    });
+    expect(fake.grids["Calendar Checks"][2][2]).toBe("FALSE");
+    expect(fake.grids["Calendar Checks"][2][3]).toBe("TRUE");
+  });
+
   it("does not call the network when the header row is missing a column", async () => {
     const fake = new FakeSheets({ "Action Items": [["Item ID", "Action"]] });
     const store = new SheetsStore(fake);
