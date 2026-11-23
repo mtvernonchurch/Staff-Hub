@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CalendarDays } from "lucide-react";
 import { AttendanceCard } from "@/components/attendance-card";
 import { ThisWeekView } from "@/components/this-week";
 import { PageHeader } from "@/components/ui";
@@ -33,6 +34,7 @@ export default async function ThisWeekPage() {
     <>
       <PageHeader
         kicker="From Monday's staff meeting"
+        icon={CalendarDays}
         title="Calendar"
         lede="Announcements by channel, and the next four weeks."
       />

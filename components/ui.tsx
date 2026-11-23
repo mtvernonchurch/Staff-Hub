@@ -1,10 +1,14 @@
+import type { LucideIcon } from "lucide-react";
 import { safeHttps, safeIconSrc } from "@/lib/domain/links";
 
-export function PageHeader({ kicker, title, lede }: { kicker?: string; title: string; lede?: string }) {
+export function PageHeader({ kicker, title, lede, icon: Icon }: { kicker?: string; title: string; lede?: string; icon?: LucideIcon }) {
   return (
     <header className="page-header">
       {kicker ? <p className="kicker">{kicker}</p> : null}
-      <h1>{title}</h1>
+      <h1 className={Icon ? "with-icon" : undefined}>
+        {Icon ? <Icon aria-hidden size={26} strokeWidth={2} /> : null}
+        <span>{title}</span>
+      </h1>
       {lede ? <p className="lede">{lede}</p> : null}
     </header>
   );

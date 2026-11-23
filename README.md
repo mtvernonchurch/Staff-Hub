@@ -13,6 +13,8 @@ Staff open one site for:
 
 It is meant to be added to a phone home screen. The sample you can open today uses fictional people, so nothing private is in this public repository.
 
+The navy header shows the church mark from `public/logo.svg`. The file is a white, transparent SVG traced from the header logo on [mtvernon.church](https://mtvernon.church) (`Mt-Vernon-White.png`). To swap it, replace `public/logo.svg`, or set `NEXT_PUBLIC_LOGO_URL` to another image address and restart. The app reads that one value from `lib/brand.ts`.
+
 ## Try it first, with no Google setup
 
 The sample hub does not need environment variables. Avery Quinn and Blake Nguyen are fictional.

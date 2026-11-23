@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { CreditCard, Wallet } from "lucide-react";
+import { Heading } from "@/components/heading";
 import { MinistryBudgetCard } from "@/components/budget-card";
 import { Flash, PageHeader } from "@/components/ui";
 import { money, monthKey, yearProgress } from "@/lib/budgets/access";
@@ -25,6 +27,7 @@ export default async function BudgetsPage({
     <>
       <PageHeader
         kicker="Sample until BILL is connected"
+        icon={Wallet}
         title="Budgets"
         lede="Ministry totals and staff cards. You only see amounts you are allowed to see."
       />
@@ -33,7 +36,7 @@ export default async function BudgetsPage({
         <>
           <MinistryBudgetCard rows={view.ministries} today={today} sample={view.sample} admin={admin} />
           <section className="card" style={{ marginTop: 16 }}>
-            <h2>Ministry detail</h2>
+            <Heading icon={Wallet}>Ministry detail</Heading>
             {view.ministries.map((row) => {
               const remaining = row.annual - row.spent;
               const max = Math.max(...row.monthly, 1);
@@ -61,7 +64,7 @@ export default async function BudgetsPage({
           {admin ? (
             <section className="card" style={{ marginTop: 16 }}>
               <div className="card-head">
-                <h2>Staff cards</h2>
+                <Heading icon={CreditCard}>Staff cards</Heading>
                 <MonthLinks month={month} />
               </div>
               <p className="hint">

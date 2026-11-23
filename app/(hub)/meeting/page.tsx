@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { ClipboardList } from "lucide-react";
 import { AttendanceCard } from "@/components/attendance-card";
 import { MeetingMode } from "@/components/meeting-mode";
 import { PageHeader } from "@/components/ui";
@@ -32,6 +33,7 @@ export default async function MeetingModePage() {
     <>
       <PageHeader
         kicker="Monday at 1:00 PM"
+        icon={ClipboardList}
         title="Staff meeting"
         lede={`Live notes for ${formatFriendly(meeting.date)}. What you add here is on each person's list as soon as you save it.`}
       />

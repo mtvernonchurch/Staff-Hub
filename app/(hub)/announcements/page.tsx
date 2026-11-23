@@ -1,4 +1,5 @@
 import { createAnnouncementAction, editAnnouncementAction } from "@/app/(hub)/actions";
+import { Megaphone } from "lucide-react";
 import { Flash, OutLink, PageHeader } from "@/components/ui";
 import { isAdmin } from "@/lib/domain/access";
 import { ANNOUNCE_CHANNELS, parseChannels } from "@/lib/domain/channels";
@@ -22,6 +23,7 @@ export default async function AnnouncementsPage({
     <>
       <PageHeader
         kicker="What the church needs to hear"
+        icon={Megaphone}
         title="Announcements"
         lede="Sunday, email, and staff notes live here. Conversation stays in staff chat."
       />

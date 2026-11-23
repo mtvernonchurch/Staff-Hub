@@ -6,6 +6,8 @@ import {
   editFolderAction,
   editQuickLinkAction,
 } from "@/app/(hub)/actions";
+import { FileText, Folder, Link2 } from "lucide-react";
+import { Heading } from "@/components/heading";
 import { Flash, IconImage, OutLink, PageHeader } from "@/components/ui";
 import { isAdmin } from "@/lib/domain/access";
 import { sortByOrder } from "@/lib/domain/view";
@@ -32,12 +34,13 @@ export default async function DocumentsPage({
     <>
       <PageHeader
         kicker="Files stay where they are"
+        icon={Folder}
         title="Resources"
         lede="Program tiles, folders, and pinned files. They open in a new tab. The hub does not copy anything."
       />
       <Flash error={query.error} notice={query.notice} />
       <section className="card">
-        <h2>Quick links</h2>
+        <Heading icon={Link2}>Quick links</Heading>
         <div className="quick-grid">
           {sortByOrder(links).map((link) => (
             <OutLink key={link.id} className="quick-link" href={link.url}>
@@ -87,7 +90,7 @@ export default async function DocumentsPage({
         ) : null}
       </section>
       <section className="card" style={{ marginTop: 16 }}>
-        <h2>Folders</h2>
+        <Heading icon={Folder}>Folders</Heading>
         <div className="folder-grid">
           {sortByOrder(folders).map((folder) => (
             <OutLink key={folder.id} className="folder-card" href={folder.url}>{folder.name}</OutLink>
@@ -117,7 +120,7 @@ export default async function DocumentsPage({
         ) : null}
       </section>
       <section className="card" style={{ marginTop: 16 }}>
-        <h2>Pinned documents</h2>
+        <Heading icon={FileText}>Pinned documents</Heading>
         {[...groups.entries()].map(([group, docs]) => (
           <div key={group}>
             <p className="group-title">{group}</p>

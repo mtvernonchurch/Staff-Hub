@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { CreditCard, Wallet } from "lucide-react";
+import { Heading } from "@/components/heading";
 import type { CardMonth, CardTransaction, MinistryBudget } from "@/lib/data/types";
 import { budgetTone, money, yearProgress } from "@/lib/budgets/access";
 
@@ -18,7 +20,7 @@ export function MinistryBudgetCard({
   return (
     <section className="card">
       <div className="card-head">
-        <h2>Ministry budgets</h2>
+        <Heading icon={Wallet}>Ministry budgets</Heading>
         <span className="row-actions">
           {sample ? <span className="sample-chip">Sample</span> : null}
           <Link href="/budgets">Open</Link>
@@ -62,7 +64,7 @@ export function StaffCardSpend({
   return (
     <section className="card">
       <div className="card-head">
-        <h2>My card this month</h2>
+        <Heading icon={CreditCard}>My card this month</Heading>
         {sample ? <span className="sample-chip">Sample</span> : null}
       </div>
       <p className="budget-label"><span>{money(card.spent)} spent</span><strong>{money(remaining)} left</strong></p>

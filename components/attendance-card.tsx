@@ -1,4 +1,6 @@
+import { BarChart3 } from "lucide-react";
 import { saveAttendanceAction } from "@/app/(hub)/extra-actions";
+import { Heading } from "@/components/heading";
 import type { AttendanceCount } from "@/lib/data/types";
 import { ATTENDANCE_AREAS, ATTENDANCE_SERVICES, attendanceSnapshot } from "@/lib/domain/attendance";
 import { formatFriendly, formatUsDate } from "@/lib/domain/dates";
@@ -20,7 +22,7 @@ export function AttendanceCard({
   return (
     <section className="card">
       <div className="card-head">
-        <h2>Last Sunday</h2>
+        <Heading icon={BarChart3}>Last Sunday</Heading>
         <span>{formatFriendly(formatUsDate(snap.sunday))}</span>
       </div>
       <p className="attendance-total">{snap.total.toLocaleString("en-US")}</p>

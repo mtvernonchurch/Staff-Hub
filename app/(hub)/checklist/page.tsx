@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { startChecklistAction, updateChecklistAction } from "@/app/(hub)/actions";
+import { ListChecks } from "lucide-react";
 import { Flash, PageHeader } from "@/components/ui";
 import { chicagoToday, formatFriendly, formatUsDate, sortMeetings, upcomingMonday } from "@/lib/domain/dates";
 import { namesMatch } from "@/lib/domain/people";
@@ -28,6 +29,7 @@ export default async function ChecklistPage({
     <>
       <PageHeader
         kicker="Before Sunday"
+        icon={ListChecks}
         title="Sunday checklist"
         lede="Each area owner marks their part ready. The list is copied from the template for one meeting."
       />

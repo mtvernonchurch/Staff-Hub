@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { GitBranch, Megaphone, SquareCheck } from "lucide-react";
 import { AttendanceCard } from "@/components/attendance-card";
 import { MinistryBudgetCard } from "@/components/budget-card";
+import { Heading } from "@/components/heading";
 import { ActionItemForm, ActionList } from "@/components/records";
 import { StaffPinBoard } from "@/components/staff-pins";
 import { Empty, Flash, OutLink } from "@/components/ui";
@@ -48,7 +50,7 @@ export default async function HomePage({
         <StaffPinBoard pins={pins} acks={acks} actor={staff} today={today} returnTo="/" />
         <section className="card">
           <div className="card-head">
-            <h2>This week&apos;s announcements</h2>
+            <Heading icon={Megaphone}>This week&apos;s announcements</Heading>
             <Link href="/this-week">Calendar</Link>
           </div>
           {weekNews.length === 0 ? <Empty>Nothing from this week&apos;s meeting yet.</Empty> : weekNews.map((item) => (
@@ -64,7 +66,7 @@ export default async function HomePage({
         </section>
         <section className="card tone-action">
           <div className="card-head">
-            <h2>Your open items</h2>
+            <Heading icon={SquareCheck}>Your open items</Heading>
             <Link href="/action-items">All items</Link>
           </div>
           <ActionList items={open} actor={staff} staff={people} meetings={meetings} today={today} returnTo="/" />
@@ -75,7 +77,7 @@ export default async function HomePage({
         </section>
         <section className="card">
           <div className="card-head">
-            <h2>Planning Center workflows</h2>
+            <Heading icon={GitBranch}>Planning Center workflows</Heading>
             <span className="hint">Assigned to you</span>
           </div>
           {workflows.ok ? (

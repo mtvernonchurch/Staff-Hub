@@ -38,11 +38,13 @@ describe("program tiles", () => {
     const ministries = await store.listMinistries();
     const blakeNames = visibleProgramLinks(blake, links, ministries).map((link) => link.name);
     const averyNames = visibleProgramLinks(avery, links, ministries).map((link) => link.name);
-    expect(blakeNames).not.toContain("QuickBooks");
     expect(blakeNames).not.toContain("BILL");
+    expect(blakeNames).not.toContain("Patriot Software");
+    expect(blakeNames).not.toContain("Gmail");
     expect(averyNames).toContain("Planning Center");
-    expect(averyNames).toContain("QuickBooks");
-    expect(blakeNames.length).toBeGreaterThan(9);
+    expect(averyNames).toContain("BILL");
+    expect(averyNames).toContain("Patriot Software");
+    expect(averyNames).not.toContain("QuickBooks");
   });
 });
 

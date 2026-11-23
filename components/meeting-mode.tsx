@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { CalendarDays, ClipboardList, Heart, Megaphone, SquareCheck } from "lucide-react";
+import { Heading } from "@/components/heading";
 import {
   addLiveAction,
   addLiveAnnouncement,
@@ -75,14 +77,14 @@ export function MeetingMode({
       {saved ? <p className="banner banner-ok" role="status">{saved}</p> : null}
       <section className="card tone-meeting">
         <div className="card-head">
-          <h2>{meeting.title}</h2>
+          <Heading icon={ClipboardList}>{meeting.title}</Heading>
           <span>{formatFriendly(meeting.date)} · {status || "Upcoming"}</span>
         </div>
         <p className="hint">Monday at 1:00 PM. Enter a row and press Enter. It shows up for the whole staff right away.</p>
       </section>
 
       <section className="card">
-        <h2>Announcements</h2>
+        <Heading icon={Megaphone}>Announcements</Heading>
         <form
           className="live-grid news"
           onSubmit={async (event) => {
@@ -192,7 +194,7 @@ export function MeetingMode({
       </section>
 
       <section className="card">
-        <h2>Next 4 weeks</h2>
+        <Heading icon={CalendarDays}>Next 4 weeks</Heading>
         <CalendarCheckBoard
           events={calendarEvents}
           checks={calendarChecks}
@@ -205,7 +207,7 @@ export function MeetingMode({
       </section>
 
       <section className="card tone-action">
-        <h2>Action items</h2>
+        <Heading icon={SquareCheck}>Action items</Heading>
         <form
           className="live-grid tasks"
           onSubmit={async (event) => {
@@ -250,7 +252,7 @@ export function MeetingMode({
       </section>
 
       <section className="card">
-        <h2>Care notes</h2>
+        <Heading icon={Heart}>Care notes</Heading>
         <p className="hint">Everyone on staff can see these. Keep them to a name and the practical help.</p>
         <form
           className="live-grid care"

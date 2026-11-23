@@ -3,6 +3,8 @@ import { createRequestAction } from "@/app/(hub)/actions";
 import { createGraphicsRequestAction, createTimeAwayAction, setGraphicsOwnerAction } from "@/app/(hub)/extra-actions";
 import { NeededByField } from "@/components/needed-by-field";
 import { StaffOptions } from "@/components/records";
+import { Inbox } from "lucide-react";
+import { Heading } from "@/components/heading";
 import { Flash, PageHeader } from "@/components/ui";
 import { isAdmin } from "@/lib/domain/access";
 import { AWAY_KINDS, GRAPHICS_NEEDS, GRAPHICS_PLATFORMS, isShortNotice } from "@/lib/domain/desk";
@@ -38,16 +40,17 @@ export default async function RequestsPage({
     <>
       <PageHeader
         kicker="Request Desk"
+        icon={Inbox}
         title="Ask for help"
         lede="Graphics, time away, the weekly email, a text, a social post, the website, or a Sunday announcement. One place, instead of a crowded inbox."
       />
       <Flash error={query.error} notice={query.notice} />
       <section className="card">
-        <h2>Needs you</h2>
+        <Heading icon={Inbox}>Needs you</Heading>
         <RequestRows rows={waiting} empty="Nothing is waiting on you." viewer={staff.name} />
       </section>
       <section className="card" style={{ marginTop: 16 }}>
-        <h2>Open requests</h2>
+        <Heading icon={Inbox}>Open requests</Heading>
         <RequestRows rows={open} empty="No other open requests." viewer={staff.name} />
         <details>
           <summary>New request</summary>
@@ -72,12 +75,12 @@ export default async function RequestsPage({
         </details>
       </section>
       <section className="card" style={{ marginTop: 16 }}>
-        <h2>Recently finished</h2>
+        <Heading icon={Inbox}>Recently finished</Heading>
         <RequestRows rows={finished} empty="None yet." viewer={staff.name} />
       </section>
       <section className="card" style={{ marginTop: 16 }}>
         <div className="card-head">
-          <h2>Graphics and social</h2>
+          <Heading icon={Inbox}>Graphics and social</Heading>
         </div>
         <p className="hint">
           {owner ? `New requests go to ${owner}.` : "No one is set to receive these yet."}
@@ -136,7 +139,7 @@ export default async function RequestsPage({
         </details>
       </section>
       <section className="card" style={{ marginTop: 16 }}>
-        <h2>Time away</h2>
+        <Heading icon={Inbox}>Time away</Heading>
         {away.length === 0 ? <p className="empty">No time away requests yet.</p> : away.map((row) => (
           <Link key={row.id} href={`/requests/away/${row.id}`} className="meeting-link">
             <strong>{row.kind}{row.halfDay ? " · half day" : ""}</strong>

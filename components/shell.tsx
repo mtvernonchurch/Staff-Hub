@@ -1,5 +1,6 @@
 import { previewAsAction, signOutAction } from "@/app/sign-in/actions";
 import { Dock } from "@/components/tab-bar";
+import { LOGO_URL } from "@/lib/brand";
 import { dataMode } from "@/lib/config";
 import type { StaffMember } from "@/lib/data/types";
 import { greeting } from "@/lib/domain/dates";
@@ -22,7 +23,8 @@ export function Shell({
     <div className="shell">
       <header className="topbar">
         <div className="brand">
-          <span className="brand-mark">MV</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="brand-logo" src={LOGO_URL} alt="Mt Vernon Church" width={46} height={46} />
           <span>
             <span className="brand-name">Welcome, {firstName(staff.name)}</span>
             <span className="brand-sub">{greeting()}</span>
