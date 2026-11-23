@@ -403,8 +403,8 @@ export function calendarCheckCells(row: Partial<CalendarCheck>): Record<string, 
   const cells: Record<string, string> = {};
   if (row.id !== undefined) cells["Check ID"] = row.id;
   if (row.eventId !== undefined) cells["Event ID"] = row.eventId;
-  if (row.promotedEmail !== undefined) cells.Email = formatBool(row.promotedEmail);
-  if (row.promotedSocials !== undefined) cells.Socials = formatBool(row.promotedSocials);
+  if (row.promotedEmail !== undefined) cells["The Weekly"] = formatBool(row.promotedEmail);
+  if (row.promotedSocials !== undefined) cells.Social = formatBool(row.promotedSocials);
   if (row.promotedPlatform !== undefined) cells.Platform = formatBool(row.promotedPlatform);
   if (row.volunteersSet !== undefined) cells.Volunteers = formatBool(row.volunteersSet);
   if (row.graphicsRequested !== undefined) cells.Graphics = formatBool(row.graphicsRequested);
@@ -418,8 +418,8 @@ export function toCalendarCheck(record: Record<string, string>): CalendarCheck |
   return {
     id,
     eventId: cell(record, "Event ID"),
-    promotedEmail: parseBool(cell(record, "Email")),
-    promotedSocials: parseBool(cell(record, "Socials")),
+    promotedEmail: parseBool(cell(record, "The Weekly", ["Email"])),
+    promotedSocials: parseBool(cell(record, "Social", ["Socials"])),
     promotedPlatform: parseBool(cell(record, "Platform")),
     volunteersSet: parseBool(cell(record, "Volunteers")),
     graphicsRequested: parseBool(cell(record, "Graphics")),

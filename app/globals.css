@@ -273,6 +273,42 @@ textarea { min-height: 110px; resize: vertical; }
   .live-grid.news { grid-template-columns: 1fr 1.2fr 0.7fr 0.8fr auto; }
   .live-grid.care { grid-template-columns: 1fr 0.7fr 0.9fr 1fr 0.9fr auto; }
 }
+.section-anchor { scroll-margin-top: 96px; }
+.jump-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.jump-row a {
+  text-decoration: none;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--navy);
+  border-radius: 999px;
+  padding: 8px 14px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 650;
+  font-size: 0.85rem;
+}
+.month-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.month-dow { text-align: center; font-size: 0.68rem; font-weight: 700; color: var(--muted); }
+.month-day {
+  min-height: 58px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 3px 4px;
+  background: white;
+  overflow: hidden;
+}
+.month-day.is-out { visibility: hidden; }
+.month-day.is-today { border-color: var(--navy); background: var(--mint); }
+.month-day strong { display: block; font-size: 0.72rem; }
+.month-event {
+  display: block;
+  font-size: 0.65rem;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .checks { display: flex; flex-wrap: wrap; gap: 8px; }
 .checks label {
   display: flex; gap: 8px; align-items: center; background: white; border: 1px solid var(--line);

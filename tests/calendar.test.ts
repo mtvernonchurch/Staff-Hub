@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { MemoryStore } from "@/lib/data/memory-store";
 import { createSeed } from "@/lib/data/mock-data";
 import { sheetCalendarSource } from "@/lib/calendar/source";
-import { checkFor, eventsInWeek, fourChurchWeeks, needsGraphics, needsPromotion } from "@/lib/domain/calendar";
+import { checkFor, eventsInMonth, eventsInWeek, fourChurchWeeks, mondayWeek, needsGraphics, needsPromotion } from "@/lib/domain/calendar";
 import { formatChannels, groupAnnouncements } from "@/lib/domain/channels";
 import { chicagoToday } from "@/lib/domain/dates";
 import { HubError } from "@/lib/hub-error";
@@ -42,6 +42,9 @@ describe("four-week calendar", () => {
     expect(needsGraphics(checkFor(checks, "cal_sunday"))).toBe(false);
     expect(needsPromotion(checkFor(checks, "cal_thanks"))).toBe(false);
     expect(needsGraphics(checkFor(checks, "cal_thanks"))).toBe(true);
+    const week = mondayWeek(today);
+    expect(eventsInWeek(events, week).map((event) => event.id).sort()).toEqual(["cal_comms", "cal_sunday"]);
+    expect(eventsInMonth(events, today).map((event) => event.id)).toEqual(["cal_comms", "cal_sunday", "cal_thanks", "cal_students"]);
   });
 
   it("lets an admin save a check and refuses staff", async () => {

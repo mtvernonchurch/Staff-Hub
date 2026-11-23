@@ -1,5 +1,5 @@
 import { HubError } from "@/lib/hub-error";
-import { isWritableTab, normalizeHeader } from "@/lib/sheets/schema";
+import { CALENDAR_CHECK_ALIASES, isWritableTab, normalizeHeader } from "@/lib/sheets/schema";
 
 export type CellUpdate = { range: string; value: string };
 
@@ -34,9 +34,16 @@ export function headersOf(grid: string[][]): string[] {
   return (grid[0] ?? []).map((header) => String(header ?? "").trim());
 }
 
+function namesFor(name: string): string[] {
+  return [name, ...(CALENDAR_CHECK_ALIASES[name] ?? [])];
+}
+
+function headerMatches(header: string, name: string): boolean {
+  return namesFor(name).some((candidate) => normalizeHeader(header) === normalizeHeader(candidate));
+}
+
 export function assertColumns(headers: string[], required: readonly string[], tab: string): void {
-  const present = new Set(headers.map(normalizeHeader));
-  const missing = required.filter((column) => !present.has(normalizeHeader(column)));
+  const missing = required.filter((column) => !headers.some((header) => headerMatches(header, column)));
   if (missing.length > 0) {
     throw new HubError(
       `${tab} is missing ${missing.join(", ")}. The hub left that tab unchanged. Check the header row.`,
@@ -45,8 +52,7 @@ export function assertColumns(headers: string[], required: readonly string[], ta
 }
 
 export function headerIndex(headers: string[], name: string): number {
-  const target = normalizeHeader(name);
-  const index = headers.findIndex((header) => normalizeHeader(header) === target);
+  const index = headers.findIndex((header) => headerMatches(header, name));
   if (index < 0) throw new HubError(`Column "${name}" was not found.`);
   return index;
 }
@@ -84,13 +90,21 @@ export function findDataRow(grid: string[][], idColumn: string, id: string): num
   return matches[0];
 }
 
+function valueForHeader(record: Record<string, string>, header: string): string | undefined {
+  if (record[header] !== undefined) return record[header];
+  const match = Object.entries(record).find(([key]) => normalizeHeader(key) === normalizeHeader(header));
+  if (match) return match[1];
+  const canonical = Object.entries(CALENDAR_CHECK_ALIASES).find(([, aliases]) =>
+    aliases.some((alias) => normalizeHeader(alias) === normalizeHeader(header)),
+  );
+  if (canonical && record[canonical[0]] !== undefined) return record[canonical[0]];
+  return undefined;
+}
+
 export function recordToAppendRow(headers: string[], record: Record<string, string>): string[] {
   return headers.map((header) => {
     if (!header) return "";
-    const direct = record[header];
-    if (direct !== undefined) return direct;
-    const match = Object.entries(record).find(([key]) => normalizeHeader(key) === normalizeHeader(header));
-    return match?.[1] ?? "";
+    return valueForHeader(record, header) ?? "";
   });
 }
 
@@ -117,10 +131,13 @@ export function planCellUpdates(
   });
 }
 
-export function cell(record: Record<string, string>, name: string): string {
-  if (record[name] !== undefined) return record[name];
-  const match = Object.entries(record).find(([key]) => normalizeHeader(key) === normalizeHeader(name));
-  return match?.[1] ?? "";
+export function cell(record: Record<string, string>, name: string, aliases: readonly string[] = []): string {
+  for (const candidate of [name, ...aliases]) {
+    if (record[candidate] !== undefined) return record[candidate];
+    const match = Object.entries(record).find(([key]) => normalizeHeader(key) === normalizeHeader(candidate));
+    if (match) return match[1];
+  }
+  return "";
 }
 
 export function parseBool(value: string): boolean {

@@ -52,8 +52,8 @@ If an earlier import is stuck, open the project → **Settings** → **Build and
 | Page | What staff do there |
 | --- | --- |
 | Home | Light greeting, where you are today, this week's Sunday, last Sunday's attendance, ministry budgets, program tiles, then your own items. Admins can switch to a team overview |
-| This week | Announcements grouped by email, socials, and platform, the next four weeks of church events, plus prayer, care notes, action items, and earlier meetings |
-| Meeting mode | Admins only. Live entry during Monday's 1:00 PM staff meeting, including announcement channels and the 4-week calendar check |
+| Calendar | This week (Monday–Sunday events and announcements), this month, and the Communications Calendar |
+| Meeting mode | Admins only. Live entry during Monday's 1:00 PM staff meeting, including announcement channels and the Communications Calendar |
 | Action items | The one shared list. Filter mine or everyone's. Add, update, and mark done |
 | Meetings | Prayer, wins, the week ahead, ministry updates, discussion and decisions, and the items from that meeting |
 | Sunday checklist | The areas copied from the checklist template for a meeting |

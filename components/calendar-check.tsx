@@ -35,7 +35,7 @@ export function CalendarCheckBoard({
 
   return (
     <div className="stack">
-      <p className="hint">The next four weeks, starting this Sunday. Promotion is email, socials, and what is said from the platform.</p>
+      <p className="hint">The next four weeks, starting this Sunday. Promotion is The Weekly, Social, and what is said from the platform.</p>
       {editable ? (
         <form
           className="live-grid calendar"
@@ -146,8 +146,8 @@ function EventRow({
         </p>
         {editable ? (
           <div className="checks">
-            <Check label="Email" checked={Boolean(check?.promotedEmail)} onChange={(value) => toggle({ promotedEmail: value })} />
-            <Check label="Socials" checked={Boolean(check?.promotedSocials)} onChange={(value) => toggle({ promotedSocials: value })} />
+            <Check label="The Weekly" checked={Boolean(check?.promotedEmail)} onChange={(value) => toggle({ promotedEmail: value })} />
+            <Check label="Social" checked={Boolean(check?.promotedSocials)} onChange={(value) => toggle({ promotedSocials: value })} />
             <Check label="Platform" checked={Boolean(check?.promotedPlatform)} onChange={(value) => toggle({ promotedPlatform: value })} />
             <Check label="Volunteers set" checked={Boolean(check?.volunteersSet)} onChange={(value) => toggle({ volunteersSet: value })} />
             <Check label="Graphics requested" checked={Boolean(check?.graphicsRequested)} onChange={(value) => toggle({ graphicsRequested: value })} />
@@ -155,8 +155,8 @@ function EventRow({
         ) : (
           <p className="note">
             {[
-              check?.promotedEmail ? "Email" : "",
-              check?.promotedSocials ? "Socials" : "",
+              check?.promotedEmail ? "The Weekly" : "",
+              check?.promotedSocials ? "Social" : "",
               check?.promotedPlatform ? "Platform" : "",
               check?.volunteersSet ? "Volunteers set" : "",
               check?.graphicsRequested ? "Graphics requested" : "",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { CalendarDays, ClipboardList, Heart, Megaphone, SquareCheck } from "lucide-react";
+import { ClipboardList, Heart, Megaphone, SquareCheck } from "lucide-react";
 import { Heading } from "@/components/heading";
 import {
   addLiveAction,
@@ -194,7 +194,7 @@ export function MeetingMode({
       </section>
 
       <section className="card">
-        <Heading icon={CalendarDays}>Next 4 weeks</Heading>
+        <Heading icon={Megaphone}>Communications Calendar</Heading>
         <CalendarCheckBoard
           events={calendarEvents}
           checks={calendarChecks}

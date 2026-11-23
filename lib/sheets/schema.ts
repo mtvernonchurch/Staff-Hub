@@ -119,7 +119,7 @@ export const COLUMNS = {
   timeAway: ["Away ID", "Requested By", "Type", "Start", "End", "Half Day", "Notes", "Coverage", "Status", "Created"],
   workStatuses: ["Status ID", "Date", "Staff", "Place", "Note"],
   calendarEvents: ["Event ID", "Date", "Time", "Event", "Ministry", "Location", "Owner"],
-  calendarChecks: ["Check ID", "Event ID", "Email", "Socials", "Platform", "Volunteers", "Graphics", "Notes"],
+  calendarChecks: ["Check ID", "Event ID", "The Weekly", "Social", "Platform", "Volunteers", "Graphics", "Notes"],
   careNotes: ["Care Note ID", "Meeting", "Name", "Action", "Custom", "Details", "Assignee", "Done", "Action Item"],
   openIssues: ["Issue ID", "Issue", "Owner", "Next Step", "Due", "Status", "Created"],
   requests: [
@@ -172,6 +172,12 @@ export const COLUMNS = {
     "Done At",
   ],
 } as const;
+
+/** Older Calendar Checks tabs used these headers. New tabs use the keys. */
+export const CALENDAR_CHECK_ALIASES: Record<string, readonly string[]> = {
+  "The Weekly": ["Email"],
+  Social: ["Socials"],
+};
 
 export function normalizeHeader(header: string): string {
   return header

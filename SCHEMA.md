@@ -12,7 +12,7 @@ Dates are text in `M/D/YYYY`. People are stored by name. Optional columns are ad
 | Action Items | Item ID, Action, Owner, Due, Status, Meeting, Update, Created, Completed On | Ministry |
 | Announcements | Announcement ID, Date, Event, Kind, Owner, Announced Where, Details, Link, Audience | Meeting, Ministry, Channels |
 | Calendar | Event ID, Date, Time, Event, Ministry, Location, Owner | |
-| Calendar Checks | Check ID, Event ID, Email, Socials, Platform, Volunteers, Graphics, Notes | |
+| Calendar Checks | Check ID, Event ID, The Weekly, Social, Platform, Volunteers, Graphics, Notes | |
 | Staff Announcements | Pin ID, Title, Message, Link, Priority, Show Until, Author, Posted | |
 | Staff Announcement Acks | Ack ID, Pin ID, Staff, Acknowledged On | |
 | Hub Settings | Setting, Value | |
@@ -37,8 +37,8 @@ Meeting mode uses the existing Meetings, Action Items, and Announcements tabs.
 - Prayer is **Prayer Requests**. Celebrations are **Wins**. Discussion is **Notes**.
 - An action item's **Meeting** cell is the meeting id, so it also appears on that person's open items.
 - An announcement's **Meeting** cell is the meeting id. **Ministry** is the ministry name when one was chosen. **Channels** is one or more of Platform, The Weekly, and Social, separated by commas. The Weekly is the church's weekly email. Older rows that say Email are treated as The Weekly, and Socials is treated as Social. A blank Channels cell is unsorted. It is not treated as a platform announcement. The hub adds the Channels header the first time an announcement is saved with that field.
-- **Calendar** is the event list for the 4-week check: date, time, event, ministry, location, and owner. Admins add and edit those rows in Meeting mode. A later Planning Center or Google Calendar feed can replace this list. The hub adds the tab the first time it is opened if it is missing.
-- **Calendar Checks** stores readiness for an event: Email, Socials, and Platform are TRUE when that channel has been promoted. Volunteers and Graphics are TRUE or FALSE. Notes is short text. Checks stay on this tab even if the event list later comes from another calendar.
+- **Calendar** is the event list behind This Week, This Month, and the Communications Calendar: date, time, event, ministry, location, and owner. Admins add and edit those rows in Meeting mode. A later Planning Center or Google Calendar feed can replace this list. The hub adds the tab the first time it is opened if it is missing.
+- **Calendar Checks** stores readiness for an event. The Weekly, Social, and Platform are TRUE when that channel has been promoted. The Weekly is the church's weekly email. A sheet that still has the older headers Email and Socials is read and written in those same columns. Volunteers and Graphics are TRUE or FALSE. Notes is short text. Checks stay on this tab even if the event list later comes from another calendar.
 - Removing an item during the live meeting deletes that one row. The header row is never deleted.
 - Care notes live on the **Care Notes** tab. Action is Visit, Card, Flowers, Call, Meal, or Other. Custom is the words used when Action is Other. Done is TRUE or FALSE. If Assignee is filled in, Action Item holds the id of the matching row on Action Items, and that row shows on the assignee's own list. The hub adds the Care Notes tab, with its header row, the first time a note is saved and the tab is not there yet.
 - **Staff Announcements** are the pinned notes at the top of Home. They are not the meeting **Announcements** tab. Priority is Normal or Urgent. Show Until is blank, or a date the note is still visible on. After that date it hides. Author and Posted are filled when an admin pins it. Removing a pin deletes that row.

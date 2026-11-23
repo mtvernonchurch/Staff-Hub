@@ -1,5 +1,5 @@
 import type { CalendarCheck, CalendarEvent } from "@/lib/data/types";
-import { addUtcDays, formatUsDate, parseSheetDate, sameDay } from "@/lib/domain/dates";
+import { addUtcDays, formatUsDate, parseSheetDate, sameDay, weekStartMonday } from "@/lib/domain/dates";
 
 /** Sunday that starts the church week containing today. */
 export function churchWeekStart(today: Date): Date {
@@ -16,18 +16,38 @@ export function fourChurchWeeks(today: Date): ChurchWeek[] {
   });
 }
 
+/** Monday through Sunday of the week that contains today. */
+export function mondayWeek(today: Date): ChurchWeek {
+  const start = weekStartMonday(today);
+  return { start, end: addUtcDays(start, 6) };
+}
+
+export function eventsInMonth(events: CalendarEvent[], today: Date): CalendarEvent[] {
+  return sortEvents(
+    events.filter((event) => {
+      const date = parseSheetDate(event.date);
+      if (!date) return false;
+      return date.getUTCFullYear() === today.getUTCFullYear() && date.getUTCMonth() === today.getUTCMonth();
+    }),
+  );
+}
+
 export function eventsInWeek(events: CalendarEvent[], week: ChurchWeek): CalendarEvent[] {
-  return events
-    .filter((event) => {
+  return sortEvents(
+    events.filter((event) => {
       const date = parseSheetDate(event.date);
       if (!date) return false;
       return date.getTime() >= week.start.getTime() && date.getTime() <= week.end.getTime();
-    })
-    .sort((a, b) => {
-      const left = parseSheetDate(a.date)?.getTime() ?? 0;
-      const right = parseSheetDate(b.date)?.getTime() ?? 0;
-      return left - right || a.time.localeCompare(b.time) || a.event.localeCompare(b.event);
-    });
+    }),
+  );
+}
+
+function sortEvents(events: CalendarEvent[]): CalendarEvent[] {
+  return [...events].sort((a, b) => {
+    const left = parseSheetDate(a.date)?.getTime() ?? 0;
+    const right = parseSheetDate(b.date)?.getTime() ?? 0;
+    return left - right || a.time.localeCompare(b.time) || a.event.localeCompare(b.event);
+  });
 }
 
 export function checkFor(checks: CalendarCheck[], eventId: string): CalendarCheck | undefined {
