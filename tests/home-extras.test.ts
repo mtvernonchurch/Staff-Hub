@@ -5,6 +5,7 @@ import { ownedMinistries, visibleCards, visibleTransactions, monthKey } from "@/
 import { attendanceSnapshot } from "@/lib/domain/attendance";
 import { chicagoToday } from "@/lib/domain/dates";
 import { visibleProgramLinks } from "@/lib/domain/programs";
+import { assignedWorkflows } from "@/lib/workflows/assigned";
 
 const now = new Date("2026-11-23T18:00:00Z");
 
@@ -42,6 +43,17 @@ describe("program tiles", () => {
     expect(averyNames).toContain("Planning Center");
     expect(averyNames).toContain("QuickBooks");
     expect(blakeNames.length).toBeGreaterThan(9);
+  });
+});
+
+describe("workflow cards", () => {
+  it("gives Avery his cards and Blake only the student card", async () => {
+    const store = new MemoryStore(createSeed(now));
+    const cards = await store.listWorkflowCards();
+    const avery = assignedWorkflows(cards, "avery@mtvernon.church");
+    const blake = assignedWorkflows(cards, "blake@mtvernon.church");
+    expect(avery.map((card) => card.id).sort()).toEqual(["card_baptism", "card_guest"]);
+    expect(blake.map((card) => card.workflow)).toEqual(["Student follow up"]);
   });
 });
 

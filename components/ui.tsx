@@ -33,6 +33,8 @@ export function OutLink({ href, className, children }: { href: string; className
 export function IconImage({ icon, alt }: { icon: string; alt: string }) {
   const src = safeIconSrc(icon);
   if (!src) return null;
+  // Icon URLs come from the sheet and are not known at build time.
+  // eslint-disable-next-line @next/next/no-img-element
   return <img src={src} alt={alt} width={28} height={28} />;
 }
 

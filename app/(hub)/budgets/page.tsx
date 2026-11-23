@@ -2,7 +2,6 @@ import Link from "next/link";
 import { MinistryBudgetCard } from "@/components/budget-card";
 import { Flash, PageHeader } from "@/components/ui";
 import { money, monthKey, yearProgress } from "@/lib/budgets/access";
-import { getBudgetSource } from "@/lib/budgets/source";
 import { loadBudgetView } from "@/lib/budgets/view";
 import { isAdmin } from "@/lib/domain/access";
 import { chicagoToday } from "@/lib/domain/dates";

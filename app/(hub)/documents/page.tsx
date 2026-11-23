@@ -11,7 +11,7 @@ import { isAdmin } from "@/lib/domain/access";
 import { sortByOrder } from "@/lib/domain/view";
 import { requireStaff } from "@/lib/session";
 
-export const metadata = { title: "Documents" };
+export const metadata = { title: "Resources" };
 
 export default async function DocumentsPage({
   searchParams,
@@ -32,8 +32,8 @@ export default async function DocumentsPage({
     <>
       <PageHeader
         kicker="Files stay where they are"
-        title="Documents and folders"
-        lede="Pins and folders open the real file. The hub does not copy anything."
+        title="Resources"
+        lede="Program tiles, folders, and pinned files. They open in a new tab. The hub does not copy anything."
       />
       <Flash error={query.error} notice={query.notice} />
       <section className="card">

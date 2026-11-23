@@ -573,6 +573,22 @@ export function createSeed(now = new Date()): HubData {
         workflowId: "wf_guest",
         assigneeId: "person_avery",
       },
+      {
+        id: "card_student",
+        workflow: "Student follow up",
+        step: "Text the parent",
+        forPerson: "Sample student",
+        assignee: "Blake Nguyen",
+        assigneeEmail: "blake@mtvernon.church",
+        overdue: "Yes",
+        movedToStep: overdue,
+        link: "https://planningcenter.com",
+        firstSeen: overdue,
+        lastSynced: formatUsDate(today),
+        personId: "person_student",
+        workflowId: "wf_student",
+        assigneeId: "person_blake",
+      },
     ],
     cardActions: [
       {

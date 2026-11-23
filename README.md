@@ -221,6 +221,8 @@ Graphics requests are assigned from one cell, **Hub Settings** → `Graphics Own
 
 Budgets default to sample numbers. Set `DATA_SOURCE_BUDGET=sheet` with `DATA_MODE=sheets` to read the **Budgets**, **Card Spend**, and **Card Transactions** tabs. `DATA_SOURCE_BUDGET=bill` does not call BILL yet. When you wire it, the Spend & Expense API (formerly Divvy) uses an `apiToken` from the BILL developer portal (`BILL_API_KEY`, `BILL_ORG_ID`). Confirm the current paths before coding them: `GET https://api.divvy.co/v1/budgets`, `GET https://api.divvy.co/v1/cards`, and `GET https://api.divvy.co/v1/transactions`. Attendance defaults to the **Attendance** tab in real mode. `DATA_SOURCE_ATTENDANCE=pco` does not call Planning Center yet. The Check-Ins API uses `PCO_APP_ID` and `PCO_SECRET`: `GET https://api.planningcenteronline.com/check-ins/v2/headcounts` and `GET https://api.planningcenteronline.com/check-ins/v2/check_ins`.
 
+Workflow cards on Home are the ones assigned to the signed-in email. Sample mode reads the **Workflow Cards** tab. `DATA_SOURCE_WORKFLOWS=pco` does not call Planning Center yet. The People API for that later step is `GET https://api.planningcenteronline.com/people/v2/workflows` and `GET https://api.planningcenteronline.com/people/v2/workflows/{workflow_id}/cards`.
+
 ## Staff chat, later
 
 The pages say **staff chat**. They do not name a product, and they do not post messages yet.

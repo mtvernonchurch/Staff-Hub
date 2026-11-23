@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AttendanceCard } from "@/components/attendance-card";
 import { ThisWeekView } from "@/components/this-week";
 import { PageHeader } from "@/components/ui";
@@ -32,9 +33,15 @@ export default async function ThisWeekPage() {
     <>
       <PageHeader
         kicker="From Monday's staff meeting"
-        title="This week"
-        lede="Announcements, action items, and notes for the whole staff."
+        title="Calendar"
+        lede="Announcements by channel, and the next four weeks."
       />
+      <p className="hint">
+        <Link href="/meetings">Meetings</Link>
+        {" · "}
+        <Link href="/checklist">Sunday checklist</Link>
+        {isAdmin(staff) ? <> · <Link href="/meeting">Meeting mode</Link> · <Link href="/announcements">Edit announcements</Link></> : null}
+      </p>
       <AttendanceCard rows={attendance} today={today} editable={isAdmin(staff)} returnTo="/this-week" />
       <ThisWeekView
         meeting={meeting}

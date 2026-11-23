@@ -312,27 +312,37 @@ summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; al
 .group-title, .section-break { margin: 18px 0 8px; color: var(--muted); font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; }
 .progress-label { font-weight: 700; }
 
-@media (max-width: 959px) {
-  .tabbar { display: grid; }
-  .more-nav { display: block; }
-  .main { padding-bottom: 96px; }
-  .more-nav .nav { flex-direction: column; background: var(--navy); padding: 8px; border-radius: 12px; }
+.dock {
+  position: fixed; z-index: 30; left: 50%;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex; gap: 2px; width: max-content; max-width: calc(100vw - 16px);
+  background: var(--navy); color: #e7f2ee; border-radius: 999px; padding: 8px;
+  box-shadow: 0 16px 40px rgba(4, 53, 75, 0.28);
 }
+.dock a {
+  position: relative; color: #d7e5e0; text-decoration: none;
+  display: grid; justify-items: center; gap: 2px;
+  min-width: 64px; min-height: 52px; padding: 6px 8px; border-radius: 999px;
+  font-size: 0.72rem; font-weight: 700;
+}
+.dock a.is-active { background: var(--mint); color: var(--navy); }
+.main { padding-bottom: 128px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.topbar .btn { background: white; color: var(--navy); }
 @media (min-width: 720px) {
-  .main { padding: 32px 28px 72px; }
+  .main { padding: 32px 28px 140px; }
   .tile-grid { grid-template-columns: repeat(4, 1fr); }
   .quick-grid, .folder-grid { grid-template-columns: 1fr 1fr; }
   .item { grid-template-columns: 1fr auto; align-items: center; }
   .sign-card { padding: 36px 32px; }
 }
 @media (min-width: 960px) {
-  .shell { display: grid; grid-template-columns: 250px 1fr; }
-  .rail { display: flex; }
-  .topbar { display: none; }
+  .shell { display: block; }
+  .rail { display: none; }
   .grid-home { grid-template-columns: 1.3fr 0.9fr; align-items: start; }
-  .main { padding: 36px 36px 80px; }
+  .main { padding: 36px 36px 140px; }
   .tile-grid { grid-template-columns: repeat(6, 1fr); }
-  .tabbar, .more-nav { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
