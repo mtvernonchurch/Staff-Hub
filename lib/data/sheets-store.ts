@@ -1,15 +1,19 @@
 import type {
   ActionItem,
   Announcement,
+  AttendanceCount,
   CalendarCheck,
   CalendarEvent,
   CareNote,
   ChecklistItem,
   DeskRequest,
+  CardMonth,
+  CardTransaction,
   FolderLink,
   GraphicsRequest,
   HubStore,
   Meeting,
+  MinistryBudget,
   MinistryUpdate,
   OpenIssue,
   PinnedDocument,
@@ -25,6 +29,7 @@ import { assertColumns, assertWritable, columnLetter, findDataRow, gridToRecords
 import {
   actionCells,
   announcementCells,
+  attendanceCells,
   calendarCheckCells,
   calendarEventCells,
   careNoteCells,
@@ -41,17 +46,21 @@ import {
   staffPinCells,
   toActionItem,
   toAnnouncement,
+  toAttendance,
   toCalendarCheck,
   toCalendarEvent,
   toCareNote,
   toCardAction,
   toChecklist,
   toDocument,
+  toCardMonth,
+  toCardTransaction,
   toFolder,
   toGraphicsRequest,
   toIssue,
   toMeeting,
   toMinistry,
+  toMinistryBudget,
   toMinistryUpdate,
   toQuickLink,
   toRequest,
@@ -438,13 +447,47 @@ export class SheetsStore implements HubStore {
     delete cells["Doc ID"];
     await this.patch("Documents", "Doc ID", id, cells);
   }
+  async listMinistryBudgets() {
+    await this.api.ensureTab("Budgets", [...COLUMNS.budgets]);
+    this.cache.delete("Budgets");
+    return (await this.records("Budgets", COLUMNS.budgets)).map(toMinistryBudget).filter((row) => row !== null);
+  }
+  async listCardMonths() {
+    await this.api.ensureTab("Card Spend", [...COLUMNS.cardSpend]);
+    this.cache.delete("Card Spend");
+    return (await this.records("Card Spend", COLUMNS.cardSpend)).map(toCardMonth).filter((row) => row !== null);
+  }
+  async listAttendance() {
+    await this.api.ensureTab("Attendance", [...COLUMNS.attendance]);
+    this.cache.delete("Attendance");
+    return (await this.records("Attendance", COLUMNS.attendance)).map(toAttendance).filter((row) => row !== null);
+  }
+  async createAttendance(row: AttendanceCount) {
+    await this.api.ensureTab("Attendance", [...COLUMNS.attendance]);
+    this.cache.delete("Attendance");
+    await this.append("Attendance", COLUMNS.attendance, attendanceCells(row));
+  }
+  async updateAttendance(id: string, changes: Partial<AttendanceCount>) {
+    await this.api.ensureTab("Attendance", [...COLUMNS.attendance]);
+    this.cache.delete("Attendance");
+    const cells = attendanceCells(changes);
+    delete cells["Attendance ID"];
+    await this.patch("Attendance", "Attendance ID", id, cells);
+  }
+  async listCardTransactions() {
+    await this.api.ensureTab("Card Transactions", [...COLUMNS.cardTransactions]);
+    this.cache.delete("Card Transactions");
+    return (await this.records("Card Transactions", COLUMNS.cardTransactions)).map(toCardTransaction).filter((row) => row !== null);
+  }
   async listQuickLinks() {
     return (await this.records("Quick Links", COLUMNS.quickLinks)).map(toQuickLink).filter((row) => row !== null);
   }
   async createQuickLink(row: QuickLink) {
+    await this.ensureHeaders("Quick Links", ["Initials", "Color", "Visible To", "Hidden"]);
     await this.append("Quick Links", COLUMNS.quickLinks, quickLinkCells(row));
   }
   async updateQuickLink(id: string, changes: Partial<QuickLink>) {
+    await this.ensureHeaders("Quick Links", ["Initials", "Color", "Visible To", "Hidden"]);
     const cells = quickLinkCells(changes);
     delete cells["Link ID"];
     await this.patch("Quick Links", "Link ID", id, cells);

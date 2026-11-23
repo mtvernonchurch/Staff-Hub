@@ -25,7 +25,11 @@ Dates are text in `M/D/YYYY`. People are stored by name. Optional columns are ad
 | Open Issues | Issue ID, Issue, Owner, Next Step, Due, Status, Created | |
 | Requests | Request ID, Title, Requested By, Needed By, Details, What's Needed, Link, Status, Assigned To, Draft Link, Created | |
 | Documents | Doc ID, Title, Group, Link, Notes | |
-| Quick Links | Link ID, Name, URL, Icon, Order | |
+| Quick Links | Link ID, Name, URL, Icon, Order | Initials, Color, Visible To, Hidden |
+| Budgets | Ministry, Fiscal Year, Annual Budget, Spent YTD, Updated, Monthly | |
+| Card Spend | Staff, Month, Limit, Spent | |
+| Card Transactions | Transaction ID, Staff, Month, Date, Merchant, Amount, Receipt Missing | |
+| Attendance | Attendance ID, Date, Service, Area, Count, Notes | |
 | Folders | Folder ID, Name, URL, Icon, Order | |
 
 Meeting mode uses the existing Meetings, Action Items, and Announcements tabs.
@@ -43,6 +47,10 @@ Meeting mode uses the existing Meetings, Action Items, and Announcements tabs.
 - **Graphics Requests** status is New, In progress, Ready for review, or Done. What's Needed and Platforms are comma-separated. Needed By under 7 days is a warning, not a block.
 - **Time Away** type is PTO/vacation, Sick, Personal, Conference/training, or Other. Half Day is TRUE or FALSE. Status is Pending, Approved, or Denied. An admin approves or denies. Approved rows that cover today show on Home under Who's out.
 - **Work Status** is where someone is working on that date: In office, Working from home, Out, or Off-site/visiting. Home shows only today's rows. A new day starts blank.
+
+- **Quick Links** optional columns: Initials, Color, Visible To (`All`, `Admin`, or a ministry name), and Hidden (`TRUE` or `FALSE`). The hub adds those headers the first time an admin saves a link. Home shows the first nine tiles, then Show all. QuickBooks, Patriot Software, and BILL are Admin in the sample list.
+- **Budgets**, **Card Spend**, and **Card Transactions** hold sample or live money figures. Amounts are filtered on the server: an admin sees every ministry and every staff card; a minister sees only ministries they lead on the Ministries tab and their own card. Monthly is a comma-separated trend. Do not put real giving or account numbers in the public repo. `DATA_SOURCE_BUDGET=bill` is a stub and does not call BILL.
+- **Attendance** is one row per service and area: Service is `9:00` or `10:30`. Area is Adults/Worship, MV Kids, Students, Volunteers, or First-time guests. The in-the-room total adds Adults/Worship, MV Kids, and Students. Volunteers and first-time guests are shown separately. Counts are visible to all staff. Admins edit them in the hub. `DATA_SOURCE_ATTENDANCE=pco` is a stub and does not call Planning Center.
 
 ## Tabs the hub only reads
 

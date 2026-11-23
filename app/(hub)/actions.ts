@@ -287,7 +287,16 @@ export async function createQuickLinkAction(formData: FormData) {
     const { staff, store } = await requireStaff();
     await createQuickLink(
       { store, actor: staff },
-      { name: field(formData, "name"), url: field(formData, "url"), icon: field(formData, "icon"), order: field(formData, "order") },
+      {
+        name: field(formData, "name"),
+        url: field(formData, "url"),
+        icon: field(formData, "icon"),
+        order: field(formData, "order"),
+        initials: field(formData, "initials"),
+        color: field(formData, "color"),
+        visibleTo: field(formData, "visibleTo"),
+        hidden: formData.get("hidden") === "yes",
+      },
     );
   });
 }
@@ -301,6 +310,10 @@ export async function editQuickLinkAction(formData: FormData) {
       url: field(formData, "url"),
       icon: field(formData, "icon"),
       order: field(formData, "order"),
+      initials: field(formData, "initials"),
+      color: field(formData, "color"),
+      visibleTo: field(formData, "visibleTo"),
+      hidden: formData.get("hidden") === "yes",
     });
   });
 }

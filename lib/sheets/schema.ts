@@ -20,6 +20,10 @@ export const WRITABLE_TABS = [
   "Documents",
   "Quick Links",
   "Folders",
+  "Budgets",
+  "Card Spend",
+  "Card Transactions",
+  "Attendance",
 ] as const;
 
 export const ALL_TABS = [
@@ -45,6 +49,10 @@ export const ALL_TABS = [
   "Documents",
   "Quick Links",
   "Folders",
+  "Budgets",
+  "Card Spend",
+  "Card Transactions",
+  "Attendance",
   "Workflow Cards",
   "Card Actions",
 ] as const;
@@ -129,6 +137,10 @@ export const COLUMNS = {
   ],
   documents: ["Doc ID", "Title", "Group", "Link", "Notes"],
   quickLinks: ["Link ID", "Name", "URL", "Icon", "Order"],
+  budgets: ["Ministry", "Fiscal Year", "Annual Budget", "Spent YTD", "Updated", "Monthly"],
+  cardSpend: ["Staff", "Month", "Limit", "Spent"],
+  cardTransactions: ["Transaction ID", "Staff", "Month", "Date", "Merchant", "Amount", "Receipt Missing"],
+  attendance: ["Attendance ID", "Date", "Service", "Area", "Count", "Notes"],
   folders: ["Folder ID", "Name", "URL", "Icon", "Order"],
   workflowCards: [
     "Card ID",

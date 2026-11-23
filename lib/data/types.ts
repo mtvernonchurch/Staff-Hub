@@ -153,6 +153,10 @@ export type CalendarEvent = {
   ministry: string;
   location: string;
   owner: string;
+  /** Optional. Sample data can fill these; a blank sheet leaves them empty. */
+  plan: string;
+  volunteersReady: string;
+  volunteersNeeded: string;
 };
 
 export type CalendarCheck = {
@@ -216,6 +220,47 @@ export type QuickLink = {
   url: string;
   icon: string;
   order: string;
+  initials: string;
+  color: string;
+  /** All, Admin, or a ministry name from the Ministries tab. */
+  visibleTo: string;
+  hidden: boolean;
+};
+
+export type MinistryBudget = {
+  ministry: string;
+  fiscalYear: string;
+  annual: number;
+  spent: number;
+  updated: string;
+  /** Last few months of spend, oldest first. Empty when the sheet has no trend. */
+  monthly: number[];
+};
+
+export type CardMonth = {
+  staff: string;
+  month: string;
+  limit: number;
+  spent: number;
+};
+
+export type AttendanceCount = {
+  id: string;
+  date: string;
+  service: string;
+  area: string;
+  count: number;
+  notes: string;
+};
+
+export type CardTransaction = {
+  id: string;
+  staff: string;
+  month: string;
+  date: string;
+  merchant: string;
+  amount: number;
+  receiptMissing: boolean;
 };
 
 export type FolderLink = {
@@ -279,6 +324,10 @@ export type HubData = {
   requests: DeskRequest[];
   documents: PinnedDocument[];
   quickLinks: QuickLink[];
+  ministryBudgets: MinistryBudget[];
+  cardMonths: CardMonth[];
+  cardTransactions: CardTransaction[];
+  attendance: AttendanceCount[];
   folders: FolderLink[];
   workflowCards: WorkflowCard[];
   cardActions: CardAction[];
@@ -345,6 +394,12 @@ export interface HubStore {
   listDocuments(): Promise<PinnedDocument[]>;
   createDocument(row: PinnedDocument): Promise<void>;
   updateDocument(id: string, changes: Partial<PinnedDocument>): Promise<void>;
+  listMinistryBudgets(): Promise<MinistryBudget[]>;
+  listCardMonths(): Promise<CardMonth[]>;
+  listCardTransactions(): Promise<CardTransaction[]>;
+  listAttendance(): Promise<AttendanceCount[]>;
+  createAttendance(row: AttendanceCount): Promise<void>;
+  updateAttendance(id: string, changes: Partial<AttendanceCount>): Promise<void>;
   listQuickLinks(): Promise<QuickLink[]>;
   createQuickLink(row: QuickLink): Promise<void>;
   updateQuickLink(id: string, changes: Partial<QuickLink>): Promise<void>;

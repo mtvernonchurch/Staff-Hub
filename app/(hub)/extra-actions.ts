@@ -6,6 +6,8 @@ import { isFrameworkError } from "@/lib/framework";
 import { safeReturnTo, withQuery } from "@/lib/domain/links";
 import { HubError } from "@/lib/hub-error";
 import { acknowledgeStaffPin, createStaffPin, deleteStaffPin, updateStaffPin } from "@/lib/services/pins";
+import { ATTENDANCE_AREAS, ATTENDANCE_SERVICES } from "@/lib/domain/attendance";
+import { saveAttendanceGrid } from "@/lib/services/hub";
 import {
   createGraphicsRequest,
   createTimeAway,
@@ -145,6 +147,17 @@ export async function decideTimeAwayAction(formData: FormData) {
   await run(returnTo, status === "Approved" ? "Approved." : "Denied.", async () => {
     const { staff, store } = await requireStaff();
     await decideTimeAway({ store, actor: staff }, field(formData, "id"), status);
+  });
+}
+
+export async function saveAttendanceAction(formData: FormData) {
+  const returnTo = safeReturnTo(formData.get("returnTo"), "/");
+  await run(returnTo, "Attendance saved.", async () => {
+    const { staff, store } = await requireStaff();
+    const counts = ATTENDANCE_SERVICES.flatMap((service) =>
+      ATTENDANCE_AREAS.map((area) => ({ service, area, count: field(formData, `count_${service}_${area}`) })),
+    );
+    await saveAttendanceGrid({ store, actor: staff }, { date: field(formData, "date"), notes: field(formData, "notes"), counts });
   });
 }
 

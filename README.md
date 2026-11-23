@@ -49,14 +49,15 @@ If an earlier import is stuck, open the project → **Settings** → **Build and
 
 | Page | What staff do there |
 | --- | --- |
-| Home | A pinned note for everyone sits above a welcome by first name. Then only your open items, care notes, requests, and where you are working today. Shared announcements, who's out, and who's in sit below. Admins can switch to a team overview |
+| Home | Light greeting, where you are today, this week's Sunday, last Sunday's attendance, ministry budgets, program tiles, then your own items. Admins can switch to a team overview |
 | This week | Announcements grouped by email, socials, and platform, the next four weeks of church events, plus prayer, care notes, action items, and earlier meetings |
 | Meeting mode | Admins only. Live entry during Monday's 1:00 PM staff meeting, including announcement channels and the 4-week calendar check |
 | Action items | The one shared list. Filter mine or everyone's. Add, update, and mark done |
 | Meetings | Prayer, wins, the week ahead, ministry updates, discussion and decisions, and the items from that meeting |
 | Sunday checklist | The areas copied from the checklist template for a meeting |
 | Announcements | What the church or the staff need to hear |
-| Documents | Quick links, shared folders, and pinned files. The files stay in Drive |
+| Documents | Quick links, shared folders, and pinned files. Admins edit the program tiles here. The files stay in Drive |
+| Budgets | Ministry totals and staff cards. Sample numbers until BILL is connected. You only see amounts you are allowed to see |
 | Requests | Graphics and social, time away, or a general request for email, text, website, or a Sunday announcement |
 
 On a phone the navy menu moves to the top and scrolls sideways.
@@ -217,6 +218,8 @@ The website does not download the sheet and upload a new copy. That would erase 
 Dates are stored as `M/D/YYYY` text, which matches the sheet today. The clock for "overdue" and "this Monday" is Columbus time.
 
 Graphics requests are assigned from one cell, **Hub Settings** → `Graphics Owner`. The app does not hard-code a name. On the live sheet, set that cell to Steven Holland for now. Change the cell, or the control on Request Desk, when someone else should receive them. Sample mode uses Avery Quinn. The hub adds **Staff Announcements**, **Graphics Requests**, **Time Away**, **Work Status**, and **Hub Settings** the first time they are saved, if those tabs are missing. Column lists are in SCHEMA.md.
+
+Budgets default to sample numbers. Set `DATA_SOURCE_BUDGET=sheet` with `DATA_MODE=sheets` to read the **Budgets**, **Card Spend**, and **Card Transactions** tabs. `DATA_SOURCE_BUDGET=bill` does not call BILL yet. When you wire it, the Spend & Expense API (formerly Divvy) uses an `apiToken` from the BILL developer portal (`BILL_API_KEY`, `BILL_ORG_ID`). Confirm the current paths before coding them: `GET https://api.divvy.co/v1/budgets`, `GET https://api.divvy.co/v1/cards`, and `GET https://api.divvy.co/v1/transactions`. Attendance defaults to the **Attendance** tab in real mode. `DATA_SOURCE_ATTENDANCE=pco` does not call Planning Center yet. The Check-Ins API uses `PCO_APP_ID` and `PCO_SECRET`: `GET https://api.planningcenteronline.com/check-ins/v2/headcounts` and `GET https://api.planningcenteronline.com/check-ins/v2/check_ins`.
 
 ## Staff chat, later
 

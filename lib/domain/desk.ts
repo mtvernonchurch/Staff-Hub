@@ -14,6 +14,18 @@ export const AWAY_STATUSES = ["Pending", "Approved", "Denied"] as const;
 
 export const WORK_PLACES = ["In office", "Working from home", "Out", "Off-site/visiting"] as const;
 
+/** Labels on the home pills. Stored values stay the same so older sheet rows still match. */
+export const WORK_PILLS: { value: (typeof WORK_PLACES)[number]; label: string }[] = [
+  { value: "In office", label: "In office" },
+  { value: "Working from home", label: "Working from home" },
+  { value: "Off-site/visiting", label: "Visiting" },
+  { value: "Out", label: "Out today" },
+];
+
+export function workPlaceLabel(value: string): string {
+  return WORK_PILLS.find((pill) => pill.value === value)?.label ?? value;
+}
+
 export function isShortNotice(neededBy: string, today: Date): boolean {
   const due = parseSheetDate(neededBy);
   if (!due) return false;

@@ -10,6 +10,7 @@ type Env = {
   ALLOWED_DOMAIN?: string;
   AUTH_SECRET?: string;
   NODE_ENV?: string;
+  DATA_SOURCE_BUDGET?: string;
 };
 
 function filled(value: string | undefined): boolean {
@@ -57,4 +58,13 @@ export function authSecret(): string {
 
 export function googleAuthReady(): boolean {
   return Boolean(process.env.AUTH_GOOGLE_ID?.trim() && process.env.AUTH_GOOGLE_SECRET?.trim());
+}
+
+export type BudgetSourceKind = "mock" | "sheet" | "bill";
+
+/** mock by default. sheet follows DATA_MODE=sheets. bill is a stub until the API is wired. */
+export function budgetSourceKind(env: Env = process.env): BudgetSourceKind {
+  const requested = env.DATA_SOURCE_BUDGET?.trim().toLowerCase();
+  if (requested === "bill" || requested === "sheet" || requested === "mock") return requested;
+  return resolveDataMode(env) === "sheets" ? "sheet" : "mock";
 }

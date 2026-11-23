@@ -1,6 +1,7 @@
 import type {
   ActionItem,
   Announcement,
+  AttendanceCount,
   CalendarCheck,
   CalendarEvent,
   CardAction,
@@ -8,11 +9,14 @@ import type {
   ChecklistItem,
   ChecklistTemplateRow,
   DeskRequest,
+  CardMonth,
+  CardTransaction,
   FolderLink,
   GraphicsRequest,
   HubSetting,
   Meeting,
   Ministry,
+  MinistryBudget,
   MinistryUpdate,
   OpenIssue,
   PinnedDocument,
@@ -372,6 +376,9 @@ export function calendarEventCells(row: Partial<CalendarEvent>): Record<string, 
   if (row.ministry !== undefined) cells.Ministry = row.ministry;
   if (row.location !== undefined) cells.Location = row.location;
   if (row.owner !== undefined) cells.Owner = row.owner;
+  if (row.plan) cells.Plan = row.plan;
+  if (row.volunteersReady) cells["Volunteers Ready"] = row.volunteersReady;
+  if (row.volunteersNeeded) cells["Volunteers Needed"] = row.volunteersNeeded;
   return cells;
 }
 
@@ -386,6 +393,9 @@ export function toCalendarEvent(record: Record<string, string>): CalendarEvent |
     ministry: cell(record, "Ministry"),
     location: cell(record, "Location"),
     owner: cell(record, "Owner"),
+    plan: cell(record, "Plan"),
+    volunteersReady: cell(record, "Volunteers Ready"),
+    volunteersNeeded: cell(record, "Volunteers Needed"),
   };
 }
 
@@ -506,18 +516,103 @@ export function quickLinkCells(row: Partial<QuickLink>): Record<string, string> 
   if (row.url !== undefined) cells.URL = row.url;
   if (row.icon !== undefined) cells.Icon = row.icon;
   if (row.order !== undefined) cells.Order = row.order;
+  if (row.initials !== undefined) cells.Initials = row.initials;
+  if (row.color !== undefined) cells.Color = row.color;
+  if (row.visibleTo !== undefined) cells["Visible To"] = row.visibleTo;
+  if (row.hidden !== undefined) cells.Hidden = formatBool(row.hidden);
   return cells;
 }
 
 export function toQuickLink(record: Record<string, string>): QuickLink | null {
   const id = cell(record, "Link ID");
-  if (!id) return null;
+  const name = cell(record, "Name");
+  if (!id && !name) return null;
+  const words = name.split(/\s+/).filter(Boolean);
+  const fallback = words.slice(0, 2).map((word) => word[0]?.toUpperCase() ?? "").join("") || "?";
   return {
-    id,
-    name: cell(record, "Name"),
+    id: id || name,
+    name,
     url: cell(record, "URL"),
     icon: cell(record, "Icon"),
     order: cell(record, "Order"),
+    initials: cell(record, "Initials") || fallback,
+    color: cell(record, "Color") || "navy",
+    visibleTo: cell(record, "Visible To") || "All",
+    hidden: parseBool(cell(record, "Hidden")),
+  };
+}
+
+function moneyNumber(value: string): number {
+  const number = Number(value.replace(/[$,]/g, "").trim());
+  return Number.isFinite(number) ? number : 0;
+}
+
+export function toMinistryBudget(record: Record<string, string>): MinistryBudget | null {
+  const ministry = cell(record, "Ministry");
+  if (!ministry) return null;
+  return {
+    ministry,
+    fiscalYear: cell(record, "Fiscal Year"),
+    annual: moneyNumber(cell(record, "Annual Budget")),
+    spent: moneyNumber(cell(record, "Spent YTD")),
+    updated: cell(record, "Updated"),
+    monthly: cell(record, "Monthly")
+      .split(",")
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .map((part) => moneyNumber(part)),
+  };
+}
+
+export function toCardMonth(record: Record<string, string>): CardMonth | null {
+  const staff = cell(record, "Staff");
+  if (!staff) return null;
+  return {
+    staff,
+    month: cell(record, "Month"),
+    limit: moneyNumber(cell(record, "Limit")),
+    spent: moneyNumber(cell(record, "Spent")),
+  };
+}
+
+export function attendanceCells(row: Partial<AttendanceCount>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Attendance ID"] = row.id;
+  if (row.date !== undefined) cells.Date = row.date;
+  if (row.service !== undefined) cells.Service = row.service;
+  if (row.area !== undefined) cells.Area = row.area;
+  if (row.count !== undefined) cells.Count = String(row.count);
+  if (row.notes !== undefined) cells.Notes = row.notes;
+  return cells;
+}
+
+export function toAttendance(record: Record<string, string>): AttendanceCount | null {
+  const id = cell(record, "Attendance ID");
+  const area = cell(record, "Area");
+  if (!id && !area) return null;
+  const count = Number(cell(record, "Count").replace(/,/g, ""));
+  return {
+    id: id || `${cell(record, "Date")}-${cell(record, "Service")}-${area}`,
+    date: cell(record, "Date"),
+    service: cell(record, "Service"),
+    area,
+    count: Number.isFinite(count) ? count : 0,
+    notes: cell(record, "Notes"),
+  };
+}
+
+export function toCardTransaction(record: Record<string, string>): CardTransaction | null {
+  const id = cell(record, "Transaction ID");
+  const merchant = cell(record, "Merchant");
+  if (!id && !merchant) return null;
+  return {
+    id: id || merchant,
+    staff: cell(record, "Staff"),
+    month: cell(record, "Month"),
+    date: cell(record, "Date"),
+    merchant,
+    amount: moneyNumber(cell(record, "Amount")),
+    receiptMissing: parseBool(cell(record, "Receipt Missing")),
   };
 }
 

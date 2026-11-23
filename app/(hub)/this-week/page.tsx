@@ -1,16 +1,18 @@
+import { AttendanceCard } from "@/components/attendance-card";
 import { ThisWeekView } from "@/components/this-week";
 import { PageHeader } from "@/components/ui";
 import { sheetCalendarSource } from "@/lib/calendar/source";
 import { chicagoToday, formatUsDate } from "@/lib/domain/dates";
+import { isAdmin } from "@/lib/domain/access";
 import { announcementsForMeeting, sortActionItems, thisWeekMeeting } from "@/lib/domain/view";
 import { requireStaff } from "@/lib/session";
 
 export const metadata = { title: "This week" };
 
 export default async function ThisWeekPage() {
-  const { store } = await requireStaff();
+  const { staff, store } = await requireStaff();
   const today = chicagoToday();
-  const [meetings, announcements, items, careNotes, people, ministries, calendarEvents, calendarChecks] = await Promise.all([
+  const [meetings, announcements, items, careNotes, people, ministries, calendarEvents, calendarChecks, attendance] = await Promise.all([
     store.listMeetings(),
     store.listAnnouncements(),
     store.listActionItems(),
@@ -19,6 +21,7 @@ export default async function ThisWeekPage() {
     store.listMinistries(),
     sheetCalendarSource(store).listEvents(),
     store.listCalendarChecks(),
+    store.listAttendance(),
   ]);
   const meeting = thisWeekMeeting(meetings, today);
   const archive = meetings.filter((row) => row.id !== meeting?.id);
@@ -32,6 +35,7 @@ export default async function ThisWeekPage() {
         title="This week"
         lede="Announcements, action items, and notes for the whole staff."
       />
+      <AttendanceCard rows={attendance} today={today} editable={isAdmin(staff)} returnTo="/this-week" />
       <ThisWeekView
         meeting={meeting}
         announcements={meeting ? announcementsForMeeting(announcements, meeting) : []}

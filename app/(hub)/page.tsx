@@ -1,12 +1,19 @@
 import Link from "next/link";
 import { setWorkStatusAction } from "@/app/(hub)/extra-actions";
+import { AttendanceCard } from "@/components/attendance-card";
+import { MinistryBudgetCard, StaffCardSpend } from "@/components/budget-card";
+import { HomeSearch } from "@/components/home-search";
+import { QuickLinkGrid } from "@/components/quick-link-grid";
 import { ActionItemForm, ActionList } from "@/components/records";
 import { StaffPinBoard } from "@/components/staff-pins";
 import { Empty, Flash, OutLink } from "@/components/ui";
-import type { ActionItem, Meeting, WorkflowCard, WorkStatus } from "@/lib/data/types";
+import { loadBudgetView } from "@/lib/budgets/view";
+import { monthKey } from "@/lib/budgets/access";
+import type { ActionItem, Meeting, WorkflowCard } from "@/lib/data/types";
 import { isAdmin } from "@/lib/domain/access";
+import { eventsToday, sundayService } from "@/lib/domain/calendar";
 import { careActionLabel } from "@/lib/domain/care";
-import { graphicsForPerson, graphicsOpen, pendingTimeAway, timeAwayForPerson, whosOut, workForDay, WORK_PLACES } from "@/lib/domain/desk";
+import { graphicsForPerson, graphicsOpen, pendingTimeAway, timeAwayForPerson, whosOut, workForDay, WORK_PILLS, workPlaceLabel } from "@/lib/domain/desk";
 import {
   chicagoToday,
   formatFriendly,
@@ -21,7 +28,8 @@ import {
   weekStartMonday,
   workWeek,
 } from "@/lib/domain/dates";
-import { firstName, namesMatch, normalizeEmail } from "@/lib/domain/people";
+import { firstName, initials, namesMatch, normalizeEmail } from "@/lib/domain/people";
+import { visibleProgramLinks } from "@/lib/domain/programs";
 import { announcementsForMeeting, myOpenItems, pickMondayMeeting, sortActionItems, sortAnnouncements, sortByOrder, thisWeekMeeting } from "@/lib/domain/view";
 import { requireStaff } from "@/lib/session";
 import { requestWaitingOn } from "@/lib/services/hub";
@@ -37,7 +45,7 @@ export default async function HomePage({
   const { staff, store } = await requireStaff();
   const teamView = isAdmin(staff) && query.view === "team";
   const today = chicagoToday();
-  const [items, meetings, announcements, links, checklist, requests, cards, people, careNotes, pins, acks, graphics, away, work] = await Promise.all([
+  const [items, meetings, announcements, links, checklist, requests, cards, people, careNotes, pins, acks, graphics, away, work, calendarEvents, documents, attendance, ministries] = await Promise.all([
     store.listActionItems(),
     store.listMeetings(),
     store.listAnnouncements(),
@@ -52,7 +60,12 @@ export default async function HomePage({
     store.listGraphicsRequests(),
     store.listTimeAway(),
     store.listWorkStatuses(),
+    store.listCalendarEvents(),
+    store.listDocuments(),
+    store.listAttendance(),
+    store.listMinistries(),
   ]);
+  const budgets = await loadBudgetView(staff, store, monthKey(today));
   const mineItems = items.filter((item) => namesMatch(item.owner, staff.name));
   const open = teamView
     ? sortActionItems(items.filter((item) => !isClosedStatus(item.status)), today)
@@ -83,40 +96,103 @@ export default async function HomePage({
   const news = sortAnnouncements(announcements).slice(0, 3);
   const quick = sortByOrder(links);
   const returnTo = teamView ? "/?view=team" : "/";
+  const sunday = sundayService(calendarEvents, today);
+  const sundayDate = sunday ? parseSheetDate(sunday.date) : null;
+  const ready = Number(sunday?.volunteersReady);
+  const needed = Number(sunday?.volunteersNeeded);
+  const hasVolunteers = Number.isFinite(ready) && Number.isFinite(needed) && needed > 0;
+  const todayEvents = eventsToday(calendarEvents, today).filter((event) => event.id !== sunday?.id);
+  const programLinks = visibleProgramLinks(staff, links, ministries);
+  const myCard = budgets.ok ? budgets.cards.find((card) => namesMatch(card.staff, staff.name)) : undefined;
+  const myCharges = budgets.ok && myCard ? budgets.transactions.filter((row) => namesMatch(row.staff, staff.name)) : [];
 
   return (
     <>
-      <section className="summary home-hat" aria-label="Welcome">
-        <header className="hat-copy">
-          <p className="kicker">Mt Vernon Church · Columbus</p>
-          <h1>Welcome, {firstName(staff.name)}</h1>
-          <p className="hat-lede">{greeting()} · {formatLong(today)}</p>
+      <HomeSearch
+        initials={initials(staff.name)}
+        items={[
+          ...items.map((item) => ({ href: "/action-items", title: item.action, kind: "Task" })),
+          ...documents.map((doc) => ({ href: doc.link, title: doc.title, kind: "File", external: true })),
+          ...links.map((link) => ({ href: link.url, title: link.name, kind: "File", external: true })),
+          ...people.filter((person) => person.active).map((person) => ({ href: "", title: person.name, kind: person.title || "Person" })),
+        ]}
+      />
+      <header className="home-hello-block">
+        <p className="home-date">{formatLong(today).toUpperCase()}</p>
+        <div className="hello-row">
+          <h1>{greeting()}, {firstName(staff.name)}</h1>
           {isAdmin(staff) ? (
-            <div className="filters" aria-label="Home view">
-              <Link className={teamView ? "btn btn-small" : "btn btn-primary btn-small"} href="/">My home</Link>
-              <Link className={teamView ? "btn btn-primary btn-small" : "btn btn-small"} href="/?view=team">Team overview</Link>
+            <div className="filters view-toggle" aria-label="Home view">
+              <Link className={teamView ? "" : "is-on"} href="/">My home</Link>
+              <Link className={teamView ? "is-on" : ""} href="/?view=team">Team overview</Link>
             </div>
           ) : null}
-        </header>
-        <div className="hat-stats">
-          <div className="ring" style={{ background: `conic-gradient(#b7e6d6 ${open.length + doneThisWeek ? Math.round((doneThisWeek / (open.length + doneThisWeek)) * 100) : 0}%, rgba(255,255,255,0.16) 0)` }} aria-hidden>
-            <span>{doneThisWeek}</span>
-          </div>
-          <div>
-            <p>{teamView ? "Team week" : "My week"}</p>
-            <div className="stat-row">
-              <strong>{overdueCount} overdue</strong>
-              <strong>{dueSoonCount} due soon</strong>
-              <strong>{open.length} open</strong>
-              <strong>{visibleNotes.length} care {visibleNotes.length === 1 ? "note" : "notes"}</strong>
-              <strong>{waiting.length + myGraphics.length + myAway.length + approvals.length} {waiting.length + myGraphics.length + myAway.length + approvals.length === 1 ? "request" : "requests"}</strong>
-            </div>
-            <WeekStrip today={today} items={teamView ? items : mineItems} meetings={meetings} />
-          </div>
         </div>
+      </header>
+      <form action={setWorkStatusAction} className="status-pills">
+        <input type="hidden" name="returnTo" value={returnTo} />
+        <input type="hidden" name="note" value={myWork?.note ?? ""} />
+        <span>Today I&apos;m</span>
+        {WORK_PILLS.map((pill) => (
+          <button key={pill.value} className={myWork?.place === pill.value ? "pill is-on" : "pill"} name="place" value={pill.value} type="submit">
+            {pill.label}
+          </button>
+        ))}
+      </form>
+      <section className="card this-week-card">
+        <div className="card-head">
+          <h2>This week</h2>
+          <Link href="/this-week">Full calendar</Link>
+        </div>
+        {sunday && sundayDate ? (
+          <article className="sunday-card">
+            <div className="date-tile">
+              <span>SUN</span>
+              <strong>{sundayDate.getUTCDate()}</strong>
+            </div>
+            <div>
+              <h3>{sunday.event}</h3>
+              <p>{sunday.time ? `· ${sunday.time}` : ""}</p>
+              {sunday.plan ? <p className="note">{sunday.plan}{hasVolunteers ? ` ${ready} of ${needed} volunteers confirmed.` : ""}</p> : null}
+              {hasVolunteers ? <div className="progress" aria-hidden><span style={{ width: `${Math.min(100, Math.round((ready / needed) * 100))}%` }} /></div> : null}
+            </div>
+          </article>
+        ) : <p className="empty">No Sunday service is on the calendar yet.</p>}
+        {todayEvents.map((event) => (
+          <article key={event.id} className="today-row">
+            <p><span>Today</span><strong>{event.time || "—"}</strong></p>
+            <div>
+              <h3>{event.event}</h3>
+              <p className="meta">
+                {event.owner ? <span>{event.owner}</span> : null}
+                {event.location ? <span>{event.location}</span> : null}
+                {event.ministry ? <span className="chip">{event.ministry}</span> : null}
+              </p>
+            </div>
+          </article>
+        ))}
       </section>
       <Flash error={query.error} notice={query.notice} />
       <StaffPinBoard pins={pins} acks={acks} actor={staff} today={today} returnTo={returnTo} />
+      <AttendanceCard rows={attendance} today={today} editable={isAdmin(staff)} returnTo={returnTo} />
+      {budgets.ok ? <MinistryBudgetCard rows={budgets.ministries} today={today} sample={budgets.sample} admin={isAdmin(staff)} /> : <p className="banner banner-error">{budgets.message}</p>}
+      {myCard && budgets.ok ? <StaffCardSpend card={myCard} transactions={myCharges} sample={budgets.sample} /> : null}
+      <section className="card">
+        <h2>Quick links</h2>
+        <QuickLinkGrid links={programLinks} />
+      </section>
+      <section className="card">
+        <div className="card-head">
+          <h2>Announcements</h2>
+          <Link href="/announcements">All</Link>
+        </div>
+        {weekNews.length === 0 ? <Empty>No announcements from this week's meeting yet.</Empty> : weekNews.map((item) => (
+          <article key={item.id} className="announce-row">
+            <h3>{item.event}</h3>
+            {item.details ? <p>{item.details}</p> : null}
+          </article>
+        ))}
+      </section>
       <div className="stack">
         <section className="card tone-action">
           <div className="card-head">
@@ -180,13 +256,6 @@ export default async function HomePage({
             </Link>
           ))}
         </section>
-        {teamView ? null : (
-          <section className="card">
-            <h2>Where I&apos;m working</h2>
-            <p className="hint">Today only. Tomorrow this starts blank.</p>
-            <WorkToday mine={myWork} returnTo={returnTo} />
-          </section>
-        )}
         {myCards.length > 0 && !teamView ? (
           <section className="card">
             <h2>Your workflow cards</h2>
@@ -221,7 +290,7 @@ export default async function HomePage({
                 <div>
                   <h3>{namesMatch(person.name, staff.name) ? "You" : person.name}</h3>
                   <p className="meta">
-                    <span>{status?.place || "Not set"}</span>
+                    <span>{status ? workPlaceLabel(status.place) : "Not set"}</span>
                     {status?.note ? <span>{status.note}</span> : null}
                   </p>
                 </div>
@@ -283,36 +352,8 @@ export default async function HomePage({
             </article>
           ))}
         </section>
-        <section className="card">
-          <h2>Quick links</h2>
-          {quick.length === 0 ? <Empty>No links yet.</Empty> : (
-            <div className="quick-grid">
-              {quick.map((link) => (
-                <OutLink key={link.id} className="quick-link" href={link.url}>{link.name}</OutLink>
-              ))}
-            </div>
-          )}
-        </section>
       </div>
     </>
-  );
-}
-
-function WorkToday({ mine, returnTo }: { mine: WorkStatus | undefined; returnTo: string }) {
-  return (
-    <form action={setWorkStatusAction} className="stack-form">
-      <input type="hidden" name="returnTo" value={returnTo} />
-      <label className="field">Note <span>optional</span>
-        <input name="note" maxLength={200} defaultValue={mine?.note ?? ""} placeholder="Optional" />
-      </label>
-      <div className="place-row">
-        {WORK_PLACES.map((place) => (
-          <button key={place} className={mine?.place === place ? "btn btn-primary" : "btn"} name="place" value={place} type="submit">
-            {place}
-          </button>
-        ))}
-      </div>
-    </form>
   );
 }
 
@@ -330,29 +371,5 @@ function CardRow({ card }: { card: WorkflowCard }) {
       </div>
       <OutLink className="btn btn-small" href={card.link}>Open card</OutLink>
     </article>
-  );
-}
-
-function WeekStrip({ today, items, meetings }: { today: Date; items: ActionItem[]; meetings: Meeting[] }) {
-  return (
-    <ol className="week">
-      {workWeek(today).map((day) => {
-        const label = formatUsDate(day);
-        const hasItem = items.some((item) => !isClosedStatus(item.status) && sameDay(item.due, label));
-        const hasMeeting = meetings.some((meeting) => sameDay(meeting.date, label));
-        const isToday = sameDay(label, formatUsDate(today));
-        const name = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: "UTC" }).format(day);
-        return (
-          <li key={label} className={isToday ? "is-today" : undefined}>
-            <span>{name}</span>
-            <strong>{day.getUTCDate()}</strong>
-            <span className="dots">
-              {hasItem ? <i className="dot dot-action" title="Due" /> : null}
-              {hasMeeting ? <i className="dot dot-meeting" title="Meeting" /> : null}
-            </span>
-          </li>
-        );
-      })}
-    </ol>
   );
 }

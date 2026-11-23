@@ -1,5 +1,5 @@
 import type { CalendarCheck, CalendarEvent } from "@/lib/data/types";
-import { addUtcDays, parseSheetDate } from "@/lib/domain/dates";
+import { addUtcDays, formatUsDate, parseSheetDate, sameDay } from "@/lib/domain/dates";
 
 /** Sunday that starts the church week containing today. */
 export function churchWeekStart(today: Date): Date {
@@ -41,4 +41,23 @@ export function needsPromotion(check: CalendarCheck | undefined): boolean {
 
 export function needsGraphics(check: CalendarCheck | undefined): boolean {
   return !check?.graphicsRequested;
+}
+
+/** This Sunday, or the coming Sunday when today is Monday–Saturday. */
+export function upcomingSunday(today: Date): Date {
+  const delta = today.getUTCDay() === 0 ? 0 : 7 - today.getUTCDay();
+  return addUtcDays(today, delta);
+}
+
+export function sundayService(events: CalendarEvent[], today: Date): CalendarEvent | null {
+  const label = formatUsDate(upcomingSunday(today));
+  const onDay = events.filter((event) => sameDay(event.date, label));
+  return onDay.find((event) => /worship|sunday|gathering/i.test(event.event)) ?? onDay[0] ?? null;
+}
+
+export function eventsToday(events: CalendarEvent[], today: Date): CalendarEvent[] {
+  const label = formatUsDate(today);
+  return events
+    .filter((event) => sameDay(event.date, label))
+    .sort((a, b) => a.time.localeCompare(b.time) || a.event.localeCompare(b.event));
 }

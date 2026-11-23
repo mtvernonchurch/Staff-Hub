@@ -33,6 +33,9 @@ export async function createCalendarEvent(
     ministry: input.ministry.trim(),
     location: input.location.trim(),
     owner,
+    plan: "",
+    volunteersReady: "",
+    volunteersNeeded: "",
   };
   await deps.store.createCalendarEvent(row);
   return row;

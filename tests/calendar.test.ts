@@ -32,8 +32,8 @@ describe("four-week calendar", () => {
     const checks = await store.listCalendarChecks();
     const weeks = fourChurchWeeks(today);
     expect(weeks).toHaveLength(4);
-    expect(weeks.flatMap((week) => eventsInWeek(events, week))).toHaveLength(6);
-    expect(eventsInWeek(events, weeks[0]).map((event) => event.id)).toEqual(["cal_sunday", "cal_thanks"]);
+    expect(weeks.flatMap((week) => eventsInWeek(events, week))).toHaveLength(7);
+    expect(eventsInWeek(events, weeks[0]).map((event) => event.id).sort()).toEqual(["cal_comms", "cal_sunday", "cal_thanks"].sort());
     expect(eventsInWeek(events, weeks[3]).map((event) => event.event)).toEqual(["Kids Christmas rehearsal", "Choir night"]);
     const students = events.find((event) => event.id === "cal_students")!;
     expect(needsPromotion(checkFor(checks, students.id))).toBe(true);

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { previewAsAction, signOutAction } from "@/app/sign-in/actions";
 import { Nav } from "@/components/nav";
+import { TabBar } from "@/components/tab-bar";
 import { dataMode } from "@/lib/config";
 import type { StaffMember } from "@/lib/data/types";
 import { isAdmin } from "@/lib/domain/access";
@@ -10,11 +11,13 @@ export function Shell({
   staff,
   people,
   preview,
+  badges,
   children,
 }: {
   staff: StaffMember;
   people: StaffMember[];
   preview: boolean;
+  badges: { tasks: number; requests: number };
   children: React.ReactNode;
 }) {
   const foot = (
@@ -66,7 +69,10 @@ export function Shell({
             <span className="brand-sub">{staff.name}</span>
           </span>
         </Link>
-        <Nav showMeetingMode={isAdmin(staff)} />
+        <details className="more-nav">
+          <summary>More</summary>
+          <Nav showMeetingMode={isAdmin(staff)} />
+        </details>
         <div className="button-row">
           {preview ? (
             <form action={previewAsAction} className="button-row">
@@ -92,6 +98,7 @@ export function Shell({
         ) : null}
         {children}
       </div>
+      <TabBar tasks={badges.tasks} requests={badges.requests} />
     </div>
   );
 }
