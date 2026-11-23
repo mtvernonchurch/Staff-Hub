@@ -3,7 +3,7 @@ import { MemoryStore } from "@/lib/data/memory-store";
 import { createSeed } from "@/lib/data/mock-data";
 import { sheetCalendarSource } from "@/lib/calendar/source";
 import { checkFor, eventsInWeek, fourChurchWeeks, needsGraphics, needsPromotion } from "@/lib/domain/calendar";
-import { groupAnnouncements } from "@/lib/domain/channels";
+import { formatChannels, groupAnnouncements } from "@/lib/domain/channels";
 import { chicagoToday } from "@/lib/domain/dates";
 import { HubError } from "@/lib/hub-error";
 import { createCalendarEvent, saveCalendarCheck } from "@/lib/services/calendar";
@@ -15,12 +15,13 @@ describe("announcement channels", () => {
     const store = new MemoryStore(createSeed(now));
     const monday = (await store.listAnnouncements()).filter((row) => row.meetingId === "mtg_monday");
     const groups = groupAnnouncements(monday, true);
-    expect(groups.find((group) => group.channel === "Email")?.rows).toHaveLength(2);
-    expect(groups.find((group) => group.channel === "Socials")?.rows.map((row) => row.event)).toEqual(["Thanksgiving Eve service"]);
+    expect(groups.find((group) => group.channel === "The Weekly")?.rows).toHaveLength(2);
+    expect(groups.find((group) => group.channel === "Social")?.rows.map((row) => row.event)).toEqual(["Thanksgiving Eve service"]);
     expect(groups.find((group) => group.channel === "Platform")?.rows).toHaveLength(1);
     const older = (await store.listAnnouncements()).find((row) => row.id === "ann_last");
     expect(groupAnnouncements([older!]).some((group) => group.channel === "Unsorted")).toBe(true);
     expect(groupAnnouncements([older!]).some((group) => group.channel === "Platform" && group.rows.length > 0)).toBe(false);
+    expect(formatChannels(["Email", "Socials"])).toBe("The Weekly, Social");
   });
 });
 

@@ -1,16 +1,20 @@
 import type { Announcement } from "@/lib/data/types";
+import { parseSheetDate } from "@/lib/domain/dates";
 
 /** Where a meeting announcement goes out. Blank rows stay Unsorted so old sheet rows are not treated as stage announcements. */
-export const ANNOUNCE_CHANNELS = ["Email", "Socials", "Platform"] as const;
+export const ANNOUNCE_CHANNELS = ["Platform", "The Weekly", "Social"] as const;
 export type AnnounceChannel = (typeof ANNOUNCE_CHANNELS)[number];
 
+/** Sheet values from before the rename still map onto the current labels. */
 const LABELS: Record<string, AnnounceChannel> = {
-  email: "Email",
-  social: "Socials",
-  socials: "Socials",
   platform: "Platform",
   stage: "Platform",
   sunday: "Platform",
+  email: "The Weekly",
+  "the weekly": "The Weekly",
+  weekly: "The Weekly",
+  social: "Social",
+  socials: "Social",
 };
 
 export function parseChannels(value: string): AnnounceChannel[] {
@@ -36,6 +40,29 @@ export function groupAnnouncements(rows: Announcement[], includeEmpty = false): 
   const unsorted = rows.filter((row) => parseChannels(row.channels).length === 0);
   if (includeEmpty || unsorted.length > 0) groups.push({ channel: "Unsorted", rows: unsorted });
   return includeEmpty ? groups : groups.filter((group) => group.rows.length > 0 || group.channel !== "Unsorted");
+}
+
+/** Soonest dated item, preferring one that is still ahead. */
+export function nextAnnouncement(rows: Announcement[], today: Date): Announcement | null {
+  const dated = rows.flatMap((row) => {
+    const time = parseSheetDate(row.date)?.getTime();
+    return time === undefined ? [] : [{ row, time }];
+  });
+  const upcoming = dated.filter((item) => item.time >= today.getTime()).sort((a, b) => a.time - b.time);
+  if (upcoming[0]) return upcoming[0].row;
+  const any = [...dated].sort((a, b) => a.time - b.time);
+  return any[0]?.row ?? rows[0] ?? null;
+}
+
+export function channelBlurb(rows: Announcement[], today: Date): string {
+  if (rows.length === 0) return "Nothing this week";
+  const next = nextAnnouncement(rows, today);
+  const day = next ? parseSheetDate(next.date) : null;
+  const when = day
+    ? new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: "UTC" }).format(day)
+    : "";
+  const noun = rows.length === 1 ? "item" : "items";
+  return `${rows.length} ${noun} this week${next ? ` · next: ${next.event}${when ? ` (${when})` : ""}` : ""}`;
 }
 
 export function announcementRecap(rows: Announcement[]): string {

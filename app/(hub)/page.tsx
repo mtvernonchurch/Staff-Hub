@@ -3,6 +3,7 @@ import { GitBranch, Megaphone, SquareCheck } from "lucide-react";
 import { AttendanceCard } from "@/components/attendance-card";
 import { MinistryBudgetCard } from "@/components/budget-card";
 import { Heading } from "@/components/heading";
+import { HomeAnnouncements } from "@/components/home-announcements";
 import { ActionItemForm, ActionList } from "@/components/records";
 import { StaffPinBoard } from "@/components/staff-pins";
 import { Empty, Flash, OutLink } from "@/components/ui";
@@ -10,8 +11,7 @@ import { monthKey } from "@/lib/budgets/access";
 import { loadBudgetView } from "@/lib/budgets/view";
 import type { WorkflowCard } from "@/lib/data/types";
 import { isAdmin } from "@/lib/domain/access";
-import { parseChannels } from "@/lib/domain/channels";
-import { chicagoToday } from "@/lib/domain/dates";
+import { chicagoToday, formatUsDate } from "@/lib/domain/dates";
 import { announcementsForMeeting, myOpenItems, thisWeekMeeting } from "@/lib/domain/view";
 import { requireStaff } from "@/lib/session";
 import { loadMyWorkflows } from "@/lib/workflows/source";
@@ -53,16 +53,7 @@ export default async function HomePage({
             <Heading icon={Megaphone}>This week&apos;s announcements</Heading>
             <Link href="/this-week">Calendar</Link>
           </div>
-          {weekNews.length === 0 ? <Empty>Nothing from this week&apos;s meeting yet.</Empty> : weekNews.map((item) => (
-            <article key={item.id} className="announce-row">
-              <h3>{item.event}</h3>
-              <p className="meta">
-                {parseChannels(item.channels).map((channel) => <span key={channel} className="chip">{channel}</span>)}
-                {parseChannels(item.channels).length === 0 ? <span className="chip">Unsorted</span> : null}
-              </p>
-              {item.details ? <p>{item.details}</p> : null}
-            </article>
-          ))}
+          <HomeAnnouncements rows={weekNews} todayLabel={formatUsDate(today)} />
         </section>
         <section className="card tone-action">
           <div className="card-head">

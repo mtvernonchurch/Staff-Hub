@@ -397,7 +397,7 @@ export function createSeed(now = new Date()): HubData {
         audience: "Church",
         meetingId: "mtg_monday",
         ministry: "Worship",
-        channels: "Email, Socials, Platform",
+        channels: "Platform, The Weekly, Social",
       },
       {
         id: "ann_office",
@@ -411,7 +411,7 @@ export function createSeed(now = new Date()): HubData {
         audience: "Staff",
         meetingId: "mtg_monday",
         ministry: "",
-        channels: "Email",
+        channels: "The Weekly",
       },
     ],
     openIssues: [

@@ -54,8 +54,8 @@ describe("meeting mode rules", () => {
     expect(events[0]?.type).toBe("meeting.finished");
     if (events[0]?.type === "meeting.finished") {
       expect(events[0].recap).toContain("Thanksgiving Eve service");
-      expect(events[0].recap).toContain("Email (2)");
-      expect(events[0].recap).toContain("Socials (1)");
+      expect(events[0].recap).toContain("The Weekly (2)");
+      expect(events[0].recap).toContain("Social (1)");
       expect(events[0].recap).toContain("Platform (1)");
       expect(events[0].recap).toContain("Call for the Parker family");
     }
