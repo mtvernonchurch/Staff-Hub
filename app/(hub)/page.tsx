@@ -6,10 +6,10 @@ import { Heading } from "@/components/heading";
 import { HomeAnnouncements } from "@/components/home-announcements";
 import { ActionItemForm, ActionList } from "@/components/records";
 import { StaffPinBoard } from "@/components/staff-pins";
-import { Empty, Flash, OutLink } from "@/components/ui";
+import { Empty, Flash } from "@/components/ui";
+import { WorkflowList } from "@/components/workflow-list";
 import { monthKey } from "@/lib/budgets/access";
 import { loadBudgetView } from "@/lib/budgets/view";
-import type { WorkflowCard } from "@/lib/data/types";
 import { isAdmin } from "@/lib/domain/access";
 import { chicagoToday, formatUsDate } from "@/lib/domain/dates";
 import { announcementsForMeeting, myOpenItems, thisWeekMeeting } from "@/lib/domain/view";
@@ -72,7 +72,7 @@ export default async function HomePage({
             <span className="hint">Assigned to you</span>
           </div>
           {workflows.ok ? (
-            workflows.cards.length === 0 ? <Empty>No workflow cards are assigned to you.</Empty> : workflows.cards.map((card) => <WorkflowRow key={card.id} card={card} />)
+            workflows.cards.length === 0 ? <Empty>No workflow cards are assigned to you.</Empty> : <WorkflowList cards={workflows.cards} />
           ) : <p className="banner banner-error">{workflows.message}</p>}
         </section>
         <AttendanceCard rows={attendance} today={today} editable={isAdmin(staff)} returnTo="/" />
@@ -81,22 +81,5 @@ export default async function HomePage({
         ) : <p className="banner banner-error">{budgets.message}</p>}
       </section>
     </>
-  );
-}
-
-function WorkflowRow({ card }: { card: WorkflowCard }) {
-  const late = /^(yes|true)$/i.test(card.overdue);
-  return (
-    <article className={late ? "item item-overdue" : "item"}>
-      <div>
-        <h3>{card.workflow}</h3>
-        <p className="meta">
-          {card.forPerson ? <span>{card.forPerson}</span> : null}
-          <span>{card.step}</span>
-          {late ? <span className="chip chip-overdue">Overdue</span> : <span className="chip">Open</span>}
-        </p>
-      </div>
-      <OutLink className="btn btn-small" href={card.link}>Open card</OutLink>
-    </article>
   );
 }
