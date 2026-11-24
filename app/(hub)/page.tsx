@@ -7,12 +7,15 @@ import { HomeAnnouncements } from "@/components/home-announcements";
 import { ActionItemForm, ActionList } from "@/components/records";
 import { StaffPinBoard } from "@/components/staff-pins";
 import { Empty, Flash } from "@/components/ui";
+import { RecentAttendanceCard } from "@/components/recent-attendance";
+import { UpcomingEventsCard } from "@/components/upcoming-events";
 import { WorkflowList } from "@/components/workflow-list";
 import { monthKey } from "@/lib/budgets/access";
 import { loadBudgetView } from "@/lib/budgets/view";
 import { isAdmin } from "@/lib/domain/access";
 import { chicagoToday, formatUsDate } from "@/lib/domain/dates";
 import { announcementsForMeeting, myOpenItems, thisWeekMeeting } from "@/lib/domain/view";
+import { homeEvents, loadRecentAttendance, loadUpcomingEvents } from "@/lib/pco/load";
 import { requireStaff } from "@/lib/session";
 import { loadMyWorkflows } from "@/lib/workflows/source";
 
@@ -35,9 +38,11 @@ export default async function HomePage({
     store.listStaffPinAcks(),
     store.listAttendance(),
   ]);
-  const [budgets, workflows] = await Promise.all([
+  const [budgets, workflows, upcoming, checkIns] = await Promise.all([
     loadBudgetView(staff, store, monthKey(today)),
     loadMyWorkflows(staff.email),
+    loadUpcomingEvents(today),
+    loadRecentAttendance(today),
   ]);
   const open = myOpenItems(items, staff.name, today);
   const weekMeeting = thisWeekMeeting(meetings, today);
@@ -66,6 +71,9 @@ export default async function HomePage({
             <ActionItemForm actor={staff} staff={people} meetings={meetings} returnTo="/" />
           </details>
         </section>
+        {upcoming.ok ? (
+          <UpcomingEventsCard events={homeEvents(upcoming.data, today)} sample={upcoming.sample} moreHref="/upcoming" />
+        ) : <p className="banner banner-error" role="alert">{upcoming.message}</p>}
         <section className="card">
           <div className="card-head">
             <Heading icon={GitBranch}>Planning Center workflows</Heading>
@@ -75,6 +83,9 @@ export default async function HomePage({
             workflows.cards.length === 0 ? <Empty>No workflow cards are assigned to you.</Empty> : <WorkflowList cards={workflows.cards} />
           ) : <p className="banner banner-error">{workflows.message}</p>}
         </section>
+        {checkIns.ok ? (
+          <RecentAttendanceCard rows={checkIns.data} sample={checkIns.sample} />
+        ) : <p className="banner banner-error" role="alert">{checkIns.message}</p>}
         <AttendanceCard rows={attendance} today={today} editable={isAdmin(staff)} returnTo="/" />
         {budgets.ok ? (
           <MinistryBudgetCard rows={budgets.ministries} today={today} sample={budgets.sample} admin={isAdmin(staff)} />

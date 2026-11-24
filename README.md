@@ -51,7 +51,7 @@ If an earlier import is stuck, open the project → **Settings** → **Build and
 
 | Page | What staff do there |
 | --- | --- |
-| Home | Light greeting, where you are today, this week's Sunday, last Sunday's attendance, ministry budgets, program tiles, then your own items. Admins can switch to a team overview |
+| Home | Announcements, the next 14 days of church events, your items, workflows, recent Check-Ins attendance, last Sunday, and ministry budgets |
 | Calendar | This week (Monday–Sunday events and announcements), this month, and the Communications Calendar |
 | Meeting mode | Admins only. Live entry during Monday's 1:00 PM staff meeting, including announcement channels and the Communications Calendar |
 | Action items | The one shared list. Filter mine or everyone's. Add, update, and mark done |
@@ -221,7 +221,15 @@ Dates are stored as `M/D/YYYY` text, which matches the sheet today. The clock fo
 
 Graphics requests are assigned from one cell, **Hub Settings** → `Graphics Owner`. The app does not hard-code a name. On the live sheet, set that cell to Steven Holland for now. Change the cell, or the control on Request Desk, when someone else should receive them. Sample mode uses Avery Quinn. The hub adds **Staff Announcements**, **Graphics Requests**, **Time Away**, **Work Status**, and **Hub Settings** the first time they are saved, if those tabs are missing. Column lists are in SCHEMA.md.
 
-Budgets default to sample numbers. Set `DATA_SOURCE_BUDGET=sheet` with `DATA_MODE=sheets` to read the **Budgets**, **Card Spend**, and **Card Transactions** tabs. `DATA_SOURCE_BUDGET=bill` does not call BILL yet. When you wire it, the Spend & Expense API (formerly Divvy) uses an `apiToken` from the BILL developer portal (`BILL_API_KEY`, `BILL_ORG_ID`). Confirm the current paths before coding them: `GET https://api.divvy.co/v1/budgets`, `GET https://api.divvy.co/v1/cards`, and `GET https://api.divvy.co/v1/transactions`. Attendance defaults to the **Attendance** tab in real mode. `DATA_SOURCE_ATTENDANCE=pco` does not call Planning Center yet. The Check-Ins API uses `PCO_APP_ID` and `PCO_SECRET`: `GET https://api.planningcenteronline.com/check-ins/v2/headcounts` and `GET https://api.planningcenteronline.com/check-ins/v2/check_ins`.
+Budgets default to sample numbers. Set `DATA_SOURCE_BUDGET=sheet` with `DATA_MODE=sheets` to read the **Budgets**, **Card Spend**, and **Card Transactions** tabs. `DATA_SOURCE_BUDGET=bill` does not call BILL yet. When you wire it, the Spend & Expense API (formerly Divvy) uses an `apiToken` from the BILL developer portal (`BILL_API_KEY`, `BILL_ORG_ID`). Confirm the current paths before coding them: `GET https://api.divvy.co/v1/budgets`, `GET https://api.divvy.co/v1/cards`, and `GET https://api.divvy.co/v1/transactions`. The Last Sunday card still reads the **Attendance** tab. `DATA_SOURCE_ATTENDANCE=pco` does not replace that card.
+
+Home loads two read-only Planning Center lists when `DATA_MODE=sheets` and both `PCO_APP_ID` and `PCO_SECRET` are set. Otherwise those sections stay on clearly labeled sample data, including every preview. Responses are cached for about 15 minutes. A Planning Center error shows "Couldn't load" and leaves the rest of the page up.
+
+The token is a personal access token (HTTP Basic auth). It needs Calendar and Check-Ins. The hub calls:
+
+- `GET https://api.planningcenteronline.com/calendar/v2/event_instances` with `filter=approved`, `include=event`, and a `starts_at` window, for the next 30 days. Home shows the first 14.
+- `GET https://api.planningcenteronline.com/check-ins/v2/headcounts` with `include=event_time,attendance_type`, for recent headcounts.
+- `GET https://api.planningcenteronline.com/check-ins/v2/events` with `filter=not_archived`, to name those Check-Ins events.
 
 Workflow cards on Home are the ones assigned to the signed-in email. Sample mode reads the **Workflow Cards** tab. `DATA_SOURCE_WORKFLOWS=pco` does not call Planning Center yet. The People API for that later step is `GET https://api.planningcenteronline.com/people/v2/workflows` and `GET https://api.planningcenteronline.com/people/v2/workflows/{workflow_id}/cards`.
 
