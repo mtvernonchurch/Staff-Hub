@@ -84,7 +84,7 @@ export default async function HomePage({
           ) : <p className="banner banner-error">{workflows.message}</p>}
         </section>
         {checkIns.ok ? (
-          <RecentAttendanceCard rows={checkIns.data} sample={checkIns.sample} />
+          <RecentAttendanceCard attendance={checkIns.data} sample={checkIns.sample} />
         ) : <p className="banner banner-error" role="alert">{checkIns.message}</p>}
         <AttendanceCard rows={attendance} today={today} editable={isAdmin(staff)} returnTo="/" />
         {budgets.ok ? (

@@ -1,6 +1,9 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { RecentAttendanceCard } from "@/components/recent-attendance";
 import { pcoList } from "@/lib/pco/client";
-import { eventsWithinDays, mapEventInstances, mapWeeklyAttendance } from "@/lib/pco/map";
+import { eventsWithinDays, mapEventInstances, mapSundayAttendance } from "@/lib/pco/map";
 import { homeEvents, shouldUseLivePco } from "@/lib/pco/load";
 import { sampleAttendance, sampleUpcomingEvents } from "@/lib/pco/sample";
 import type { PcoDocument } from "@/lib/pco/types";
@@ -57,27 +60,53 @@ describe("Planning Center event mapping", () => {
   });
 });
 
-describe("Planning Center headcounts", () => {
-  it("sums each Check-Ins event for this week and last week", () => {
-    const headcounts: PcoDocument[] = [{
-      data: [
-        { type: "Headcount", id: "h1", attributes: { total: 120 }, relationships: { event_time: { data: { type: "EventTime", id: "t1" } } } },
-        { type: "Headcount", id: "h2", attributes: { total: 80 }, relationships: { event_time: { data: { type: "EventTime", id: "t2" } } } },
-        { type: "Headcount", id: "h3", attributes: { total: 40 }, relationships: { event_time: { data: { type: "EventTime", id: "t3" } } } },
-      ],
-      included: [
-        { type: "EventTime", id: "t1", attributes: { starts_at: "2026-11-29T15:00:00Z", name: "9:00" }, relationships: { event: { data: { type: "Event", id: "sun" } } } },
-        { type: "EventTime", id: "t2", attributes: { starts_at: "2026-11-29T16:30:00Z", name: "10:30" }, relationships: { event: { data: { type: "Event", id: "sun" } } } },
-        { type: "EventTime", id: "t3", attributes: { starts_at: "2026-11-22T15:00:00Z", name: "9:00" }, relationships: { event: { data: { type: "Event", id: "sun" } } } },
-      ],
-    }];
-    const events: PcoDocument[] = [{ data: [{ type: "Event", id: "sun", attributes: { name: "Sunday Service" } }] }];
-    const rows = mapWeeklyAttendance(headcounts, events, today);
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ name: "Sunday Service", thisWeek: 200, lastWeek: 40, change: 160 });
-    expect(rows[0]?.weeks).toHaveLength(6);
-    expect(rows[0]?.weeks.at(-1)?.total).toBe(200);
-    expect(rows[0]?.weeks.at(-2)?.total).toBe(40);
+describe("Sunday worship and kids attendance", () => {
+  const events: PcoDocument[] = [{
+    data: [{ type: "Event", id: "92682", attributes: { name: "Sunday Services | All Campus" } }],
+  }];
+  const eventTimes: PcoDocument[] = [{
+    data: [
+      { type: "EventTime", id: "t9", attributes: { starts_at: "2026-11-29T15:00:00Z", total_count: 500 }, relationships: { event: { data: { type: "Event", id: "92682" } } } },
+      { type: "EventTime", id: "t1030", attributes: { starts_at: "2026-11-29T16:30:00Z", total_count: 400 }, relationships: { event: { data: { type: "Event", id: "92682" } } } },
+      { type: "EventTime", id: "nov22a", attributes: { starts_at: "2026-11-22T15:00:00Z", total_count: 101 }, relationships: { event: { data: { type: "Event", id: "92682" } } } },
+      { type: "EventTime", id: "nov22b", attributes: { starts_at: "2026-11-22T16:30:00Z", total_count: 36 }, relationships: { event: { data: { type: "Event", id: "92682" } } } },
+    ],
+  }];
+  const headcounts: PcoDocument[] = [{
+    data: [
+      { type: "Headcount", id: "h1", attributes: { total: 120 }, relationships: { event_time: { data: { type: "EventTime", id: "t9" } }, attendance_type: { data: { type: "AttendanceType", id: "worship" } } } },
+      { type: "Headcount", id: "h2", attributes: { total: 80 }, relationships: { event_time: { data: { type: "EventTime", id: "t1030" } }, attendance_type: { data: { type: "AttendanceType", id: "worship" } } } },
+    ],
+    included: [{ type: "AttendanceType", id: "worship", attributes: { name: "Worship" } }],
+  }];
+  const locations: PcoDocument[] = [{
+    data: [
+      { type: "Location", id: "babies", attributes: { name: "Babies" }, relationships: { parent: { data: { type: "Location", id: "dz" } } } },
+      { type: "Location", id: "hosts", attributes: { name: "Host Team Volunteers", child_or_adult: "A" }, relationships: { parent: { data: { type: "Location", id: "dz" } } } },
+    ],
+    included: [{ type: "Location", id: "dz", attributes: { name: "DiscoveryZone", kind: "Folder" } }],
+  }];
+  const checkIns: PcoDocument[] = [{
+    data: [
+      { type: "CheckIn", id: "c1", attributes: { kind: "Regular" }, relationships: { check_in_times: { data: [{ type: "CheckInTime", id: "cit1" }] } } },
+      { type: "CheckIn", id: "c2", attributes: { kind: "Guest" }, relationships: { check_in_times: { data: [{ type: "CheckInTime", id: "cit2" }] } } },
+      { type: "CheckIn", id: "c3", attributes: { kind: "Volunteer" }, relationships: { check_in_times: { data: [{ type: "CheckInTime", id: "cit3" }] } } },
+    ],
+    included: [
+      { type: "CheckInTime", id: "cit1", relationships: { location: { data: { type: "Location", id: "babies" } }, event_time: { data: { type: "EventTime", id: "nov22a" } } } },
+      { type: "CheckInTime", id: "cit2", relationships: { location: { data: { type: "Location", id: "babies" } }, event_time: { data: { type: "EventTime", id: "nov22b" } } } },
+      { type: "CheckInTime", id: "cit3", relationships: { location: { data: { type: "Location", id: "babies" } }, event_time: { data: { type: "EventTime", id: "nov22a" } } } },
+    ],
+  }];
+
+  it("uses Worship headcounts when they exist and check-in totals when they do not", () => {
+    const attendance = mapSundayAttendance(headcounts, events, eventTimes, locations, checkIns, today);
+    expect(attendance.coming.sunday).toBe("11/29/2026");
+    expect(attendance.coming.worship).toEqual({ total: 200, source: "headcount" });
+    expect(attendance.last.sunday).toBe("11/22/2026");
+    expect(attendance.last.worship).toEqual({ total: 137, source: "check-ins" });
+    expect(attendance.last.kids).toEqual({ total: 2, source: "check-ins" });
+    expect(attendance.sundays).toHaveLength(6);
   });
 });
 
@@ -136,7 +165,14 @@ describe("sample Planning Center data", () => {
     expect(homeEvents(events, today).map((event) => event.name)).not.toContain("Sample choir night");
     expect(eventsWithinDays(events, today, 30).map((event) => event.name)).toContain("Sample choir night");
     const attendance = sampleAttendance(today);
-    expect(attendance[0]).toMatchObject({ name: "Sample Sunday worship", thisWeek: 210, lastWeek: 200, change: 10 });
-    expect(attendance[1]?.change).toBe(-5);
+    expect(attendance.coming.worship).toEqual({ total: 210, source: "headcount" });
+    expect(attendance.last.worship).toEqual({ total: 200, source: "check-ins" });
+    expect(attendance.sundays).toHaveLength(6);
+    const html = renderToStaticMarkup(createElement(RecentAttendanceCard, { attendance, sample: true }));
+    expect(html).toContain("Coming Sunday");
+    expect(html).toContain("Last Sunday");
+    expect(html).toContain("Worship 200 from check-ins");
+    expect(html).toContain("Kids 41");
+    expect(html).not.toContain("This week");
   });
 });

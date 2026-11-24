@@ -1,8 +1,10 @@
+export type PcoRef = { type?: string; id?: string };
+
 export type PcoResource = {
   type?: string;
   id?: string;
   attributes?: Record<string, unknown>;
-  relationships?: Record<string, { data?: { type?: string; id?: string } | null }>;
+  relationships?: Record<string, { data?: PcoRef | PcoRef[] | null }>;
 };
 
 export type PcoDocument = {
@@ -21,13 +23,19 @@ export type UpcomingEvent = {
   day: string;
 };
 
-export type WeeklyCount = { week: string; total: number };
+export type CountSource = "headcount" | "check-ins" | "mixed";
 
-export type EventAttendance = {
-  id: string;
-  name: string;
-  thisWeek: number;
-  lastWeek: number;
-  change: number;
-  weeks: WeeklyCount[];
+export type SundayCount = { total: number; source: CountSource };
+
+/** Worship and kids for one Sunday. */
+export type SundayAttendance = {
+  sunday: string;
+  worship: SundayCount;
+  kids: SundayCount;
+};
+
+export type RecentAttendance = {
+  coming: SundayAttendance;
+  last: SundayAttendance;
+  sundays: SundayAttendance[];
 };
