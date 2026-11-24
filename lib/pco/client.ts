@@ -45,11 +45,12 @@ async function readPage(url: string, deps: PcoDeps, attempt = 0): Promise<PcoDoc
 }
 
 /** Follow Planning Center's next link, staying on their host, and stop after a few pages. */
-export async function pcoList(path: string, query: Record<string, string>, deps: PcoDeps): Promise<PcoDocument[]> {
+export async function pcoList(path: string, query: Record<string, string>, deps: PcoDeps, maxPages = PAGE_CAP): Promise<PcoDocument[]> {
   const pages: PcoDocument[] = [];
   let url = `${API}${path}?${new URLSearchParams(query).toString()}`;
   const seen = new Set<string>();
-  for (let page = 0; page < PAGE_CAP && url; page += 1) {
+  const cap = Math.max(1, Math.min(maxPages, 20));
+  for (let page = 0; page < cap && url; page += 1) {
     if (seen.has(url)) break;
     seen.add(url);
     const doc = await readPage(url, deps);

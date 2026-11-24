@@ -1,6 +1,6 @@
-import type { EventAttendance, UpcomingEvent } from "@/lib/pco/types";
-import { addUtcDays, formatUsDate, weekStartMonday } from "@/lib/domain/dates";
-import { noonChicago } from "@/lib/pco/map";
+import type { RecentAttendance, SundayAttendance, UpcomingEvent } from "@/lib/pco/types";
+import { addUtcDays, formatUsDate } from "@/lib/domain/dates";
+import { comingSunday, noonChicago } from "@/lib/pco/map";
 
 export function sampleUpcomingEvents(today: Date): UpcomingEvent[] {
   const rows: Array<{ offset: number; name: string; location: string; allDay?: boolean }> = [
@@ -23,21 +23,14 @@ export function sampleUpcomingEvents(today: Date): UpcomingEvent[] {
   });
 }
 
-export function sampleAttendance(today: Date): EventAttendance[] {
-  const start = weekStartMonday(today);
-  const weeks = [5, 4, 3, 2, 1, 0].map((ago) => formatUsDate(addUtcDays(start, -7 * ago)));
+export function sampleAttendance(today: Date): RecentAttendance {
+  const coming = comingSunday(today);
   const worship = [180, 190, 176, 188, 200, 210];
   const kids = [40, 42, 38, 44, 41, 36];
-  const build = (id: string, name: string, counts: number[]): EventAttendance => ({
-    id,
-    name,
-    thisWeek: counts[5] ?? 0,
-    lastWeek: counts[4] ?? 0,
-    change: (counts[5] ?? 0) - (counts[4] ?? 0),
-    weeks: weeks.map((week, index) => ({ week, total: counts[index] ?? 0 })),
-  });
-  return [
-    build("sample_worship", "Sample Sunday worship", worship),
-    build("sample_kids", "Sample MV Kids", kids),
-  ];
+  const sundays: SundayAttendance[] = worship.map((total, index) => ({
+    sunday: formatUsDate(addUtcDays(coming, -7 * (worship.length - 1 - index))),
+    worship: { total, source: index === 4 ? "check-ins" : "headcount" },
+    kids: { total: kids[index] ?? 0, source: "check-ins" },
+  }));
+  return { coming: sundays[5]!, last: sundays[4]!, sundays };
 }

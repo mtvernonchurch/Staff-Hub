@@ -223,13 +223,15 @@ Graphics requests are assigned from one cell, **Hub Settings** → `Graphics Own
 
 Budgets default to sample numbers. Set `DATA_SOURCE_BUDGET=sheet` with `DATA_MODE=sheets` to read the **Budgets**, **Card Spend**, and **Card Transactions** tabs. `DATA_SOURCE_BUDGET=bill` does not call BILL yet. When you wire it, the Spend & Expense API (formerly Divvy) uses an `apiToken` from the BILL developer portal (`BILL_API_KEY`, `BILL_ORG_ID`). Confirm the current paths before coding them: `GET https://api.divvy.co/v1/budgets`, `GET https://api.divvy.co/v1/cards`, and `GET https://api.divvy.co/v1/transactions`. The Last Sunday card still reads the **Attendance** tab. `DATA_SOURCE_ATTENDANCE=pco` does not replace that card.
 
-Home loads two read-only Planning Center lists when `DATA_MODE=sheets` and both `PCO_APP_ID` and `PCO_SECRET` are set. Otherwise those sections stay on clearly labeled sample data, including every preview. Responses are cached for about 15 minutes. A Planning Center error shows "Couldn't load" and leaves the rest of the page up.
+Home loads two read-only Planning Center lists when `DATA_MODE=sheets` and both `PCO_APP_ID` and `PCO_SECRET` are set. Otherwise those sections stay on clearly labeled sample data, including every preview. Recent attendance shows Worship and Kids for Coming Sunday, Last Sunday, and the six Sundays before that. A number taken from check-ins, because that service had no Worship headcount, is marked "from check-ins". Responses are cached for about 15 minutes. A Planning Center error shows "Couldn't load" and leaves the rest of the page up.
 
 The token is a personal access token (HTTP Basic auth). It needs Calendar and Check-Ins. The hub calls:
 
 - `GET https://api.planningcenteronline.com/calendar/v2/event_instances` with `filter=approved`, `include=event`, and a `starts_at` window, for the next 30 days. Home shows the first 14.
-- `GET https://api.planningcenteronline.com/check-ins/v2/headcounts` with `include=event_time,attendance_type`, for recent headcounts.
-- `GET https://api.planningcenteronline.com/check-ins/v2/events` with `filter=not_archived`, to name those Check-Ins events.
+- `GET https://api.planningcenteronline.com/check-ins/v2/headcounts` with `include=event_time,attendance_type`. Worship on a Sunday service uses the Worship headcount when one was entered.
+- `GET https://api.planningcenteronline.com/check-ins/v2/events` with `filter=not_archived`, to find Sunday Services and any separate kids events.
+- `GET https://api.planningcenteronline.com/check-ins/v2/event_times` with `include=event`. A Sunday service with no Worship headcount uses that time's `total_count` (regulars, guests, and volunteers).
+- `GET https://api.planningcenteronline.com/check-ins/v2/events/{id}/locations` with `include=parent`, and `GET https://api.planningcenteronline.com/check-ins/v2/locations/{id}/check_ins` with `include=check_in_times`. Kids are those check-ins in Discovery Zone and KidZone rooms, not volunteer rooms. The request asks only for kind and created time, not names.
 
 Workflow cards on Home are the ones assigned to the signed-in email. Sample mode reads the **Workflow Cards** tab. `DATA_SOURCE_WORKFLOWS=pco` does not call Planning Center yet. The People API for that later step is `GET https://api.planningcenteronline.com/people/v2/workflows` and `GET https://api.planningcenteronline.com/people/v2/workflows/{workflow_id}/cards`.
 
