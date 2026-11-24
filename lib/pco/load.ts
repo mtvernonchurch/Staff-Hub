@@ -108,5 +108,5 @@ export async function loadRecentAttendance(today: Date, env: Env = process.env):
 }
 
 export function homeEvents(events: UpcomingEvent[], today: Date): UpcomingEvent[] {
-  return eventsWithinDays(events, today, 14);
+  return eventsWithinDays(events, today, 7);
 }

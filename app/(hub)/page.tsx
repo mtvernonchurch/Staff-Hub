@@ -72,7 +72,7 @@ export default async function HomePage({
           </details>
         </section>
         {upcoming.ok ? (
-          <UpcomingEventsCard events={homeEvents(upcoming.data, today)} sample={upcoming.sample} moreHref="/upcoming" />
+          <UpcomingEventsCard events={homeEvents(upcoming.data, today)} sample={upcoming.sample} />
         ) : <p className="banner banner-error" role="alert">{upcoming.message}</p>}
         <section className="card">
           <div className="card-head">

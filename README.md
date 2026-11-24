@@ -227,7 +227,7 @@ Home loads two read-only Planning Center lists when `DATA_MODE=sheets` and both 
 
 The token is a personal access token (HTTP Basic auth). It needs Calendar and Check-Ins. The hub calls:
 
-- `GET https://api.planningcenteronline.com/calendar/v2/event_instances` with `filter=approved`, `include=event`, and a `starts_at` window, for the next 30 days. Home shows the first 14.
+- `GET https://api.planningcenteronline.com/calendar/v2/event_instances` with `filter=approved`, `include=event`, and a `starts_at` window. Home shows the next 7 days. The upcoming page shows 30 days.
 - `GET https://api.planningcenteronline.com/check-ins/v2/headcounts` with `include=event_time,attendance_type`. Worship on a Sunday service uses the Worship headcount when one was entered.
 - `GET https://api.planningcenteronline.com/check-ins/v2/events` with `filter=not_archived`, to find Sunday Services and any separate kids events.
 - `GET https://api.planningcenteronline.com/check-ins/v2/event_times` with `include=event`. A Sunday service with no Worship headcount uses that time's `total_count` (regulars, guests, and volunteers).

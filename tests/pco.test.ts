@@ -162,6 +162,7 @@ describe("sample Planning Center data", () => {
   it("marks the farther sample event as outside the 14-day home window", () => {
     const events = sampleUpcomingEvents(today);
     expect(events.every((event) => event.name.startsWith("Sample "))).toBe(true);
+    expect(homeEvents(events, today).map((event) => event.name)).toEqual(["Sample staff lunch", "Sample Sunday worship"]);
     expect(homeEvents(events, today).map((event) => event.name)).not.toContain("Sample choir night");
     expect(eventsWithinDays(events, today, 30).map((event) => event.name)).toContain("Sample choir night");
     const attendance = sampleAttendance(today);

@@ -86,7 +86,7 @@ export const COLUMNS = {
     "Submitted By",
     "Submitted On",
   ],
-  ministries: ["Ministry", "Lead", "Order"],
+  ministries: ["Ministry", "Lead"],
   announcements: [
     "Announcement ID",
     "Date",

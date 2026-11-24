@@ -188,6 +188,18 @@ describe("sheet writes", () => {
     expect(fake.writes.filter((write) => write.type === "append")).toHaveLength(1);
   });
 
+  it("adds a missing Care Notes column instead of refusing to open the tab", async () => {
+    const headers = ["Care Note ID", "Meeting", "Name", "Action", "Custom", "Details", "Assignee", "Done"];
+    const fake = new FakeSheets({
+      "Care Notes": [headers, ["care1", "mtg_monday", "Sample guest", "Call", "", "Check in", "", "FALSE"]],
+    });
+    const store = new SheetsStore(fake);
+    const notes = await store.listCareNotes();
+    expect(notes[0]).toMatchObject({ id: "care1", person: "Sample guest", action: "Call", actionItemId: "" });
+    expect(fake.grids["Care Notes"][0]).toContain("Action Item");
+    expect(fake.grids["Care Notes"][1][0]).toBe("care1");
+  });
+
   it("reads and writes Calendar Checks when the headers are still Email and Socials", async () => {
     const headers = ["Check ID", "Event ID", "Email", "Socials", "Platform", "Volunteers", "Graphics", "Notes"];
     const fake = new FakeSheets({
@@ -213,11 +225,12 @@ describe("sheet writes", () => {
     expect(fake.grids["Calendar Checks"][2][3]).toBe("TRUE");
   });
 
-  it("does not call the network when the header row is missing a column", async () => {
-    const fake = new FakeSheets({ "Action Items": [["Item ID", "Action"]] });
+  it("does not change a read-only tab that is missing a column", async () => {
+    const fake = new FakeSheets({ Staff: [["Name", "Email"]] });
     const store = new SheetsStore(fake);
-    await expect(store.listActionItems()).rejects.toThrow(/missing/);
+    await expect(store.listStaff()).rejects.toThrow(/missing/);
     expect(fake.writes).toHaveLength(0);
+    expect(fake.grids.Staff[0]).toEqual(["Name", "Email"]);
   });
 
   it("reads a service account from JSON or a key with escaped newlines, and does not echo the key", () => {
