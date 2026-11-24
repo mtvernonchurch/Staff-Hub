@@ -6,11 +6,8 @@ import { HubError } from "@/lib/hub-error";
 export type AttendanceSourceKind = "mock" | "sheet" | "pco";
 
 /**
- * Previous Sunday's counts. Planning Center Check-Ins can implement this later.
- * Headcounts: GET https://api.planningcenteronline.com/check-ins/v2/headcounts
- * Check-ins: GET https://api.planningcenteronline.com/check-ins/v2/check_ins
- * Event times: GET https://api.planningcenteronline.com/check-ins/v2/event_times
- * Auth is HTTP Basic with PCO_APP_ID and PCO_SECRET. Do not call these yet.
+ * Previous Sunday's counts for the Attendance tab.
+ * Home's Recent attendance section reads Check-Ins separately when the hub is in sheets mode.
  */
 export interface AttendanceSource {
   kind: AttendanceSourceKind;
