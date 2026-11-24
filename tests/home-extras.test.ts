@@ -1,4 +1,8 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { WorkflowList } from "@/components/workflow-list";
+import type { WorkflowCard } from "@/lib/data/types";
 import { MemoryStore } from "@/lib/data/memory-store";
 import { createSeed } from "@/lib/data/mock-data";
 import { ownedMinistries, visibleCards, visibleTransactions, monthKey } from "@/lib/budgets/access";
@@ -6,6 +10,7 @@ import { attendanceSnapshot } from "@/lib/domain/attendance";
 import { chicagoToday } from "@/lib/domain/dates";
 import { visibleProgramLinks } from "@/lib/domain/programs";
 import { assignedWorkflows } from "@/lib/workflows/assigned";
+import { workflowPreview, workflowPreviewCanToggle } from "@/lib/workflows/preview";
 
 const now = new Date("2026-11-23T18:00:00Z");
 
@@ -57,7 +62,50 @@ describe("workflow cards", () => {
     expect(avery.map((card) => card.id).sort()).toEqual(["card_baptism", "card_guest"]);
     expect(blake.map((card) => card.workflow)).toEqual(["Student follow up"]);
   });
+
+  it("keeps the first five cards in order until the list is expanded", () => {
+    const cards = ["Baptism", "Guest follow up", "Student follow up", "Care", "Worship", "Kids", "Office"];
+    expect(workflowPreview(cards, false)).toEqual(cards.slice(0, 5));
+    expect(workflowPreview(cards, true)).toEqual(cards);
+    expect(workflowPreviewCanToggle(5)).toBe(false);
+    expect(workflowPreviewCanToggle(6)).toBe(true);
+    expect(workflowPreview(cards.slice(0, 2), false)).toEqual(cards.slice(0, 2));
+  });
+
+  it("renders a keyboard button only when more than five cards are assigned", () => {
+    const five = renderToStaticMarkup(createElement(WorkflowList, { cards: sampleCards(5) }));
+    expect(five.match(/<h3>/g)).toHaveLength(5);
+    expect(five).not.toContain("Show more");
+    const six = renderToStaticMarkup(createElement(WorkflowList, { cards: sampleCards(6) }));
+    expect(six.match(/<h3>/g)).toHaveLength(5);
+    expect(six).toContain("Baptism 1");
+    expect(six).toContain("Baptism 5");
+    expect(six).not.toContain("Baptism 6");
+    expect(six).toContain("Show more");
+    expect(six).toContain('type="button"');
+    expect(six).toContain('aria-expanded="false"');
+    expect(six).toContain('aria-controls="workflow-cards"');
+  });
 });
+
+function sampleCards(count: number): WorkflowCard[] {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `card_${index + 1}`,
+    workflow: `Baptism ${index + 1}`,
+    step: "Follow up",
+    forPerson: "Sample guest",
+    assignee: "Avery Quinn",
+    assigneeEmail: "avery@mtvernon.church",
+    overdue: "No",
+    movedToStep: "",
+    link: "https://planningcenter.com",
+    firstSeen: "",
+    lastSynced: "",
+    personId: "",
+    workflowId: "",
+    assigneeId: "",
+  }));
+}
 
 describe("attendance", () => {
   it("summarizes the previous Sunday and an 8-week trend", async () => {
