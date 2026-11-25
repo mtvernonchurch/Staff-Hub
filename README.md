@@ -53,9 +53,9 @@ If an earlier import is stuck, open the project → **Settings** → **Build and
 | --- | --- |
 | Home | Announcements, the next 7 days of events and room reservations, your items, workflows, recent Check-Ins attendance, last Sunday, and ministry budgets |
 | Calendar | This week (Monday–Sunday events and announcements), this month (choose a day to see everything that day), and the Communications Calendar |
-| Meeting mode | Admins only. Live entry during Monday's 1:00 PM staff meeting, including announcement channels and the Communications Calendar |
+| Meetings | The Meetings tab. The Monday list, each meeting's notes, and, for admins, Meeting mode |
+| Meeting mode | Admins only, opened from the Meetings tab. Live entry during Monday's 1:00 PM staff meeting, including announcement channels and the Communications Calendar |
 | Action items | The one shared list. Filter mine or everyone's. Add, update, and mark done |
-| Meetings | Prayer, wins, the week ahead, ministry updates, discussion and decisions, and the items from that meeting |
 | Sunday checklist | The areas copied from the checklist template for a meeting |
 | Announcements | What the church or the staff need to hear |
 | Documents | Quick links, shared folders, and pinned files. Admins edit the program tiles here. The files stay in Drive |

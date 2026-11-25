@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ClipboardList } from "lucide-react";
 import { AttendanceCard } from "@/components/attendance-card";
@@ -13,7 +14,7 @@ export const metadata = { title: "Meeting mode" };
 
 export default async function MeetingModePage() {
   const { staff, store } = await requireStaff();
-  if (!isAdmin(staff)) redirect("/this-week");
+  if (!isAdmin(staff)) redirect("/meetings");
   const meeting = await ensureMondayMeeting({ store, actor: staff });
   const [items, announcements, careNotes, people, ministries, calendarEvents, calendarChecks, attendance] = await Promise.all([
     store.listActionItems(),
@@ -37,6 +38,7 @@ export default async function MeetingModePage() {
         title="Staff meeting"
         lede={`Live notes for ${formatFriendly(meeting.date)}. What you add here is on each person's list as soon as you save it.`}
       />
+      <p className="hint"><Link href="/meetings">All meetings</Link></p>
       <AttendanceCard rows={attendance} today={today} editable returnTo="/meeting" />
       <MeetingMode
         meeting={meeting}

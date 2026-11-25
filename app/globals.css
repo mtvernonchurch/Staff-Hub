@@ -362,8 +362,13 @@ summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; al
 .dock a {
   position: relative; color: #d7e5e0; text-decoration: none;
   display: grid; justify-items: center; gap: 2px;
-  min-width: 64px; min-height: 52px; padding: 6px 8px; border-radius: 999px;
-  font-size: 0.64rem; font-weight: 700;
+  min-width: 54px; min-height: 52px; padding: 6px 6px; border-radius: 999px;
+  font-size: 0.6rem; font-weight: 700; white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .dock { width: calc(100vw - 12px); padding: 6px 4px; gap: 0; }
+  .dock a { min-width: 0; flex: 1 1 0; padding: 6px 0; font-size: 0.56rem; }
+  .tab-badge { right: 2px; }
 }
 .dock a.is-active { background: var(--mint); color: var(--navy); }
 .main { padding-bottom: 128px; }
