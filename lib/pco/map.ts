@@ -1,4 +1,4 @@
-import type { CountSource, PcoDocument, PcoRef, PcoResource, RecentAttendance, SundayAttendance, SundayCount, UpcomingEvent } from "@/lib/pco/types";
+import type { CalendarSource, CountSource, PcoDocument, PcoRef, PcoResource, RecentAttendance, SundayAttendance, SundayCount, UpcomingEvent } from "@/lib/pco/types";
 import { addUtcDays, chicagoToday, formatUsDate } from "@/lib/domain/dates";
 
 export function chicagoTime(iso: string): string {
@@ -51,22 +51,69 @@ function approved(status: string): boolean {
   return value === "" || value === "a" || value === "approved";
 }
 
-/** Approved Calendar instances that fall on a Columbus day inside the window. */
-export function mapEventInstances(docs: PcoDocument[], today: Date, days: number): UpcomingEvent[] {
+export function groupsFeedIds(docs: PcoDocument[]): Set<string> {
+  const ids = new Set<string>();
+  for (const doc of docs) {
+    for (const row of doc.data ?? []) {
+      if (row.type && row.type !== "Feed") continue;
+      if (attr(row, "feed_type").toLowerCase() === "groups" && row.id) ids.add(String(row.id));
+    }
+  }
+  return ids;
+}
+
+/** Event ids that belong to a Groups feed. Those instances are Groups events, not church events. */
+export function eventIdsOnFeeds(docs: PcoDocument[], feedIds: ReadonlySet<string>): Set<string> {
+  const ids = new Set<string>();
+  if (feedIds.size === 0) return ids;
+  for (const doc of docs) {
+    for (const row of doc.data ?? []) {
+      if (!row.id || (row.type && row.type !== "Event")) continue;
+      const feed = related(row, "feed");
+      if (!feed || feedIds.has(feed.id)) ids.add(String(row.id));
+    }
+  }
+  return ids;
+}
+
+function inWindow(day: Date, start: Date, end: Date): boolean {
+  return day.getTime() >= start.getTime() && day.getTime() < end.getTime();
+}
+
+function sorted(events: UpcomingEvent[]): UpcomingEvent[] {
+  return events.sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.name.localeCompare(b.name));
+}
+
+function flagged(value: unknown, text: string): boolean {
+  return value === true || text.toLowerCase() === "true";
+}
+
+/**
+ * Approved Calendar instances inside the window.
+ * Instances whose event sits on a Groups feed are left out. Groups has its own list.
+ */
+export function mapEventInstances(
+  docs: PcoDocument[],
+  start: Date,
+  end: Date,
+  exclude: { eventIds?: ReadonlySet<string>; feedIds?: ReadonlySet<string> } = {},
+): UpcomingEvent[] {
   const included = indexIncluded(docs);
-  const start = today.getTime();
-  const end = addUtcDays(today, days).getTime();
   const events: UpcomingEvent[] = [];
   for (const doc of docs) {
     for (const row of doc.data ?? []) {
       if (row.type && row.type !== "EventInstance") continue;
+      if (flagged(row.attributes?.canceled, attr(row, "canceled"))) continue;
       const startsAt = attr(row, "starts_at");
       const when = new Date(startsAt);
       if (!startsAt || Number.isNaN(when.getTime())) continue;
       const day = chicagoToday(when);
-      if (day.getTime() < start || day.getTime() >= end) continue;
+      if (!inWindow(day, start, end)) continue;
       const parentRef = related(row, "event");
-      const parent = parentRef ? included.get(`${parentRef.type}:${parentRef.id}`) : undefined;
+      const parent = parentRef ? included.get(`${parentRef.type}:${parentRef.id}`) ?? included.get(`Event:${parentRef.id}`) : undefined;
+      if (parentRef && exclude.eventIds?.has(parentRef.id)) continue;
+      const parentFeed = related(parent, "feed");
+      if (parentFeed && exclude.feedIds?.has(parentFeed.id)) continue;
       const status = attr(parent, "approval_status") || attr(row, "approval_status");
       if (!approved(status)) continue;
       const kind = (attr(parent, "kind") || attr(row, "kind")).toLowerCase();
@@ -78,12 +125,78 @@ export function mapEventInstances(docs: PcoDocument[], today: Date, days: number
         startsAt,
         endsAt: attr(row, "ends_at"),
         location: attr(row, "location"),
-        allDay: row.attributes?.all_day_event === true || attr(row, "all_day_event").toLowerCase() === "true",
+        allDay: flagged(row.attributes?.all_day_event, attr(row, "all_day_event")),
         day: formatUsDate(day),
+        source: "event",
       });
     }
   }
-  return events.sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.name.localeCompare(b.name));
+  return sorted(events);
+}
+
+/** Approved bookings of rooms. Equipment (`kind` Resource) is not a room reservation. */
+export function mapRoomBookings(docs: PcoDocument[], start: Date, end: Date): UpcomingEvent[] {
+  const included = indexIncluded(docs);
+  const events: UpcomingEvent[] = [];
+  for (const doc of docs) {
+    for (const row of doc.data ?? []) {
+      if (row.type && row.type !== "ResourceBooking") continue;
+      const startsAt = attr(row, "starts_at");
+      const when = new Date(startsAt);
+      if (!startsAt || Number.isNaN(when.getTime())) continue;
+      const day = chicagoToday(when);
+      if (!inWindow(day, start, end)) continue;
+      const resourceRef = related(row, "resource");
+      const resource = resourceRef ? included.get(`${resourceRef.type || "Resource"}:${resourceRef.id}`) ?? included.get(`Resource:${resourceRef.id}`) : undefined;
+      if (attr(resource, "kind").toLowerCase() !== "room") continue;
+      const eventRef = related(row, "event");
+      const event = eventRef ? included.get(`${eventRef.type || "Event"}:${eventRef.id}`) ?? included.get(`Event:${eventRef.id}`) : undefined;
+      const room = attr(resource, "name") || "Room";
+      events.push({
+        id: `room-${row.id ?? room}-${startsAt}`,
+        name: attr(event, "name") || room,
+        startsAt,
+        endsAt: attr(row, "ends_at"),
+        location: room,
+        allDay: false,
+        day: formatUsDate(day),
+        source: "room",
+      });
+    }
+  }
+  return sorted(events);
+}
+
+/** Groups events. Canceled meetings are dropped. The group name is the place label. */
+export function mapGroupEvents(docs: PcoDocument[], start: Date, end: Date): UpcomingEvent[] {
+  const included = indexIncluded(docs);
+  const events: UpcomingEvent[] = [];
+  for (const doc of docs) {
+    for (const row of doc.data ?? []) {
+      if (row.type && row.type !== "Event") continue;
+      if (flagged(row.attributes?.canceled, attr(row, "canceled"))) continue;
+      const startsAt = attr(row, "starts_at");
+      const when = new Date(startsAt);
+      if (!startsAt || Number.isNaN(when.getTime())) continue;
+      const day = chicagoToday(when);
+      if (!inWindow(day, start, end)) continue;
+      const groupRef = related(row, "group");
+      const group = groupRef ? included.get(`${groupRef.type || "Group"}:${groupRef.id}`) ?? included.get(`Group:${groupRef.id}`) : undefined;
+      const groupName = attr(group, "name");
+      const name = attr(row, "name") || groupName || "Group event";
+      events.push({
+        id: `group-${row.id ?? name}-${startsAt}`,
+        name,
+        startsAt,
+        endsAt: attr(row, "ends_at"),
+        location: groupName,
+        allDay: flagged(row.attributes?.multi_day, attr(row, "multi_day")),
+        day: formatUsDate(day),
+        source: "group" satisfies CalendarSource,
+      });
+    }
+  }
+  return sorted(events);
 }
 
 export function eventsWithinDays(events: UpcomingEvent[], today: Date, days: number): UpcomingEvent[] {
