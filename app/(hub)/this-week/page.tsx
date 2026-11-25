@@ -45,10 +45,8 @@ export default async function ThisWeekPage() {
         lede="This week, this month, and where each event is being promoted."
       />
       <p className="hint">
-        <Link href="/meetings">Meetings</Link>
-        {" · "}
         <Link href="/checklist">Sunday checklist</Link>
-        {isAdmin(staff) ? <> · <Link href="/meeting">Meeting mode</Link> · <Link href="/announcements">Edit announcements</Link></> : null}
+        {isAdmin(staff) ? <> · <Link href="/announcements">Edit announcements</Link></> : null}
       </p>
       <nav className="jump-row" aria-label="Calendar sections">
         <a href="#this-week">This Week</a>

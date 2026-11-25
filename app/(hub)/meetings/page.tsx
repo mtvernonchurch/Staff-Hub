@@ -32,6 +32,11 @@ export default async function MeetingsPage({
         lede="Prayer, wins, the week ahead, ministry updates, and the decisions that become action items."
       />
       <Flash error={query.error} notice={query.notice} />
+      {isAdmin(staff) ? (
+        <p className="button-row" style={{ marginBottom: 16 }}>
+          <Link className="btn btn-primary" href="/meeting">Meeting mode</Link>
+        </p>
+      ) : null}
       <section className="card tone-meeting">
         <Heading icon={CalendarDays}>This Monday</Heading>
         {monday ? (
