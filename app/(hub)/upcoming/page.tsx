@@ -18,11 +18,16 @@ export default async function UpcomingPage() {
         kicker="Planning Center"
         icon={CalendarDays}
         title="Next 30 days"
-        lede="Approved church events."
+        lede="Events and room reservations. Groups stay on the month calendar."
       />
       <p className="hint"><Link href="/">Home</Link></p>
       {events.ok ? (
-        <UpcomingEventsCard events={events.data} sample={events.sample} />
+        <UpcomingEventsCard
+          events={events.data}
+          sample={events.sample}
+          heading="Next 30 days"
+          hint={events.sample ? "The next 30 days. Sample events and room reservations, not the live church calendar." : "The next 30 days. Events and room reservations. Groups are on the month calendar."}
+        />
       ) : <p className="banner banner-error" role="alert">{events.message}</p>}
     </>
   );

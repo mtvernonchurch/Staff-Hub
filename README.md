@@ -51,8 +51,8 @@ If an earlier import is stuck, open the project → **Settings** → **Build and
 
 | Page | What staff do there |
 | --- | --- |
-| Home | Announcements, the next 14 days of church events, your items, workflows, recent Check-Ins attendance, last Sunday, and ministry budgets |
-| Calendar | This week (Monday–Sunday events and announcements), this month, and the Communications Calendar |
+| Home | Announcements, the next 7 days of events and room reservations, your items, workflows, recent Check-Ins attendance, last Sunday, and ministry budgets |
+| Calendar | This week (Monday–Sunday events and announcements), this month (choose a day to see everything that day), and the Communications Calendar |
 | Meeting mode | Admins only. Live entry during Monday's 1:00 PM staff meeting, including announcement channels and the Communications Calendar |
 | Action items | The one shared list. Filter mine or everyone's. Add, update, and mark done |
 | Meetings | Prayer, wins, the week ahead, ministry updates, discussion and decisions, and the items from that meeting |
@@ -225,9 +225,12 @@ Budgets default to sample numbers. Set `DATA_SOURCE_BUDGET=sheet` with `DATA_MOD
 
 Home loads two read-only Planning Center lists when `DATA_MODE=sheets` and both `PCO_APP_ID` and `PCO_SECRET` are set. Otherwise those sections stay on clearly labeled sample data, including every preview. Recent attendance shows Worship and Kids for Coming Sunday, Last Sunday, and the six Sundays before that. A number taken from check-ins, because that service had no Worship headcount, is marked "from check-ins". Responses are cached for about 15 minutes. A Planning Center error shows "Couldn't load" and leaves the rest of the page up.
 
-The token is a personal access token (HTTP Basic auth). It needs Calendar and Check-Ins. The hub calls:
+The token is a personal access token (HTTP Basic auth). It needs Calendar, Check-Ins, and Groups. Groups is only read for the month calendar. The hub calls:
 
-- `GET https://api.planningcenteronline.com/calendar/v2/event_instances` with `filter=approved`, `include=event`, and a `starts_at` window, for the next 30 days. Home shows the first 14.
+- `GET https://api.planningcenteronline.com/calendar/v2/event_instances` with `filter=approved`, `include=event`, and a `starts_at` window. Home shows today through the next 7 days. The upcoming page shows 30 days. Instances on a Groups feed are left out.
+- `GET https://api.planningcenteronline.com/calendar/v2/feeds?where[feed_type]=groups` and `GET https://api.planningcenteronline.com/calendar/v2/events?where[feed_id]=…` so Groups events can be told apart from church events.
+- `GET https://api.planningcenteronline.com/calendar/v2/resource_bookings` with `filter=approved` and `include=resource,event`. Home and the month show bookings whose resource `kind` is `Room`.
+- `GET https://api.planningcenteronline.com/groups/v2/events` with `include=group` for the month view only. Home does not show Groups.
 - `GET https://api.planningcenteronline.com/check-ins/v2/headcounts` with `include=event_time,attendance_type`. Worship on a Sunday service uses the Worship headcount when one was entered.
 - `GET https://api.planningcenteronline.com/check-ins/v2/events` with `filter=not_archived`, to find Sunday Services and any separate kids events.
 - `GET https://api.planningcenteronline.com/check-ins/v2/event_times` with `include=event`. A Sunday service with no Worship headcount uses that time's `total_count` (regulars, guests, and volunteers).
