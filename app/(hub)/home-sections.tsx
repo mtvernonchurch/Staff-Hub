@@ -68,7 +68,7 @@ export async function HomeTasks({ store, actor, today }: { store: HubStore; acto
 export async function HomeCalendarSection({ today }: { today: Date }) {
   const upcoming = await loadHomeCalendar(today);
   if (!upcoming.ok) return <p className="banner banner-error" role="alert">{upcoming.message}</p>;
-  return <UpcomingEventsCard events={upcoming.data} sample={upcoming.sample} moreHref="/upcoming" />;
+  return <UpcomingEventsCard events={upcoming.data} sample={upcoming.sample} />;
 }
 
 export async function HomeWorkflows({ email }: { email: string }) {

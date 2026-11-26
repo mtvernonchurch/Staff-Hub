@@ -22,7 +22,7 @@ import type {
 } from "@/lib/data/types";
 import { HubError } from "@/lib/hub-error";
 import type { SheetsApi } from "@/lib/sheets/api";
-import { assertColumns, assertWritable, columnLetter, findDataRow, gridToRecords, headersOf, planCellUpdates, quoteTab, recordToAppendRow } from "@/lib/sheets/codec";
+import { assertColumns, assertWritable, columnLetter, findDataRow, gridToRecords, headersOf, missingColumns, planCellUpdates, quoteTab, recordToAppendRow } from "@/lib/sheets/codec";
 import {
   actionCells,
   announcementCells,
@@ -72,7 +72,7 @@ import {
   timeAwayCells,
   workStatusCells,
 } from "@/lib/sheets/mappers";
-import { COLUMNS, normalizeHeader } from "@/lib/sheets/schema";
+import { COLUMNS, isWritableTab, normalizeHeader } from "@/lib/sheets/schema";
 
 /**
  * Reads a tab, then writes only the cells that changed (or appends a new row).
@@ -92,21 +92,33 @@ export class SheetsStore implements HubStore {
     return value;
   }
 
-  private async records(tab: string, required: readonly string[]) {
-    const grid = await this.grid(tab);
-    const headers = headersOf(grid);
+  /** Add any required header the tab does not have yet, then check the row. Older sheets keep their existing columns, including aliases such as Email for The Weekly. */
+  private async prepare(tab: string, required: readonly string[]) {
+    let grid = await this.grid(tab);
+    let headers = headersOf(grid);
     if (headers.every((header) => !header)) {
       throw new HubError(`${tab} has no header row. The hub left it unchanged.`);
     }
+    if (isWritableTab(tab)) {
+      const missing = missingColumns(headers, required);
+      if (missing.length > 0) {
+        await this.ensureHeaders(tab, missing);
+        grid = await this.grid(tab);
+        headers = headersOf(grid);
+      }
+    }
     assertColumns(headers, required, tab);
+    return { grid, headers };
+  }
+
+  private async records(tab: string, required: readonly string[]) {
+    const { grid } = await this.prepare(tab, required);
     return gridToRecords(grid);
   }
 
   private async append(tab: string, required: readonly string[], record: Record<string, string>) {
     assertWritable(tab);
-    const grid = await this.grid(tab);
-    const headers = headersOf(grid);
-    assertColumns(headers, required, tab);
+    const { headers } = await this.prepare(tab, required);
     const row = recordToAppendRow(headers, record);
     await this.api.appendRows(tab, [row]);
     this.cache.delete(tab);
@@ -115,9 +127,7 @@ export class SheetsStore implements HubStore {
   private async appendMany(tab: string, required: readonly string[], records: Record<string, string>[]) {
     assertWritable(tab);
     if (records.length === 0) return;
-    const grid = await this.grid(tab);
-    const headers = headersOf(grid);
-    assertColumns(headers, required, tab);
+    const { headers } = await this.prepare(tab, required);
     await this.api.appendRows(tab, records.map((record) => recordToAppendRow(headers, record)));
     this.cache.delete(tab);
   }

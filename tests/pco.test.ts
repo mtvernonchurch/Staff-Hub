@@ -261,6 +261,7 @@ describe("sample Planning Center data", () => {
     expect(homeEvents(events, today).map((event) => event.name)).toEqual(["Sample staff lunch", "Sample staff meeting", "Sample Sunday worship"]);
     expect(homeEvents(events, today).map((event) => event.source)).toEqual(["event", "room", "event"]);
     expect(homeEvents(events, today).some((event) => event.source === "group")).toBe(false);
+    expect(homeEvents(events, today).map((event) => event.name)).not.toContain("Sample choir night");
     expect(eventsWithinDays(events, today, 30).map((event) => event.name)).toContain("Sample choir night");
     expect(eventsWithinDays(events, today, 30).map((event) => event.name)).toContain("Sample men's breakfast");
     const attendance = sampleAttendance(today);

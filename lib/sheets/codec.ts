@@ -42,8 +42,12 @@ function headerMatches(header: string, name: string): boolean {
   return namesFor(name).some((candidate) => normalizeHeader(header) === normalizeHeader(candidate));
 }
 
+export function missingColumns(headers: string[], required: readonly string[]): string[] {
+  return required.filter((column) => !headers.some((header) => headerMatches(header, column)));
+}
+
 export function assertColumns(headers: string[], required: readonly string[], tab: string): void {
-  const missing = required.filter((column) => !headers.some((header) => headerMatches(header, column)));
+  const missing = missingColumns(headers, required);
   if (missing.length > 0) {
     throw new HubError(
       `${tab} is missing ${missing.join(", ")}. The hub left that tab unchanged. Check the header row.`,
