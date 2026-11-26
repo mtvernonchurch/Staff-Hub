@@ -348,6 +348,8 @@ export function createSeed(now = new Date()): HubData {
         created: lastLabel,
       },
     ],
+    notificationPrefs: [],
+    pushSubscriptions: [],
     workStatuses: [
       { id: "work_avery", date: formatUsDate(today), staff: "Avery Quinn", place: "In office", note: "" },
       { id: "work_ellis", date: formatUsDate(today), staff: "Ellis Park", place: "Working from home", note: "Rehearsal playlist from home." },

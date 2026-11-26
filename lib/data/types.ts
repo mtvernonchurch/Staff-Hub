@@ -302,6 +302,26 @@ export type CardAction = {
   doneAt: string;
 };
 
+/** One row per person on the Notification Settings tab. No row means the defaults: all on. */
+export type NotificationPrefs = {
+  email: string;
+  emailOn: boolean;
+  pushOn: boolean;
+  digestOn: boolean;
+  updated: string;
+};
+
+/** One row per phone or browser that turned on alerts. */
+export type PushSubscriptionRow = {
+  id: string;
+  email: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  device: string;
+  created: string;
+};
+
 export type HubData = {
   staff: StaffMember[];
   meetings: Meeting[];
@@ -331,6 +351,8 @@ export type HubData = {
   folders: FolderLink[];
   workflowCards: WorkflowCard[];
   cardActions: CardAction[];
+  notificationPrefs: NotificationPrefs[];
+  pushSubscriptions: PushSubscriptionRow[];
 };
 
 export interface HubStore {
@@ -408,4 +430,9 @@ export interface HubStore {
   updateFolder(id: string, changes: Partial<FolderLink>): Promise<void>;
   listWorkflowCards(): Promise<WorkflowCard[]>;
   listCardActions(): Promise<CardAction[]>;
+  listNotificationPrefs(): Promise<NotificationPrefs[]>;
+  saveNotificationPrefs(row: NotificationPrefs): Promise<void>;
+  listPushSubscriptions(): Promise<PushSubscriptionRow[]>;
+  savePushSubscription(row: PushSubscriptionRow): Promise<void>;
+  deletePushSubscription(id: string): Promise<void>;
 }

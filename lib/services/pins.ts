@@ -6,6 +6,7 @@ import { safeHttps } from "@/lib/domain/links";
 import { namesMatch } from "@/lib/domain/people";
 import { canManageRecords } from "@/lib/domain/permissions";
 import { HubError } from "@/lib/hub-error";
+import { announce } from "@/lib/notify";
 
 function assertActive(actor: StaffMember) {
   if (!actor.active) throw new HubError("Your staff record is inactive. Ask an admin to turn it back on.");
@@ -63,6 +64,7 @@ export async function createStaffPin(
     posted: day(deps),
   };
   await deps.store.createStaffPin(row);
+  await announce(deps, { type: "pin.posted", pin: row });
   return row;
 }
 

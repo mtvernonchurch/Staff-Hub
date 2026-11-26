@@ -263,4 +263,27 @@ export class MemoryStore implements HubStore {
   async listCardActions() {
     return clone(this.data.cardActions);
   }
+  async listNotificationPrefs() {
+    return clone(this.data.notificationPrefs ?? []);
+  }
+  async saveNotificationPrefs(row: HubData["notificationPrefs"][number]) {
+    this.data.notificationPrefs ??= [];
+    const email = row.email.trim().toLowerCase();
+    const index = this.data.notificationPrefs.findIndex((item) => item.email === email);
+    const next = clone({ ...row, email });
+    if (index < 0) this.data.notificationPrefs.push(next);
+    else this.data.notificationPrefs[index] = next;
+  }
+  async listPushSubscriptions() {
+    return clone(this.data.pushSubscriptions ?? []);
+  }
+  async savePushSubscription(row: HubData["pushSubscriptions"][number]) {
+    this.data.pushSubscriptions ??= [];
+    const index = this.data.pushSubscriptions.findIndex((item) => item.endpoint === row.endpoint);
+    if (index < 0) this.data.pushSubscriptions.push(clone(row));
+    else this.data.pushSubscriptions[index] = clone({ ...row, id: this.data.pushSubscriptions[index].id });
+  }
+  async deletePushSubscription(id: string) {
+    this.data.pushSubscriptions = (this.data.pushSubscriptions ?? []).filter((item) => item.id !== id);
+  }
 }

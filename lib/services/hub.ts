@@ -28,11 +28,14 @@ import {
   isRequestStatus,
 } from "@/lib/domain/permissions";
 import { HubError } from "@/lib/hub-error";
+import { announce, type Notify } from "@/lib/notify";
 
 export type Deps = {
   store: HubStore;
   actor: StaffMember;
   chat?: StaffChatNotifier;
+  /** Tests pass this to see which alerts fired. The hub sends real ones. */
+  notify?: Notify;
   today?: Date;
 };
 
@@ -108,6 +111,7 @@ export async function createActionItem(
   } catch (error) {
     console.error("staff chat hook failed", error instanceof Error ? error.message : "unknown");
   }
+  if (!namesMatch(item.owner, deps.actor.name)) await announce(deps, { type: "task.assigned", item });
   return item;
 }
 
@@ -152,6 +156,9 @@ export async function updateActionItem(
     next.completedOn = status === "Done" ? day(deps) : "";
   }
   await deps.store.updateActionItem(id, next);
+  if (next.owner && !namesMatch(next.owner, deps.actor.name)) {
+    await announce(deps, { type: "task.assigned", item: { ...existing, ...next } });
+  }
   if (next.status) {
     const linked = (await deps.store.listCareNotes()).find((note) => note.actionItemId === id);
     if (linked && linked.done !== (next.status === "Done")) {
@@ -546,6 +553,7 @@ export async function createRequest(
     created: day(deps),
   };
   await deps.store.createRequest(row);
+  await announce(deps, { type: "request.created", request: row });
   return row;
 }
 
@@ -578,6 +586,7 @@ export async function updateRequest(
     throw new HubError("Add an https draft link before asking for review.");
   }
   await deps.store.updateRequest(id, next);
+  if (Object.keys(next).length > 0) await announce(deps, { type: "request.updated", before: existing, after: { ...existing, ...next } });
 }
 
 export async function startChecklist(deps: Deps, meetingId: string) {

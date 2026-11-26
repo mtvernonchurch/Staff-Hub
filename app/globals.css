@@ -478,3 +478,16 @@ summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; al
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 }
+
+/* Alerts page */
+.toggle-row {
+  display: flex; gap: 12px; align-items: flex-start; background: white; border: 1px solid var(--line);
+  border-radius: 14px; padding: 12px 14px; cursor: pointer;
+}
+.toggle-row input { width: 22px; height: 22px; min-height: 0; margin-top: 2px; flex: none; accent-color: var(--navy); }
+.toggle-row > span { display: grid; gap: 4px; }
+.toggle-row strong { display: inline-flex; gap: 6px; align-items: center; }
+.plain-list { margin: 4px 0 12px; padding-left: 20px; display: grid; gap: 6px; }
+.push-setup { display: grid; gap: 10px; justify-items: start; }
+.push-setup p { margin: 0; }
+.btn-icon { display: inline-flex; gap: 6px; align-items: center; text-decoration: none; }

@@ -1,4 +1,16 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "functions": {
+    "app/api/digest/route.ts": {
+      "experimentalTriggers": [{ "type": "schedule/v1beta" }]
+    }
+  },
+  "schedules": {
+    "morning-summary": {
+      "schedule": "0 7 * * 1-5",
+      "timezone": "America/Chicago",
+      "function": "api/digest"
+    }
+  }
 }
