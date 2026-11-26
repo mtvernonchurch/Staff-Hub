@@ -51,16 +51,17 @@ If an earlier import is stuck, open the project → **Settings** → **Build and
 
 | Page | What staff do there |
 | --- | --- |
-| Home | Announcements, the next 7 days of events and room reservations, your items, workflows, recent Check-Ins attendance, last Sunday, and ministry budgets |
+| Home | **Needs you** first (requests waiting on you, overdue tasks, a Make a request button), the pinned note, your tasks, this week's announcements, the next 7 days of events and room reservations, workflows, Planning Center attendance, and ministry budgets |
 | Calendar | This week (Monday–Sunday events and announcements), this month (choose a day to see everything that day), and the Communications Calendar |
 | Meetings | The Meetings tab. The Monday list, each meeting's notes, and, for admins, Meeting mode |
 | Meeting mode | Admins only, opened from the Meetings tab. Live entry during Monday's 1:00 PM staff meeting, including announcement channels and the Communications Calendar |
-| Action items | The one shared list. Filter mine or everyone's. Add, update, and mark done |
+| Tasks | The one shared list (the **Action Items** tab). Filter mine or everyone's. Add, update, and mark done |
 | Sunday checklist | The areas copied from the checklist template for a meeting |
 | Announcements | What the church or the staff need to hear |
-| Documents | Quick links, shared folders, and pinned files. Admins edit the program tiles here. The files stay in Drive |
+| Resources | Quick links, shared folders, and pinned files. Admins edit the program tiles here. The files stay in Drive |
 | Budgets | Ministry totals and staff cards. Sample numbers until BILL is connected. You only see amounts you are allowed to see |
-| Requests | Graphics and social, time away, or a general request for email, text, website, or a Sunday announcement |
+| Requests | One **Make a request** button: graphics or social, email/text/website/Sunday, or time away. Every request shows a status tag, who has it, and when it last changed |
+| Alerts | The bell at the top. Each person turns on email, phone alerts, and the weekday morning summary |
 
 On a phone the navy menu moves to the top and scrolls sideways.
 
@@ -238,6 +239,44 @@ The token is a personal access token (HTTP Basic auth). It needs Calendar, Check
 
 Workflow cards on Home are the ones assigned to the signed-in email. Sample mode reads the **Workflow Cards** tab. `DATA_SOURCE_WORKFLOWS=pco` does not call Planning Center yet. The People API for that later step is `GET https://api.planningcenteronline.com/people/v2/workflows` and `GET https://api.planningcenteronline.com/people/v2/workflows/{workflow_id}/cards`.
 
+## Turn on alerts
+
+Staff choose on the **Alerts** page (the bell at the top) whether they want email, phone alerts, and a weekday morning summary. Everything starts on. Nobody gets an alert about something they did themselves.
+
+| Who | Hears about |
+| --- | --- |
+| Admins, or the person a request is assigned to | A new request, a new graphics request, the requester approving or asking for changes |
+| The requester | Their request changing status, a draft ready to review, a decline |
+| Admins | A new time away request |
+| The requester | Time away approved or denied |
+| The new owner | A task someone else gave them |
+| Everyone | A note pinned on Home |
+
+The morning summary goes out weekdays at 7:00 AM Central (the `morning-summary` schedule in `vercel.json`) and lists what is overdue, due today, or waiting on each person. It skips anyone with nothing to report, and it runs once a day even if Vercel delivers the schedule twice. On Vercel, open the project → **Schedules** to see it run, or press **Run Schedule** to test. New schedules start off in preview deployments; they run in production.
+
+Settings live on two tabs the hub adds the first time someone saves: **Notification Settings** and **Push Subscriptions**.
+
+### Email
+
+Email goes out from one church Google account, such as a `staffhub@mtvernon.church` user. It needs a real mailbox in Google Workspace.
+
+1. In the Google Cloud project from step 1 above, search for **Gmail API** and click **Enable**.
+2. Open the service account from step 3 and copy its **Unique ID** (a long number).
+3. In the Google Workspace **Admin console**, go to **Security** → **Access and data control** → **API controls** → **Manage Domain Wide Delegation** → **Add new**.
+4. Paste the Unique ID. For OAuth scopes, paste exactly `https://www.googleapis.com/auth/gmail.send` and nothing else. Authorize.
+5. In Vercel, add `NOTIFY_EMAIL_FROM` with the sending address. Optionally set `NOTIFY_EMAIL_NAME` (it defaults to MV Staff Hub). Redeploy.
+6. On the Alerts page, press **Send me a test**.
+
+That scope only lets the hub send mail. It cannot read anyone's inbox. Sample mode never sends real email; it lists alerts under **Recent alerts** on the Alerts page instead.
+
+### Phone alerts
+
+1. On your computer, in this folder, run `npx web-push generate-vapid-keys`.
+2. In Vercel, add `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (the public key) and `VAPID_PRIVATE_KEY` (the private key). Redeploy.
+3. Each person opens the Alerts page on their phone and taps **Turn on alerts on this device**.
+
+On an iPhone, alerts only work from the home-screen app (iOS 16.4 or later): add the hub to the Home Screen first, open it from that icon, then turn alerts on. Android, Mac, and Windows work in the browser. If you ever change the keys, everyone has to turn phone alerts on again.
+
 ## Staff chat, later
 
 The pages say **staff chat**. They do not name a product, and they do not post messages yet.
@@ -278,5 +317,8 @@ Quick links can point at each space. The label in the sample data is "Staff chat
 - `lib/services/hub.ts` who is allowed to change what
 - `lib/data/sheets-store.ts` and `lib/sheets/` the Google Sheet reads and writes
 - `lib/data/mock-data.ts` the fictional preview
+- `lib/notify/` alerts: who hears about what (`events.ts`), email, phone push, and the morning summary
+- `app/api/digest/route.ts` the private morning-summary job
+- `public/sw.js` shows phone alerts
 - `lib/chat/notifier.ts` the unused staff-chat hook
 - `tests/` role checks and sheet write checks

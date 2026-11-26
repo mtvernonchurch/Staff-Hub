@@ -268,11 +268,18 @@ describe("sample Planning Center data", () => {
     expect(attendance.coming.worship).toEqual({ total: 210, source: "headcount" });
     expect(attendance.last.worship).toEqual({ total: 200, source: "check-ins" });
     expect(attendance.sundays).toHaveLength(6);
-    const html = renderToStaticMarkup(createElement(RecentAttendanceCard, { attendance, sample: true }));
-    expect(html).toContain("Coming Sunday");
+    const html = renderToStaticMarkup(createElement(RecentAttendanceCard, { attendance, sample: true, today }));
+    // The coming Sunday has no numbers until it happens, so it only shows on a Sunday.
+    expect(html).not.toContain("Coming Sunday");
+    expect(html).not.toContain("Today so far");
+    expect(html).toContain("Last 5 Sundays, oldest to newest");
     expect(html).toContain("Last Sunday");
     expect(html).toContain("Worship 200 from check-ins");
     expect(html).toContain("Kids 41");
     expect(html).not.toContain("This week");
+    const sunday = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + ((7 - today.getUTCDay()) % 7)));
+    const onSunday = renderToStaticMarkup(createElement(RecentAttendanceCard, { attendance: sampleAttendance(sunday), sample: true, today: sunday }));
+    expect(onSunday).toContain("Today so far");
+    expect(onSunday).toContain("Last 6 Sundays, oldest to newest");
   });
 });

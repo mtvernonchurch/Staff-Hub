@@ -116,11 +116,11 @@ export default async function MeetingPage({
         <Section title="Discussion and decisions" section="notes" value={meeting.notes} canEdit={admin} meetingId={meeting.id} returnTo={returnTo} hint="What you talked about, and what you decided. Leave pastoral care and personnel details out." />
         <Section title="Care update" section="care" value={meeting.care} canEdit={admin} meetingId={meeting.id} returnTo={returnTo} hint="Keep this general. Everyone on staff can read it." />
         <section className="card tone-action">
-          <Heading icon={SquareCheck}>Action items from this meeting</Heading>
+          <Heading icon={SquareCheck}>Tasks from this meeting</Heading>
           <p className="hint">{openLinked.length} still open.</p>
           <ActionList items={linked} actor={staff} staff={people} meetings={[meeting]} today={today} returnTo={returnTo} />
           <details>
-            <summary>{admin ? "Add an item from this meeting" : "Add one for me"}</summary>
+            <summary>{admin ? "Add a task from this meeting" : "Add one for me"}</summary>
             <ActionItemForm actor={staff} staff={people} meetings={[meeting]} returnTo={returnTo} meetingId={meeting.id} />
           </details>
         </section>

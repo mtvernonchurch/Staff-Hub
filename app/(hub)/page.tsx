@@ -4,8 +4,8 @@ import {
   HomeBudgets,
   HomeCalendarSection,
   HomeCheckIns,
+  HomeNeedsYou,
   HomePins,
-  HomeSheetAttendance,
   HomeTasks,
   HomeWorkflows,
   Pending,
@@ -27,21 +27,28 @@ export default async function HomePage({
 
   return (
     <>
+      <h1 className="sr-only">Staff Hub home</h1>
       <Flash error={query.error} notice={query.notice} />
+      {/* Phone order is the reading order: what needs you, the pinned note, your tasks, then the rest. */}
       <div className="home-columns">
+        <div className="home-span">
+          <Suspense fallback={<Pending title="what needs you" />}>
+            <HomeNeedsYou store={store} actor={staff} today={today} />
+          </Suspense>
+        </div>
         <div className="home-span">
           <Suspense fallback={<Pending title="pinned notes" />}>
             <HomePins store={store} actor={staff} today={today} />
           </Suspense>
         </div>
+        <div className="home-side">
+          <Suspense fallback={<Pending title="your tasks" />}>
+            <HomeTasks store={store} actor={staff} today={today} />
+          </Suspense>
+        </div>
         <div className="home-main">
           <Suspense fallback={<Pending title="announcements" />}>
             <HomeAnnouncementsSection store={store} today={today} />
-          </Suspense>
-        </div>
-        <div className="home-side">
-          <Suspense fallback={<Pending title="your open items" />}>
-            <HomeTasks store={store} actor={staff} today={today} />
           </Suspense>
         </div>
         <div className="home-main">
@@ -57,11 +64,6 @@ export default async function HomePage({
         <div className="home-main">
           <Suspense fallback={<Pending title="recent attendance" />}>
             <HomeCheckIns today={today} />
-          </Suspense>
-        </div>
-        <div className="home-main">
-          <Suspense fallback={<Pending title="last Sunday" />}>
-            <HomeSheetAttendance store={store} actor={staff} today={today} />
           </Suspense>
         </div>
         <div className="home-side">

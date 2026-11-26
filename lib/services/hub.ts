@@ -11,7 +11,7 @@ import type {
   StaffMember,
 } from "@/lib/data/types";
 import { isAdmin } from "@/lib/domain/access";
-import { canonicalActionStatus, chicagoToday, formatUsDate, isClosedStatus, toSheetDate, upcomingMonday } from "@/lib/domain/dates";
+import { canonicalActionStatus, chicagoToday, formatUsDate, toSheetDate, upcomingMonday } from "@/lib/domain/dates";
 import { pickMondayMeeting } from "@/lib/domain/view";
 import { CARE_ACTIONS, careActionLabel, careTaskText } from "@/lib/domain/care";
 import { announcementRecap, formatChannels } from "@/lib/domain/channels";
@@ -28,11 +28,15 @@ import {
   isRequestStatus,
 } from "@/lib/domain/permissions";
 import { HubError } from "@/lib/hub-error";
+import { announce, type Notify } from "@/lib/notify";
+import { waitingOnRequest } from "@/lib/domain/request-desk";
 
 export type Deps = {
   store: HubStore;
   actor: StaffMember;
   chat?: StaffChatNotifier;
+  /** Tests pass this to see which alerts fired. The hub sends real ones. */
+  notify?: Notify;
   today?: Date;
 };
 
@@ -108,6 +112,7 @@ export async function createActionItem(
   } catch (error) {
     console.error("staff chat hook failed", error instanceof Error ? error.message : "unknown");
   }
+  if (!namesMatch(item.owner, deps.actor.name)) await announce(deps, { type: "task.assigned", item });
   return item;
 }
 
@@ -152,6 +157,9 @@ export async function updateActionItem(
     next.completedOn = status === "Done" ? day(deps) : "";
   }
   await deps.store.updateActionItem(id, next);
+  if (next.owner && !namesMatch(next.owner, deps.actor.name)) {
+    await announce(deps, { type: "task.assigned", item: { ...existing, ...next } });
+  }
   if (next.status) {
     const linked = (await deps.store.listCareNotes()).find((note) => note.actionItemId === id);
     if (linked && linked.done !== (next.status === "Done")) {
@@ -544,8 +552,10 @@ export async function createRequest(
     assignedTo: "",
     draftLink: "",
     created: day(deps),
+    updated: day(deps),
   };
   await deps.store.createRequest(row);
+  await announce(deps, { type: "request.created", request: row });
   return row;
 }
 
@@ -577,7 +587,9 @@ export async function updateRequest(
   if (status === "Ready for review" && !safeHttps(draft)) {
     throw new HubError("Add an https draft link before asking for review.");
   }
+  if (Object.keys(next).length > 0) next.updated = day(deps);
   await deps.store.updateRequest(id, next);
+  if (Object.keys(next).length > 0) await announce(deps, { type: "request.updated", before: existing, after: { ...existing, ...next } });
 }
 
 export async function startChecklist(deps: Deps, meetingId: string) {
@@ -786,10 +798,7 @@ export async function updateFolder(deps: Deps, id: string, input: Partial<{ name
 }
 
 export function requestWaitingOn(actor: StaffMember, request: DeskRequest): boolean {
-  const mine = namesMatch(actor.name, request.requestedBy);
-  if (isClosedStatus(request.status) || ["Declined", "Withdrawn", "Done"].includes(request.status)) return false;
-  if (isAdmin(actor) && ["New", "In progress", "Changes requested", "Approved"].includes(request.status)) return true;
-  return mine && request.status === "Ready for review";
+  return waitingOnRequest(actor, request);
 }
 
 function limit(value: string, max: number, label: string): string {

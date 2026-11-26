@@ -27,6 +27,8 @@ import type {
   TimeAway,
   WorkflowCard,
   WorkStatus,
+  NotificationPrefs,
+  PushSubscriptionRow,
 } from "@/lib/data/types";
 import { cell, formatBool, parseBool } from "@/lib/sheets/codec";
 
@@ -290,6 +292,7 @@ export function graphicsCells(row: Partial<GraphicsRequest>): Record<string, str
   if (row.status !== undefined) cells.Status = row.status;
   if (row.assignedTo !== undefined) cells["Assigned To"] = row.assignedTo;
   if (row.created !== undefined) cells.Created = row.created;
+  if (row.updated !== undefined) cells.Updated = row.updated;
   return cells;
 }
 
@@ -310,6 +313,7 @@ export function toGraphicsRequest(record: Record<string, string>): GraphicsReque
     status: cell(record, "Status") || "New",
     assignedTo: cell(record, "Assigned To"),
     created: cell(record, "Created"),
+    updated: cell(record, "Updated"),
   };
 }
 
@@ -325,6 +329,7 @@ export function timeAwayCells(row: Partial<TimeAway>): Record<string, string> {
   if (row.coverage !== undefined) cells.Coverage = row.coverage;
   if (row.status !== undefined) cells.Status = row.status;
   if (row.created !== undefined) cells.Created = row.created;
+  if (row.updated !== undefined) cells.Updated = row.updated;
   return cells;
 }
 
@@ -342,6 +347,7 @@ export function toTimeAway(record: Record<string, string>): TimeAway | null {
     coverage: cell(record, "Coverage"),
     status: cell(record, "Status") || "Pending",
     created: cell(record, "Created"),
+    updated: cell(record, "Updated"),
   };
 }
 
@@ -466,6 +472,7 @@ export function requestCells(row: Partial<DeskRequest>): Record<string, string> 
   if (row.assignedTo !== undefined) cells["Assigned To"] = row.assignedTo;
   if (row.draftLink !== undefined) cells["Draft Link"] = row.draftLink;
   if (row.created !== undefined) cells.Created = row.created;
+  if (row.updated !== undefined) cells.Updated = row.updated;
   return cells;
 }
 
@@ -484,6 +491,7 @@ export function toRequest(record: Record<string, string>): DeskRequest | null {
     assignedTo: cell(record, "Assigned To"),
     draftLink: cell(record, "Draft Link"),
     created: cell(record, "Created"),
+    updated: cell(record, "Updated"),
   };
 }
 
@@ -704,5 +712,59 @@ export function toCardAction(record: Record<string, string>): CardAction | null 
     status: cell(record, "Status"),
     result: cell(record, "Result"),
     doneAt: cell(record, "Done At"),
+  };
+}
+
+export function notificationPrefsCells(row: Partial<NotificationPrefs>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.email !== undefined) cells["Staff Email"] = row.email.trim().toLowerCase();
+  if (row.emailOn !== undefined) cells.Email = formatBool(row.emailOn);
+  if (row.pushOn !== undefined) cells.Push = formatBool(row.pushOn);
+  if (row.digestOn !== undefined) cells.Digest = formatBool(row.digestOn);
+  if (row.updated !== undefined) cells.Updated = row.updated;
+  return cells;
+}
+
+/** A blank cell counts as on, so a half-filled row never silences someone. */
+function onUnlessFalse(value: string): boolean {
+  return value.trim() === "" ? true : parseBool(value);
+}
+
+export function toNotificationPrefs(record: Record<string, string>): NotificationPrefs | null {
+  const email = cell(record, "Staff Email").trim().toLowerCase();
+  if (!email) return null;
+  return {
+    email,
+    emailOn: onUnlessFalse(cell(record, "Email")),
+    pushOn: onUnlessFalse(cell(record, "Push")),
+    digestOn: onUnlessFalse(cell(record, "Digest")),
+    updated: cell(record, "Updated"),
+  };
+}
+
+export function pushSubscriptionCells(row: Partial<PushSubscriptionRow>): Record<string, string> {
+  const cells: Record<string, string> = {};
+  if (row.id !== undefined) cells["Subscription ID"] = row.id;
+  if (row.email !== undefined) cells["Staff Email"] = row.email.trim().toLowerCase();
+  if (row.endpoint !== undefined) cells.Endpoint = row.endpoint;
+  if (row.p256dh !== undefined) cells.P256dh = row.p256dh;
+  if (row.auth !== undefined) cells.Auth = row.auth;
+  if (row.device !== undefined) cells.Device = row.device;
+  if (row.created !== undefined) cells.Created = row.created;
+  return cells;
+}
+
+export function toPushSubscription(record: Record<string, string>): PushSubscriptionRow | null {
+  const id = cell(record, "Subscription ID");
+  const endpoint = cell(record, "Endpoint");
+  if (!id || !endpoint) return null;
+  return {
+    id,
+    email: cell(record, "Staff Email").trim().toLowerCase(),
+    endpoint,
+    p256dh: cell(record, "P256dh"),
+    auth: cell(record, "Auth"),
+    device: cell(record, "Device"),
+    created: cell(record, "Created"),
   };
 }

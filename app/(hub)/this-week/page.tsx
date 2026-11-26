@@ -58,7 +58,7 @@ export default async function ThisWeekPage() {
           <Heading icon={CalendarDays}>This Week</Heading>
           <p className="hint">{formatFriendly(formatUsDate(week.start))} – {formatFriendly(formatUsDate(week.end))}</p>
           <WeekEvents events={eventsInWeek(calendarEvents, week)} />
-          <HomeAnnouncements rows={weekNews} todayLabel={todayLabel} />
+          <HomeAnnouncements rows={weekNews} />
         </section>
         <Suspense fallback={<Pending title="this month" />}>
           <MonthSection today={today} todayLabel={todayLabel} sheetEvents={eventsInMonth(calendarEvents, today)} />

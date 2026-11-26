@@ -19,7 +19,7 @@ function hasSession(request: NextRequest): boolean {
  */
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (pathname.startsWith("/api/auth") || pathname.startsWith("/sign-in")) {
+  if (pathname.startsWith("/api/auth") || pathname.startsWith("/api/digest") || pathname.startsWith("/sign-in")) {
     return NextResponse.next();
   }
   if (!hasSession(request)) {
@@ -32,5 +32,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon|apple-icon|manifest.webmanifest|robots.txt).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon|apple-icon|manifest.webmanifest|robots.txt|sw.js).*)"],
 };

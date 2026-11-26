@@ -1,7 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { allowedDomain, authMode, dataMode } from "@/lib/config";
+import { allowedDomain, previewSignInAllowed, securityProblem } from "@/lib/config";
 import { getStore } from "@/lib/data";
 import { accessDecision } from "@/lib/domain/access";
 import { normalizeEmail } from "@/lib/domain/people";
@@ -9,9 +9,8 @@ import { HubError } from "@/lib/hub-error";
 import type { HubStore, StaffMember } from "@/lib/data/types";
 
 export async function requireStaff(): Promise<{ staff: StaffMember; store: HubStore }> {
-  if (process.env.NODE_ENV === "production" && dataMode() === "sheets" && !process.env.AUTH_SECRET) {
-    throw new HubError("Set AUTH_SECRET in the hosting environment before opening the real staff list.");
-  }
+  const problem = securityProblem();
+  if (problem) throw new HubError(problem);
   const session = await auth();
   const email = session?.user?.email;
   if (!email) redirect("/sign-in");
@@ -29,5 +28,5 @@ export async function requireStaff(): Promise<{ staff: StaffMember; store: HubSt
 }
 
 export function showPreviewSwitcher(): boolean {
-  return authMode() === "mock";
+  return previewSignInAllowed();
 }

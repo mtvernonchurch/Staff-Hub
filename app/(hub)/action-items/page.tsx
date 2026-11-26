@@ -10,7 +10,7 @@ import { namesMatch } from "@/lib/domain/people";
 import { mine, sortActionItems } from "@/lib/domain/view";
 import { requireStaff } from "@/lib/session";
 
-export const metadata = { title: "Action items" };
+export const metadata = { title: "Tasks" };
 
 export default async function ActionItemsPage({
   searchParams,
@@ -42,7 +42,7 @@ export default async function ActionItemsPage({
       <PageHeader
         kicker="The one shared list"
         icon={SquareCheck}
-        title="Action items"
+        title="Tasks"
         lede="Everyone can see the list. You update what you own. An admin can assign work to someone else."
       />
       <Flash error={query.error} notice={query.notice} />
@@ -56,7 +56,7 @@ export default async function ActionItemsPage({
       <section className="card tone-action">
         <ActionList items={sortActionItems(filtered, today)} actor={staff} staff={people} meetings={meetings} today={today} returnTo={returnTo} />
         <details>
-          <summary>{isAdmin(staff) ? "Add or assign an item" : "Add an item for me"}</summary>
+          <summary>{isAdmin(staff) ? "Add or assign a task" : "Add a task for me"}</summary>
           <ActionItemForm actor={staff} staff={people} meetings={meetings} returnTo={returnTo} />
         </details>
       </section>

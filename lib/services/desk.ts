@@ -15,6 +15,7 @@ import { newId } from "@/lib/domain/ids";
 import { safeHttps } from "@/lib/domain/links";
 import { namesMatch } from "@/lib/domain/people";
 import { HubError } from "@/lib/hub-error";
+import { announce } from "@/lib/notify";
 
 function assertActive(actor: StaffMember) {
   if (!actor.active) throw new HubError("Your staff record is inactive. Ask an admin to turn it back on.");
@@ -110,8 +111,10 @@ export async function createGraphicsRequest(
     status: "New",
     assignedTo,
     created: day(deps),
+    updated: day(deps),
   };
   await deps.store.createGraphicsRequest(row);
+  await announce(deps, { type: "graphics.created", request: row });
   return row;
 }
 
@@ -134,7 +137,9 @@ export async function updateGraphicsRequest(
     if (!canMove) throw new HubError("The person assigned to graphics requests can update the status.");
     next.status = input.status;
   }
+  if (Object.keys(next).length > 0) next.updated = day(deps);
   await deps.store.updateGraphicsRequest(id, next);
+  if (Object.keys(next).length > 0) await announce(deps, { type: "graphics.updated", before: existing, after: { ...existing, ...next } });
 }
 
 export async function createTimeAway(
@@ -163,8 +168,10 @@ export async function createTimeAway(
     coverage,
     status: "Pending",
     created: day(deps),
+    updated: day(deps),
   };
   await deps.store.createTimeAway(row);
+  await announce(deps, { type: "away.created", away: row });
   return row;
 }
 
@@ -175,7 +182,8 @@ export async function decideTimeAway(deps: Deps, id: string, status: string): Pr
   const existing = (await deps.store.listTimeAway()).find((row) => row.id === id);
   if (!existing) throw new HubError("That time away request is no longer on the list.");
   if (existing.status !== "Pending") throw new HubError("This request has already been decided.");
-  await deps.store.updateTimeAway(id, { status });
+  await deps.store.updateTimeAway(id, { status, updated: day(deps) });
+  await announce(deps, { type: "away.decided", away: { ...existing, status } });
 }
 
 export async function setWorkStatus(deps: Deps, input: { place: string; note: string }): Promise<WorkStatus> {

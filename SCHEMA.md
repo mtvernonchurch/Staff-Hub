@@ -56,3 +56,30 @@ Meeting mode uses the existing Meetings, Action Items, and Announcements tabs.
 ## Tabs the hub only reads
 
 Staff, Ministries, Checklist Template, Workflow Cards, Card Actions.
+
+## Notification Settings
+
+Added by the hub the first time someone saves their alert settings. One row per person. A blank cell counts as on.
+
+| Column | Meaning |
+| --- | --- |
+| Staff Email | The person's @mtvernon.church address, lowercase |
+| Email | TRUE or FALSE: email alerts |
+| Push | TRUE or FALSE: phone alerts |
+| Digest | TRUE or FALSE: weekday morning summary |
+| Updated | M/D/YYYY of the last change |
+
+## Push Subscriptions
+
+Added by the hub the first time someone turns on phone alerts. One row per phone or browser. The hub removes a row when the phone says alerts were turned off.
+
+| Column | Meaning |
+| --- | --- |
+| Subscription ID | Hub id |
+| Staff Email | Whose device it is |
+| Endpoint | The browser push address (Apple, Google, Mozilla, or Microsoft) |
+| P256dh, Auth | Keys the browser gave for encrypting alerts |
+| Device | iPhone, Android, Mac, Windows, or Browser |
+| Created | M/D/YYYY |
+
+Hub Settings also gets a `Last Morning Summary` row so the summary goes out once a day.

@@ -39,8 +39,8 @@ export function StaffPinBoard({
         </>
       ) : null}
       {admin ? (
-        <details className="pin">
-          <summary>Pin something for everyone</summary>
+        <details className="pin-new">
+          <summary>Pin a note for everyone</summary>
           <PinFields action={createStaffPinAction} returnTo={returnTo} />
         </details>
       ) : null}

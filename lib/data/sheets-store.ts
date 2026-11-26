@@ -19,6 +19,8 @@ import type {
   StaffPinAck,
   TimeAway,
   WorkStatus,
+  NotificationPrefs,
+  PushSubscriptionRow,
 } from "@/lib/data/types";
 import { HubError } from "@/lib/hub-error";
 import type { SheetsApi } from "@/lib/sheets/api";
@@ -69,6 +71,10 @@ import {
   toTemplate,
   toWorkflowCard,
   toWorkStatus,
+  notificationPrefsCells,
+  toNotificationPrefs,
+  pushSubscriptionCells,
+  toPushSubscription,
   timeAwayCells,
   workStatusCells,
 } from "@/lib/sheets/mappers";
@@ -515,5 +521,45 @@ export class SheetsStore implements HubStore {
   }
   async listCardActions() {
     return (await this.records("Card Actions", COLUMNS.cardActions)).map(toCardAction).filter((row) => row !== null);
+  }
+  async listNotificationPrefs() {
+    await this.api.ensureTab("Notification Settings", [...COLUMNS.notificationPrefs]);
+    this.cache.delete("Notification Settings");
+    return (await this.records("Notification Settings", COLUMNS.notificationPrefs))
+      .map(toNotificationPrefs)
+      .filter((row) => row !== null);
+  }
+  async saveNotificationPrefs(row: NotificationPrefs) {
+    const email = row.email.trim().toLowerCase();
+    const existing = (await this.listNotificationPrefs()).some((item) => item.email === email);
+    const cells = notificationPrefsCells({ ...row, email });
+    if (!existing) {
+      await this.append("Notification Settings", COLUMNS.notificationPrefs, cells);
+      return;
+    }
+    delete cells["Staff Email"];
+    await this.patch("Notification Settings", "Staff Email", email, cells);
+  }
+  async listPushSubscriptions() {
+    await this.api.ensureTab("Push Subscriptions", [...COLUMNS.pushSubscriptions]);
+    this.cache.delete("Push Subscriptions");
+    return (await this.records("Push Subscriptions", COLUMNS.pushSubscriptions))
+      .map(toPushSubscription)
+      .filter((row) => row !== null);
+  }
+  async savePushSubscription(row: PushSubscriptionRow) {
+    const existing = (await this.listPushSubscriptions()).find((item) => item.endpoint === row.endpoint);
+    if (!existing) {
+      await this.append("Push Subscriptions", COLUMNS.pushSubscriptions, pushSubscriptionCells(row));
+      return;
+    }
+    const cells = pushSubscriptionCells(row);
+    delete cells["Subscription ID"];
+    await this.patch("Push Subscriptions", "Subscription ID", existing.id, cells);
+  }
+  async deletePushSubscription(id: string) {
+    await this.api.ensureTab("Push Subscriptions", [...COLUMNS.pushSubscriptions]);
+    this.cache.delete("Push Subscriptions");
+    await this.remove("Push Subscriptions", "Subscription ID", id);
   }
 }

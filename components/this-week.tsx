@@ -85,7 +85,7 @@ export function ThisWeekView({
         ))}
       </section>
       <section className="card tone-action">
-        <Heading icon={SquareCheck}>Action items</Heading>
+        <Heading icon={SquareCheck}>Tasks</Heading>
         {items.length === 0 ? <p className="empty">None from this meeting.</p> : items.map((item) => (
           <article key={item.id} className="item">
             <div>

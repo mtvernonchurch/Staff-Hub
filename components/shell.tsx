@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { Bell } from "lucide-react";
 import { previewAsAction, signOutAction } from "@/app/sign-in/actions";
 import { Dock } from "@/components/tab-bar";
 import { LOGO_URL } from "@/lib/brand";
@@ -44,17 +46,21 @@ export function Shell({
               <button className="btn btn-small" type="submit">Switch</button>
             </form>
           ) : null}
+          <Link className="btn btn-small btn-icon" href="/notifications">
+            <Bell aria-hidden size={16} />
+            <span>Alerts</span>
+          </Link>
           <form action={signOutAction}>
             <button className="btn btn-small" type="submit">Sign out</button>
           </form>
         </div>
       </header>
-      <div className="main">
+      <main className="main" id="main">
         {dataMode() === "mock" ? (
           <p className="preview-banner">Preview mode. These are sample people and sample records, not the church sheet.</p>
         ) : null}
         {children}
-      </div>
+      </main>
       <Dock tasks={badges.tasks} requests={badges.requests} />
     </div>
   );
