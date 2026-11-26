@@ -51,16 +51,17 @@ If an earlier import is stuck, open the project → **Settings** → **Build and
 
 | Page | What staff do there |
 | --- | --- |
-| Home | Announcements, the next 7 days of events and room reservations, your items, workflows, recent Check-Ins attendance, last Sunday, and ministry budgets |
+| Home | **Needs you** first (requests waiting on you, overdue tasks, a Make a request button), the pinned note, your tasks, this week's announcements, the next 7 days of events and room reservations, workflows, Planning Center attendance, and ministry budgets |
 | Calendar | This week (Monday–Sunday events and announcements), this month (choose a day to see everything that day), and the Communications Calendar |
 | Meetings | The Meetings tab. The Monday list, each meeting's notes, and, for admins, Meeting mode |
 | Meeting mode | Admins only, opened from the Meetings tab. Live entry during Monday's 1:00 PM staff meeting, including announcement channels and the Communications Calendar |
-| Action items | The one shared list. Filter mine or everyone's. Add, update, and mark done |
+| Tasks | The one shared list (the **Action Items** tab). Filter mine or everyone's. Add, update, and mark done |
 | Sunday checklist | The areas copied from the checklist template for a meeting |
 | Announcements | What the church or the staff need to hear |
-| Documents | Quick links, shared folders, and pinned files. Admins edit the program tiles here. The files stay in Drive |
+| Resources | Quick links, shared folders, and pinned files. Admins edit the program tiles here. The files stay in Drive |
 | Budgets | Ministry totals and staff cards. Sample numbers until BILL is connected. You only see amounts you are allowed to see |
-| Requests | Graphics and social, time away, or a general request for email, text, website, or a Sunday announcement |
+| Requests | One **Make a request** button: graphics or social, email/text/website/Sunday, or time away. Every request shows a status tag, who has it, and when it last changed |
+| Alerts | The bell at the top. Each person turns on email, phone alerts, and the weekday morning summary |
 
 On a phone the navy menu moves to the top and scrolls sideways.
 

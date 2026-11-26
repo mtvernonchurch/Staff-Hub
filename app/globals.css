@@ -228,7 +228,7 @@ button { cursor: pointer; }
 .note { color: var(--ink); margin-top: 6px; }
 .chip {
   display: inline-flex; align-items: center; min-height: 26px; padding: 0 8px;
-  border-radius: 999px; background: var(--paper-deep); font-size: 0.75rem; font-weight: 700;
+  border-radius: 999px; background: var(--paper-deep); color: #3f4a43; font-size: 0.75rem; font-weight: 700;
 }
 .chip-overdue { background: #f3d2bc; color: var(--clay); }
 .chip-done { background: #d9f0e6; color: var(--mint-deep); }
@@ -329,7 +329,20 @@ textarea { min-height: 110px; resize: vertical; }
 .empty { color: var(--muted); padding: 8px 0 16px; }
 .prose { white-space: pre-wrap; padding-bottom: 12px; }
 details { margin: 8px 0 14px; }
-summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
+/* Every "Add…" or "Edit" that opens a form looks and works like a button. */
+summary {
+  list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; width: fit-content;
+  min-height: 44px; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--line);
+  background: white; color: var(--navy); font-weight: 650;
+}
+summary::-webkit-details-marker { display: none; }
+summary::after {
+  content: ""; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-2px); transition: transform 0.15s;
+}
+details[open] > summary { margin-bottom: 10px; background: var(--paper-deep); }
+details[open] > summary::after { transform: rotate(-135deg) translateY(-2px); }
+summary:hover { border-color: var(--navy); }
 .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .filters a { text-decoration: none; }
 .sign-in {
@@ -449,6 +462,8 @@ summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; al
     padding: 28px 32px 48px;
   }
   .grid-home, .home-columns { grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr); align-items: start; }
+  /* Home's reading order puts Tasks before Announcements for phones; dense packing fills the left column on wide screens. */
+  .home-columns { grid-auto-flow: row dense; }
   .home-span { grid-column: 1 / -1; }
   .home-main { grid-column: 1; }
   .home-side { grid-column: 2; }
@@ -522,3 +537,12 @@ summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; al
 .chip-overdue { color: #7a3a14; }
 .topbar .hint { color: #c9d6dc; }
 .channel-chip { gap: 4px; background: #e4eef5; color: #0b3a57; }
+
+/* Home: Needs you */
+.needs-you { box-shadow: inset 4px 0 0 var(--navy); }
+.needs-overdue strong { color: #7a3a14; }
+.alerts-nudge {
+  display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; padding: 12px 14px; border-radius: 12px;
+  background: #e4eef5; color: #0b3a57; text-decoration: none;
+}
+.alerts-nudge svg { flex: none; margin-top: 3px; }

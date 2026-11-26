@@ -1,4 +1,4 @@
-import { GitBranch, Megaphone, SquareCheck } from "lucide-react";
+import { Bell, GitBranch, Inbox, Megaphone, SquareCheck } from "lucide-react";
 import Link from "next/link";
 import { MinistryBudgetCard } from "@/components/budget-card";
 import { Heading } from "@/components/heading";
@@ -6,13 +6,16 @@ import { HomeAnnouncements } from "@/components/home-announcements";
 import { ActionItemForm, ActionList } from "@/components/records";
 import { StaffPinBoard } from "@/components/staff-pins";
 import { UpcomingEventsCard } from "@/components/upcoming-events";
+import { StatusChip } from "@/components/status-chip";
 import { Empty } from "@/components/ui";
 import { RecentAttendanceCard } from "@/components/recent-attendance";
 import { WorkflowList } from "@/components/workflow-list";
 import { monthKey } from "@/lib/budgets/access";
 import { loadBudgetView } from "@/lib/budgets/view";
 import { isAdmin } from "@/lib/domain/access";
-import { addUtcDays, formatFriendly, formatUsDate, parseSheetDate } from "@/lib/domain/dates";
+import { addUtcDays, formatFriendly, isOverdue, parseSheetDate } from "@/lib/domain/dates";
+import { normalizeEmail } from "@/lib/domain/people";
+import { KIND_LABEL, deskRows } from "@/lib/domain/request-desk";
 import { announcementsForMeeting, myOpenItems, thisWeekMeeting } from "@/lib/domain/view";
 import type { HubStore, StaffMember } from "@/lib/data/types";
 import { loadHomeCalendar, loadRecentAttendance } from "@/lib/pco/load";
@@ -36,7 +39,8 @@ export async function HomeAnnouncementsSection({ store, today }: { store: HubSto
   const weekMeeting = thisWeekMeeting(meetings, today);
   const weekNews = weekMeeting ? announcementsForMeeting(announcements, weekMeeting) : [];
   const monday = weekMeeting ? parseSheetDate(weekMeeting.date) : null;
-  const range = monday ? `${formatFriendly(formatUsDate(monday))}–${formatFriendly(formatUsDate(addUtcDays(monday, 6)))}` : "";
+  const short = new Intl.DateTimeFormat("en-US", { timeZone: "UTC", month: "short", day: "numeric" });
+  const range = monday ? `${short.format(monday)}–${short.format(addUtcDays(monday, 6))}` : "";
   return (
     <section className="card">
       <div className="card-head">
@@ -98,4 +102,62 @@ export async function HomeBudgets({ store, actor, today }: { store: HubStore; ac
   const budgets = await loadBudgetView(actor, store, monthKey(today));
   if (!budgets.ok) return <p className="banner banner-error">{budgets.message}</p>;
   return <MinistryBudgetCard rows={budgets.ministries} today={today} sample={budgets.sample} admin={isAdmin(actor)} />;
+}
+
+/**
+ * The first thing on Home: what is waiting on you right now, and the way to
+ * ask for something. Requests of every kind, plus how many tasks are overdue.
+ */
+export async function HomeNeedsYou({ store, actor, today }: { store: HubStore; actor: StaffMember; today: Date }) {
+  const [requests, graphics, away, items, prefs] = await Promise.all([
+    store.listRequests(),
+    store.listGraphicsRequests(),
+    store.listTimeAway(),
+    store.listActionItems(),
+    store.listNotificationPrefs(),
+  ]);
+  const waiting = deskRows(requests, graphics, away, today).filter((row) => row.waitingOn(actor));
+  const overdue = myOpenItems(items, actor.name, today).filter((item) => isOverdue(item.due, item.status, today));
+  const alertsSet = prefs.some((row) => row.email === normalizeEmail(actor.email));
+  const shown = waiting.slice(0, 4);
+  return (
+    <section className="card needs-you" aria-labelledby="needs-you-title">
+      <div className="card-head">
+        <h2 id="needs-you-title" className="with-icon">
+          <Inbox aria-hidden size={18} strokeWidth={2} />
+          <span>Needs you</span>
+        </h2>
+        <Link className="btn btn-primary btn-small" href="/requests">Make a request</Link>
+      </div>
+      {waiting.length === 0 && overdue.length === 0 ? <p className="empty">You&apos;re all caught up.</p> : null}
+      {shown.map((row) => (
+        <Link key={`${row.kind}-${row.id}`} href={row.href} className="meeting-link desk-row">
+          <span className="desk-row-top">
+            <strong>{row.title}</strong>
+            <StatusChip status={row.status} />
+          </span>
+          <span>
+            {KIND_LABEL[row.kind]} · {row.requestedBy}
+            {row.when ? ` · ${row.when}` : ""}
+            {row.shortNotice ? " · short notice" : ""}
+          </span>
+        </Link>
+      ))}
+      {waiting.length > shown.length ? (
+        <Link className="meeting-link" href="/requests">See all {waiting.length} requests waiting on you</Link>
+      ) : null}
+      {overdue.length ? (
+        <Link className="meeting-link needs-overdue" href="/action-items">
+          <strong>{overdue.length === 1 ? "1 task is overdue" : `${overdue.length} tasks are overdue`}</strong>
+          <span>Open your tasks to update or finish {overdue.length === 1 ? "it" : "them"}.</span>
+        </Link>
+      ) : null}
+      {!alertsSet ? (
+        <Link className="alerts-nudge" href="/notifications">
+          <Bell aria-hidden size={16} />
+          <span><strong>Turn on alerts</strong> so requests and tasks reach you by email or on your phone.</span>
+        </Link>
+      ) : null}
+    </section>
+  );
 }
