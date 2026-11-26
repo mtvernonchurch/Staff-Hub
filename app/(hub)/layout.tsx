@@ -6,7 +6,8 @@ import { namesMatch } from "@/lib/domain/people";
 import { isFrameworkError } from "@/lib/framework";
 import { HubError } from "@/lib/hub-error";
 import { requireStaff } from "@/lib/session";
-import { requestWaitingOn } from "@/lib/services/hub";
+import { chicagoToday } from "@/lib/domain/dates";
+import { deskRows } from "@/lib/domain/request-desk";
 
 export const dynamic = "force-dynamic";
 
@@ -23,10 +24,12 @@ export default async function HubLayout({ children }: { children: React.ReactNod
 async function loadShell() {
   try {
     const { staff, store } = await requireStaff();
-    const [people, tasks, requests] = await Promise.all([
+    const [people, tasks, requests, graphics, away] = await Promise.all([
       previewSignInAllowed() ? store.listStaff().then((rows) => rows.filter((person) => person.active)) : Promise.resolve([]),
       store.listActionItems(),
       store.listRequests(),
+      store.listGraphicsRequests(),
+      store.listTimeAway(),
     ]);
     return {
       ok: true as const,
@@ -35,7 +38,7 @@ async function loadShell() {
       preview: previewSignInAllowed(),
       badges: {
         tasks: tasks.filter((item) => namesMatch(item.owner, staff.name) && !isClosedStatus(item.status)).length,
-        requests: requests.filter((request) => requestWaitingOn(staff, request)).length,
+        requests: deskRows(requests, graphics, away, chicagoToday()).filter((row) => row.waitingOn(staff)).length,
       },
     };
   } catch (error) {

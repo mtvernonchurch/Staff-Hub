@@ -28,7 +28,7 @@ export default async function RequestPage({
 
   return (
     <>
-      <PageHeader kicker="Request Desk" title={request.title} lede={`${request.status} · asked by ${request.requestedBy}`} />
+      <PageHeader kicker="Requests" title={request.title} lede={`${request.status} · asked by ${request.requestedBy}`} />
       <Flash error={query.error} notice={query.notice} />
       <p className="hint"><Link href="/requests">All requests</Link></p>
       <section className="card">

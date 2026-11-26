@@ -30,7 +30,7 @@ export default async function TimeAwayPage({
         lede={`${request.status} · asked by ${request.requestedBy}`}
       />
       <Flash error={query.error} notice={query.notice} />
-      <p className="hint"><Link href="/requests">Request Desk</Link></p>
+      <p className="hint"><Link href="/requests">Requests</Link></p>
       <section className="card">
         <p className="meta">
           <span>{formatFriendly(request.start)}{request.end !== request.start ? ` – ${formatFriendly(request.end)}` : ""}</span>

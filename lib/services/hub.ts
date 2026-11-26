@@ -11,7 +11,7 @@ import type {
   StaffMember,
 } from "@/lib/data/types";
 import { isAdmin } from "@/lib/domain/access";
-import { canonicalActionStatus, chicagoToday, formatUsDate, isClosedStatus, toSheetDate, upcomingMonday } from "@/lib/domain/dates";
+import { canonicalActionStatus, chicagoToday, formatUsDate, toSheetDate, upcomingMonday } from "@/lib/domain/dates";
 import { pickMondayMeeting } from "@/lib/domain/view";
 import { CARE_ACTIONS, careActionLabel, careTaskText } from "@/lib/domain/care";
 import { announcementRecap, formatChannels } from "@/lib/domain/channels";
@@ -29,6 +29,7 @@ import {
 } from "@/lib/domain/permissions";
 import { HubError } from "@/lib/hub-error";
 import { announce, type Notify } from "@/lib/notify";
+import { waitingOnRequest } from "@/lib/domain/request-desk";
 
 export type Deps = {
   store: HubStore;
@@ -551,6 +552,7 @@ export async function createRequest(
     assignedTo: "",
     draftLink: "",
     created: day(deps),
+    updated: day(deps),
   };
   await deps.store.createRequest(row);
   await announce(deps, { type: "request.created", request: row });
@@ -585,6 +587,7 @@ export async function updateRequest(
   if (status === "Ready for review" && !safeHttps(draft)) {
     throw new HubError("Add an https draft link before asking for review.");
   }
+  if (Object.keys(next).length > 0) next.updated = day(deps);
   await deps.store.updateRequest(id, next);
   if (Object.keys(next).length > 0) await announce(deps, { type: "request.updated", before: existing, after: { ...existing, ...next } });
 }
@@ -795,10 +798,7 @@ export async function updateFolder(deps: Deps, id: string, input: Partial<{ name
 }
 
 export function requestWaitingOn(actor: StaffMember, request: DeskRequest): boolean {
-  const mine = namesMatch(actor.name, request.requestedBy);
-  if (isClosedStatus(request.status) || ["Declined", "Withdrawn", "Done"].includes(request.status)) return false;
-  if (isAdmin(actor) && ["New", "In progress", "Changes requested", "Approved"].includes(request.status)) return true;
-  return mine && request.status === "Ready for review";
+  return waitingOnRequest(actor, request);
 }
 
 function limit(value: string, max: number, label: string): string {

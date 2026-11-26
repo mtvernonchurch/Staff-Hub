@@ -292,6 +292,7 @@ export function graphicsCells(row: Partial<GraphicsRequest>): Record<string, str
   if (row.status !== undefined) cells.Status = row.status;
   if (row.assignedTo !== undefined) cells["Assigned To"] = row.assignedTo;
   if (row.created !== undefined) cells.Created = row.created;
+  if (row.updated !== undefined) cells.Updated = row.updated;
   return cells;
 }
 
@@ -312,6 +313,7 @@ export function toGraphicsRequest(record: Record<string, string>): GraphicsReque
     status: cell(record, "Status") || "New",
     assignedTo: cell(record, "Assigned To"),
     created: cell(record, "Created"),
+    updated: cell(record, "Updated"),
   };
 }
 
@@ -327,6 +329,7 @@ export function timeAwayCells(row: Partial<TimeAway>): Record<string, string> {
   if (row.coverage !== undefined) cells.Coverage = row.coverage;
   if (row.status !== undefined) cells.Status = row.status;
   if (row.created !== undefined) cells.Created = row.created;
+  if (row.updated !== undefined) cells.Updated = row.updated;
   return cells;
 }
 
@@ -344,6 +347,7 @@ export function toTimeAway(record: Record<string, string>): TimeAway | null {
     coverage: cell(record, "Coverage"),
     status: cell(record, "Status") || "Pending",
     created: cell(record, "Created"),
+    updated: cell(record, "Updated"),
   };
 }
 
@@ -468,6 +472,7 @@ export function requestCells(row: Partial<DeskRequest>): Record<string, string> 
   if (row.assignedTo !== undefined) cells["Assigned To"] = row.assignedTo;
   if (row.draftLink !== undefined) cells["Draft Link"] = row.draftLink;
   if (row.created !== undefined) cells.Created = row.created;
+  if (row.updated !== undefined) cells.Updated = row.updated;
   return cells;
 }
 
@@ -486,6 +491,7 @@ export function toRequest(record: Record<string, string>): DeskRequest | null {
     assignedTo: cell(record, "Assigned To"),
     draftLink: cell(record, "Draft Link"),
     created: cell(record, "Created"),
+    updated: cell(record, "Updated"),
   };
 }
 

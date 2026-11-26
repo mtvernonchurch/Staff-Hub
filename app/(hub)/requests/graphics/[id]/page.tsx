@@ -33,7 +33,7 @@ export default async function GraphicsRequestPage({
     <>
       <PageHeader kicker="Graphics and social" title={request.event} lede={`${request.status} · asked by ${request.requestedBy}`} />
       <Flash error={query.error} notice={query.notice} />
-      <p className="hint"><Link href="/requests">Request Desk</Link></p>
+      <p className="hint"><Link href="/requests">Requests</Link></p>
       <section className="card">
         {short ? <p className="banner banner-error">Needed in less than 7 days.</p> : null}
         <p className="meta">

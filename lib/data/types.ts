@@ -107,6 +107,8 @@ export type GraphicsRequest = {
   status: string;
   assignedTo: string;
   created: string;
+  /** M/D/YYYY of the last change. Older rows may not have it. */
+  updated?: string;
 };
 
 export type TimeAway = {
@@ -120,6 +122,8 @@ export type TimeAway = {
   coverage: string;
   status: string;
   created: string;
+  /** M/D/YYYY of the last change. Older rows may not have it. */
+  updated?: string;
 };
 
 export type WorkStatus = {
@@ -204,6 +208,8 @@ export type DeskRequest = {
   assignedTo: string;
   draftLink: string;
   created: string;
+  /** M/D/YYYY of the last change. Older rows may not have it. */
+  updated?: string;
 };
 
 export type PinnedDocument = {
