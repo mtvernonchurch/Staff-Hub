@@ -1,23 +1,27 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import { allowedDomain, authMode, authSecret, googleAuthReady } from "@/lib/config";
+import { allowedDomain, authMode, authSecret, googleAuthReady, previewSignInAllowed } from "@/lib/config";
 import { getStore } from "@/lib/data";
 import { accessDecision } from "@/lib/domain/access";
 import { normalizeEmail } from "@/lib/domain/people";
 
 // Auth.js throws in production when AUTH_SECRET is missing, even for the
-// sample sign-in. A public fallback is enough for fictional preview data.
-// A real AUTH_SECRET in the environment replaces it.
-if (!process.env.AUTH_SECRET?.trim()) process.env.AUTH_SECRET = authSecret();
+// sample sign-in. A public fallback is enough for fictional preview data,
+// so authSecret() only returns it while the hub shows sample data. With the
+// real sheet and no AUTH_SECRET, nothing is filled in here and the hub
+// refuses to open (see securityProblem in lib/config.ts).
+const secret = authSecret();
+if (!process.env.AUTH_SECRET?.trim() && secret) process.env.AUTH_SECRET = secret;
 if (!process.env.AUTH_TRUST_HOST) process.env.AUTH_TRUST_HOST = "true";
 
 const domain = allowedDomain();
 const mode = authMode();
+const preview = previewSignInAllowed();
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
-  secret: authSecret(),
+  secret,
   session: { strategy: "jwt", maxAge: 60 * 60 * 24 * 30 },
   pages: { signIn: "/sign-in", error: "/sign-in" },
   providers: [
@@ -32,7 +36,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }),
         ]
       : []),
-    ...(mode === "mock"
+    ...(preview
       ? [
           Credentials({
             id: "preview",

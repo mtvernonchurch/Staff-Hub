@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { googleSignInAction, previewAsAction, signOutAction } from "@/app/sign-in/actions";
-import { allowedDomain, authMode, googleAuthReady } from "@/lib/config";
+import { allowedDomain, authMode, googleAuthReady, previewSignInAllowed, securityProblem } from "@/lib/config";
 import { getStore } from "@/lib/data";
 import { accessDecision } from "@/lib/domain/access";
 import { normalizeEmail } from "@/lib/domain/people";
@@ -21,7 +21,21 @@ export default async function SignInPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const query = await searchParams;
+  const problem = securityProblem();
+  if (problem) {
+    return (
+      <main className="sign-in">
+        <section className="sign-card">
+          <div className="brand-mark">MV</div>
+          <p className="kicker">Mt Vernon Church · Columbus</p>
+          <h1>Staff Hub</h1>
+          <p className="banner banner-error" role="alert">{problem}</p>
+        </section>
+      </main>
+    );
+  }
   const mode = authMode();
+  const preview = previewSignInAllowed();
   const session = await auth();
   const email = session?.user?.email;
   if (email) {
@@ -33,7 +47,7 @@ export default async function SignInPage({
   }
 
   let people: { name: string; email: string; title: string }[] = [];
-  if (mode === "mock") {
+  if (preview) {
     const store = await getStore();
     people = (await store.listStaff()).filter((person) => person.active);
   }

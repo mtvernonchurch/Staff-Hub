@@ -51,13 +51,48 @@ export function allowedDomain(): string {
   return process.env.ALLOWED_DOMAIN?.trim() || "mtvernon.church";
 }
 
-export function authSecret(): string {
-  if (process.env.AUTH_SECRET?.trim()) return process.env.AUTH_SECRET.trim();
-  return "dev-only-mv-staff-hub-secret";
+const PREVIEW_SECRET = "dev-only-mv-staff-hub-secret";
+
+/**
+ * The secret that signs the login cookie. The public preview secret is only
+ * used while the hub shows sample data; with the real sheet it returns
+ * undefined so the hub refuses to open instead of trusting a secret that is
+ * printed in this public repository.
+ */
+export function authSecret(env: Env = process.env): string | undefined {
+  if (env.AUTH_SECRET?.trim()) return env.AUTH_SECRET.trim();
+  return resolveDataMode(env) === "mock" ? PREVIEW_SECRET : undefined;
+}
+
+/** "Pick a person" sign-in is only for sample data, never the real staff list. */
+export function previewSignInAllowed(env: Env = process.env): boolean {
+  return resolveAuthMode(env) === "mock" && resolveDataMode(env) === "mock";
+}
+
+/**
+ * A setup mistake that would let the wrong people in. The sign-in page and
+ * every hub page show this instead of opening.
+ */
+export function securityProblem(env: Env = process.env): string | null {
+  if (resolveDataMode(env) !== "sheets") return null;
+  if (resolveAuthMode(env) !== "google") {
+    return "The hub is connected to the real staff sheet, but Google sign-in is not turned on. Set AUTH_MODE=google with the Google client id and secret before anyone signs in.";
+  }
+  if (!googleAuthReadyIn(env)) {
+    return "Google sign-in needs the OAuth client id and secret. The setup steps are in the README.";
+  }
+  if (!env.AUTH_SECRET?.trim()) {
+    return "Set AUTH_SECRET in the hosting environment before opening the real staff list.";
+  }
+  return null;
+}
+
+function googleAuthReadyIn(env: Env): boolean {
+  return Boolean(env.AUTH_GOOGLE_ID?.trim() && env.AUTH_GOOGLE_SECRET?.trim());
 }
 
 export function googleAuthReady(): boolean {
-  return Boolean(process.env.AUTH_GOOGLE_ID?.trim() && process.env.AUTH_GOOGLE_SECRET?.trim());
+  return googleAuthReadyIn(process.env);
 }
 
 export type BudgetSourceKind = "mock" | "sheet" | "bill";

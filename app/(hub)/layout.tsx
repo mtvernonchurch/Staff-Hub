@@ -1,6 +1,6 @@
 import { Shell } from "@/components/shell";
 import { Problem } from "@/components/ui";
-import { authMode } from "@/lib/config";
+import { previewSignInAllowed } from "@/lib/config";
 import { isClosedStatus } from "@/lib/domain/dates";
 import { namesMatch } from "@/lib/domain/people";
 import { isFrameworkError } from "@/lib/framework";
@@ -24,7 +24,7 @@ async function loadShell() {
   try {
     const { staff, store } = await requireStaff();
     const [people, tasks, requests] = await Promise.all([
-      authMode() === "mock" ? store.listStaff().then((rows) => rows.filter((person) => person.active)) : Promise.resolve([]),
+      previewSignInAllowed() ? store.listStaff().then((rows) => rows.filter((person) => person.active)) : Promise.resolve([]),
       store.listActionItems(),
       store.listRequests(),
     ]);
@@ -32,7 +32,7 @@ async function loadShell() {
       ok: true as const,
       staff,
       people,
-      preview: authMode() === "mock",
+      preview: previewSignInAllowed(),
       badges: {
         tasks: tasks.filter((item) => namesMatch(item.owner, staff.name) && !isClosedStatus(item.status)).length,
         requests: requests.filter((request) => requestWaitingOn(staff, request)).length,
