@@ -3,8 +3,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { RecentAttendanceCard } from "@/components/recent-attendance";
 import { pcoList } from "@/lib/pco/client";
-import { eventsWithinDays, mapEventInstances, mapSundayAttendance } from "@/lib/pco/map";
-import { homeEvents, shouldUseLivePco } from "@/lib/pco/load";
+import { addUtcDays } from "@/lib/domain/dates";
+import { eventsWithinDays, groupsFeedIds, mapEventInstances, mapGroupEvents, mapRoomBookings, mapSundayAttendance } from "@/lib/pco/map";
+import { homeEvents, loadRecentAttendance, shouldUseLivePco } from "@/lib/pco/load";
 import { sampleAttendance, sampleUpcomingEvents } from "@/lib/pco/sample";
 import type { PcoDocument } from "@/lib/pco/types";
 
@@ -51,12 +52,73 @@ describe("Planning Center event mapping", () => {
     ],
   }];
 
-  it("keeps approved instances in start order and drops pending and blockouts", () => {
-    const events = mapEventInstances(docs, today, 14);
+  it("keeps approved instances in start order and drops pending, blockouts, and Groups feeds", () => {
+    const events = mapEventInstances(docs, today, addUtcDays(today, 14));
     expect(events.map((event) => event.name)).toEqual(["Staff lunch", "Sunday worship"]);
+    expect(events.every((event) => event.source === "event")).toBe(true);
     expect(events[1]?.location).toBe("Worship room");
     expect(events[1]?.day).toBe("11/29/2026");
     expect(eventsWithinDays(events, today, 1).map((event) => event.id)).toEqual(["first"]);
+    const withGroup = mapEventInstances([{
+      data: [{
+        type: "EventInstance",
+        id: "group-instance",
+        attributes: { starts_at: "2026-11-24T15:00:00Z" },
+        relationships: { event: { data: { type: "Event", id: "mens" } } },
+      }],
+      included: [{
+        type: "Event",
+        id: "mens",
+        attributes: { name: "Men's breakfast", approval_status: "A" },
+        relationships: { feed: { data: { type: "Feed", id: "feed-groups" } } },
+      }],
+    }], today, addUtcDays(today, 14), { eventIds: new Set(["mens"]), feedIds: new Set(["feed-groups"]) });
+    expect(withGroup).toEqual([]);
+  });
+});
+
+describe("room reservations and Groups events", () => {
+  it("keeps approved room bookings and drops equipment", () => {
+    const rooms = mapRoomBookings([{
+      data: [
+        {
+          type: "ResourceBooking",
+          id: "b1",
+          attributes: { starts_at: "2026-11-24T15:00:00Z", ends_at: "2026-11-24T16:00:00Z" },
+          relationships: {
+            event: { data: { type: "Event", id: "meet" } },
+            resource: { data: { type: "Resource", id: "hall" } },
+          },
+        },
+        {
+          type: "ResourceBooking",
+          id: "b2",
+          attributes: { starts_at: "2026-11-24T18:00:00Z" },
+          relationships: { resource: { data: { type: "Resource", id: "van" } } },
+        },
+      ],
+      included: [
+        { type: "Event", id: "meet", attributes: { name: "Staff meeting" } },
+        { type: "Resource", id: "hall", attributes: { name: "Fellowship Hall", kind: "Room" } },
+        { type: "Resource", id: "van", attributes: { name: "Van", kind: "Resource" } },
+      ],
+    }], today, addUtcDays(today, 7));
+    expect(rooms.map((event) => event.name)).toEqual(["Staff meeting"]);
+    expect(rooms[0]).toMatchObject({ location: "Fellowship Hall", source: "room", day: "11/24/2026" });
+  });
+
+  it("reads Groups events and skips canceled ones", () => {
+    const feeds = groupsFeedIds([{ data: [{ type: "Feed", id: "9", attributes: { feed_type: "groups" } }, { type: "Feed", id: "8", attributes: { feed_type: "registrations" } }] }]);
+    expect([...feeds]).toEqual(["9"]);
+    const groups = mapGroupEvents([{
+      data: [
+        { type: "Event", id: "g1", attributes: { name: "Men's breakfast", starts_at: "2026-11-25T13:00:00Z", canceled: false }, relationships: { group: { data: { type: "Group", id: "men" } } } },
+        { type: "Event", id: "g2", attributes: { name: "Canceled", starts_at: "2026-11-25T18:00:00Z", canceled: true }, relationships: { group: { data: { type: "Group", id: "men" } } } },
+      ],
+      included: [{ type: "Group", id: "men", attributes: { name: "Men's group" } }],
+    }], today, addUtcDays(today, 7));
+    expect(groups).toHaveLength(1);
+    expect(groups[0]).toMatchObject({ name: "Men's breakfast", location: "Men's group", source: "group" });
   });
 });
 
@@ -156,15 +218,52 @@ describe("Planning Center client", () => {
       expect((error as Error).message).not.toContain(secret);
     }
   });
+
+  it("starts room and location reads before a slow headcount finishes", async () => {
+    const env = {
+      DATA_MODE: "sheets",
+      GOOGLE_SHEET_ID: "sheet",
+      GOOGLE_SERVICE_ACCOUNT_JSON: "{}",
+      PCO_APP_ID: "app",
+      PCO_SECRET: secret,
+    };
+    let releaseHeadcount: () => void = () => {};
+    const headcountGate = new Promise<void>((resolve) => {
+      releaseHeadcount = resolve;
+    });
+    const calls: string[] = [];
+    const result = loadRecentAttendance(today, env, {
+      appId: "app",
+      secret,
+      sleep: async () => {},
+      fetch: async (url) => {
+        calls.push(url);
+        if (url.includes("/headcounts")) await headcountGate;
+        if (url.includes("/check-ins/v2/events?") || url.endsWith("/events") || url.includes("/check-ins/v2/events?")) {
+          return jsonResponse({ data: [{ type: "Event", id: "92682", attributes: { name: "Sunday Services" } }] });
+        }
+        return jsonResponse({ data: [] });
+      },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(calls.some((url) => url.includes("/locations"))).toBe(true);
+    expect(calls.some((url) => url.includes("/headcounts"))).toBe(true);
+    releaseHeadcount();
+    const attendance = await result;
+    expect(attendance.ok).toBe(true);
+  });
 });
 
 describe("sample Planning Center data", () => {
-  it("marks the farther sample event as outside the 14-day home window", () => {
+  it("shows the next 7 days of events and rooms, and leaves Groups off the home list", () => {
     const events = sampleUpcomingEvents(today);
     expect(events.every((event) => event.name.startsWith("Sample "))).toBe(true);
-    expect(homeEvents(events, today).map((event) => event.name)).toEqual(["Sample staff lunch", "Sample Sunday worship"]);
+    expect(homeEvents(events, today).map((event) => event.name)).toEqual(["Sample staff lunch", "Sample staff meeting", "Sample Sunday worship"]);
+    expect(homeEvents(events, today).map((event) => event.source)).toEqual(["event", "room", "event"]);
+    expect(homeEvents(events, today).some((event) => event.source === "group")).toBe(false);
     expect(homeEvents(events, today).map((event) => event.name)).not.toContain("Sample choir night");
     expect(eventsWithinDays(events, today, 30).map((event) => event.name)).toContain("Sample choir night");
+    expect(eventsWithinDays(events, today, 30).map((event) => event.name)).toContain("Sample men's breakfast");
     const attendance = sampleAttendance(today);
     expect(attendance.coming.worship).toEqual({ total: 210, source: "headcount" });
     expect(attendance.last.worship).toEqual({ total: 200, source: "check-ins" });

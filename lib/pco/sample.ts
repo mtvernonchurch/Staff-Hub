@@ -3,22 +3,25 @@ import { addUtcDays, formatUsDate } from "@/lib/domain/dates";
 import { comingSunday, noonChicago } from "@/lib/pco/map";
 
 export function sampleUpcomingEvents(today: Date): UpcomingEvent[] {
-  const rows: Array<{ offset: number; name: string; location: string; allDay?: boolean }> = [
-    { offset: 0, name: "Sample staff lunch", location: "Office" },
-    { offset: 6, name: "Sample Sunday worship", location: "Worship room" },
-    { offset: 10, name: "Sample kids rehearsal", location: "Kids hallway" },
-    { offset: 20, name: "Sample choir night", location: "Choir room" },
+  const rows: Array<{ offset: number; name: string; location: string; source: UpcomingEvent["source"]; allDay?: boolean }> = [
+    { offset: 0, name: "Sample staff lunch", location: "Office", source: "event" },
+    { offset: 1, name: "Sample staff meeting", location: "Fellowship Hall", source: "room" },
+    { offset: 2, name: "Sample men's breakfast", location: "Men's group", source: "group" },
+    { offset: 6, name: "Sample Sunday worship", location: "Worship room", source: "event" },
+    { offset: 10, name: "Sample kids rehearsal", location: "Kids hallway", source: "event" },
+    { offset: 20, name: "Sample choir night", location: "Choir room", source: "event" },
   ];
   return rows.map((row) => {
     const day = addUtcDays(today, row.offset);
     return {
-      id: `sample_event_${row.offset}`,
+      id: `sample_${row.source}_${row.offset}`,
       name: row.name,
       startsAt: noonChicago(day),
       endsAt: "",
       location: row.location,
       allDay: Boolean(row.allDay),
       day: formatUsDate(day),
+      source: row.source,
     };
   });
 }

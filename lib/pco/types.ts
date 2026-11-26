@@ -13,6 +13,9 @@ export type PcoDocument = {
   links?: { next?: string | null };
 };
 
+/** Where a calendar row came from. Groups stay off the home week. */
+export type CalendarSource = "event" | "room" | "group";
+
 export type UpcomingEvent = {
   id: string;
   name: string;
@@ -21,6 +24,7 @@ export type UpcomingEvent = {
   location: string;
   allDay: boolean;
   day: string;
+  source: CalendarSource;
 };
 
 export type CountSource = "headcount" | "check-ins" | "mixed";
