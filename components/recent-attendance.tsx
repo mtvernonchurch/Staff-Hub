@@ -1,9 +1,16 @@
 import { Users } from "lucide-react";
 import { Heading } from "@/components/heading";
 import type { RecentAttendance, SundayCount } from "@/lib/pco/types";
-import { formatFriendly } from "@/lib/domain/dates";
+import { formatFriendly, parseSheetDate } from "@/lib/domain/dates";
 
-export function RecentAttendanceCard({ attendance, sample }: { attendance: RecentAttendance; sample: boolean }) {
+/**
+ * The one attendance card on Home, from Planning Center. The coming Sunday
+ * only shows on Sunday itself, while services are counted; the rest of the
+ * week it has no numbers yet.
+ */
+export function RecentAttendanceCard({ attendance, sample, today }: { attendance: RecentAttendance; sample: boolean; today: Date }) {
+  const isSunday = today.getUTCDay() === 0;
+  const counted = attendance.sundays.filter((row) => (parseSheetDate(row.sunday)?.getTime() ?? 0) <= today.getTime());
   return (
     <section className="card">
       <div className="card-head">
@@ -15,11 +22,13 @@ export function RecentAttendanceCard({ attendance, sample }: { attendance: Recen
           ? "Sample Sunday numbers, not the live church."
           : "Worship uses the Worship headcount. A service with none uses that service's check-ins. Kids are check-ins in Discovery Zone and KidZone, not volunteers."}
       </p>
-      <SundayLine label="Coming Sunday" day={attendance.coming.sunday} worship={attendance.coming.worship} kids={attendance.coming.kids} />
+      {isSunday ? (
+        <SundayLine label="Today so far" day={attendance.coming.sunday} worship={attendance.coming.worship} kids={attendance.coming.kids} />
+      ) : null}
       <SundayLine label="Last Sunday" day={attendance.last.sunday} worship={attendance.last.worship} kids={attendance.last.kids} />
-      <p className="hint">Last 6 Sundays</p>
-      <p className="hint">Worship: {attendance.sundays.map((row) => figure(row.worship)).join(" · ")}</p>
-      <p className="hint">Kids: {attendance.sundays.map((row) => row.kids.total.toLocaleString("en-US")).join(" · ")}</p>
+      <p className="hint">Last {counted.length} Sundays, oldest to newest</p>
+      <p className="hint">Worship: {counted.map((row) => figure(row.worship)).join(" · ")}</p>
+      <p className="hint">Kids: {counted.map((row) => row.kids.total.toLocaleString("en-US")).join(" · ")}</p>
     </section>
   );
 }

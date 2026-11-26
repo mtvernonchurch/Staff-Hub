@@ -41,9 +41,10 @@ export function MonthCalendar({ items, todayLabel }: { items: DayItem[]; todayLa
     <div className="month-layout">
       <div>
         <p className="hint">{label}</p>
-        <div className="month-grid" role="grid" aria-label={label}>
+        {/* A plain group of day buttons. A role="grid" would promise arrow-key moves this calendar doesn't have. */}
+        <div className="month-grid" role="group" aria-label={`${label}. Choose a day to see what's on it.`}>
           {WEEKDAYS.map((day) => (
-            <div key={day} className="month-dow" role="columnheader">{day}</div>
+            <div key={day} className="month-dow" aria-hidden>{day}</div>
           ))}
           {Array.from({ length: cells }, (_, index) => {
             const day = index - lead + 1;
@@ -59,17 +60,16 @@ export function MonthCalendar({ items, todayLabel }: { items: DayItem[]; todayLa
                 key={index}
                 type="button"
                 className={["month-day", isToday ? "is-today" : "", selected === day ? "is-selected" : ""].filter(Boolean).join(" ")}
-                role="gridcell"
                 aria-current={isToday ? "date" : undefined}
-                aria-selected={selected === day}
-                aria-label={`${friendly}. ${summary}`}
+                aria-pressed={selected === day}
                 onClick={() => setSelected(day)}
               >
-                <strong>{day}</strong>
+                <span className="sr-only">{`${friendly}${isToday ? ", today" : ""}. ${summary}`}</span>
+                <strong aria-hidden>{day}</strong>
                 {rows.slice(0, 2).map((row) => (
-                  <span key={row.id} className={`month-event source-${row.source.toLowerCase()}`}>{row.name}</span>
+                  <span key={row.id} className={`month-event source-${row.source.toLowerCase()}`} aria-hidden>{row.name}</span>
                 ))}
-                {rows.length > 2 ? <span className="month-more">+{rows.length - 2}</span> : null}
+                {rows.length > 2 ? <span className="month-more" aria-hidden>+{rows.length - 2}</span> : null}
               </button>
             );
           })}

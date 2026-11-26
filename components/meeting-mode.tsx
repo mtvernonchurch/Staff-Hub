@@ -207,7 +207,7 @@ export function MeetingMode({
       </section>
 
       <section className="card tone-action">
-        <Heading icon={SquareCheck}>Action items</Heading>
+        <Heading icon={SquareCheck}>Tasks</Heading>
         <form
           className="live-grid tasks"
           onSubmit={async (event) => {
@@ -224,10 +224,10 @@ export function MeetingMode({
             setItems((current) => [result.data, ...current]);
             event.currentTarget.reset();
             taskRef.current?.focus();
-            remember("Action item added.", true);
+            remember("Task added.", true);
           }}
         >
-          <input ref={taskRef} name="action" required placeholder="What needs doing" aria-label="Action item" />
+          <input ref={taskRef} name="action" required placeholder="What needs doing" aria-label="Task" />
           <select name="owner" aria-label="Assignee" defaultValue={people[0]?.name ?? ""}>
             {people.map((person) => (
               <option key={person.email} value={person.name}>{person.name}</option>
@@ -463,7 +463,7 @@ function LiveItem({
               const result = await removeLiveAction(item.id);
               if (!result.ok) return onError(result.error);
               onRemove();
-              onSaved("Action item removed.");
+              onSaved("Task removed.");
             }}
           >
             Remove
@@ -482,10 +482,10 @@ function LiveItem({
         if (!result.ok) return onError(result.error);
         onChange({ ...item, action, owner, due, ministry });
         setEditing(false);
-        onSaved("Action item updated.");
+        onSaved("Task updated.");
       }}
     >
-      <input aria-label="Action item" value={action} onChange={(event) => setAction(event.target.value)} required />
+      <input aria-label="Task" value={action} onChange={(event) => setAction(event.target.value)} required />
       <select aria-label="Assignee" value={owner} onChange={(event) => setOwner(event.target.value)}>
         {people.map((person) => (
           <option key={person.email} value={person.name}>{person.name}</option>

@@ -29,7 +29,7 @@ export default async function MeetingsPage({
         kicker="Mondays at 1:00 PM"
         icon={CalendarDays}
         title="Staff meetings"
-        lede="Prayer, wins, the week ahead, ministry updates, and the decisions that become action items."
+        lede="Prayer, wins, the week ahead, ministry updates, and the decisions that become tasks."
       />
       <Flash error={query.error} notice={query.notice} />
       {isAdmin(staff) ? (

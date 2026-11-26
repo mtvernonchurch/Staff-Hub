@@ -55,12 +55,12 @@ export function Shell({
           </form>
         </div>
       </header>
-      <div className="main">
+      <main className="main" id="main">
         {dataMode() === "mock" ? (
           <p className="preview-banner">Preview mode. These are sample people and sample records, not the church sheet.</p>
         ) : null}
         {children}
-      </div>
+      </main>
       <Dock tasks={badges.tasks} requests={badges.requests} />
     </div>
   );
